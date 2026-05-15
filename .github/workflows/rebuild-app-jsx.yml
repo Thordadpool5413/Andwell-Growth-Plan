@@ -1,0 +1,46 @@
+name: Rebuild App JSX
+
+on:
+  push:
+    paths:
+      - ".github/source-update/app.jsx.gz.b64.part*"
+      - ".github/workflows/rebuild-app-jsx.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild-app-jsx:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Rebuild src/App.jsx from compressed source chunks
+        run: |
+          mkdir -p src
+          cat .github/source-update/app.jsx.gz.b64.part* > /tmp/app.jsx.gz.b64
+          base64 -d /tmp/app.jsx.gz.b64 > /tmp/app.jsx.gz
+          gzip -d -c /tmp/app.jsx.gz > src/App.jsx
+          test -s src/App.jsx
+          grep -q "export default function AndwellGrowthPlanApp" src/App.jsx
+
+      - name: Validate production build
+        run: |
+          npm install
+          npm run build
+
+      - name: Commit rebuilt App.jsx
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/App.jsx package-lock.json
+          if git diff --cached --quiet; then
+            echo "No source changes to commit."
+          else
+            git commit -m "Rebuild App.jsx from uploaded dashboard source"
+            git push
+          fi
