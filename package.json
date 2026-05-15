@@ -4,10 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "rebuild:app": "node scripts/rebuild-app-jsx.mjs",
-    "dev": "npm run rebuild:app && vite --host 0.0.0.0",
-    "build": "npm run rebuild:app && vite build",
-    "preview": "npm run rebuild:app && vite preview --host 0.0.0.0"
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
