@@ -1,83 +1,63 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { gunzipSync, inflateRawSync } from "node:zlib";
+import { gunzipSync } from "node:zlib";
 
 const repoRoot = process.cwd();
 const sourceDir = join(repoRoot, ".github", "source-update");
 const outputPath = join(repoRoot, "src", "App.jsx");
-const parts = [
-  "app.jsx.gz.b64.part01",
-  "app.jsx.gz.b64.part02",
-  "app.jsx.gz.b64.part03",
-  "app.jsx.gz.b64.part04",
-  "app.jsx.gz.b64.part05",
-  "app.jsx.gz.b64.part06",
-  "app.jsx.gz.b64.part07",
-];
+const expectedBytes = 184618;
 
-function getGzipPayloadStart(buffer) {
-  if (buffer[0] !== 0x1f || buffer[1] !== 0x8b || buffer[2] !== 0x08) {
-    throw new Error("Source payload is not a gzip stream.");
+function loadCompressedSource() {
+  if (!existsSync(sourceDir)) {
+    throw new Error(`Missing source directory: ${sourceDir}`);
   }
 
-  const flags = buffer[3];
-  let offset = 10;
+  const parts = readdirSync(sourceDir)
+    .filter((name) => name.startsWith("app.jsx.gz.b64.part"))
+    .sort();
 
-  if (flags & 0x04) {
-    const extraLength = buffer[offset] | (buffer[offset + 1] << 8);
-    offset += 2 + extraLength;
+  if (!parts.length) {
+    throw new Error("No App.jsx source chunks were found.");
   }
 
-  if (flags & 0x08) {
-    while (offset < buffer.length && buffer[offset] !== 0) offset += 1;
-    offset += 1;
-  }
+  const base64 = parts
+    .map((part) => readFileSync(join(sourceDir, part), "utf8").replaceAll("\n", "").replaceAll("\r", "").trim())
+    .join("");
 
-  if (flags & 0x10) {
-    while (offset < buffer.length && buffer[offset] !== 0) offset += 1;
-    offset += 1;
-  }
-
-  if (flags & 0x02) {
-    offset += 2;
-  }
-
-  return offset;
+  return { parts, compressed: Buffer.from(base64, "base64") };
 }
 
-function decompressSourcePayload(compressed) {
+function recoverSource(compressed) {
   try {
-    return gunzipSync(compressed).toString("utf8");
+    const source = gunzipSync(compressed);
+    if (source.length === expectedBytes) return source;
   } catch (error) {
-    const payloadStart = getGzipPayloadStart(compressed);
-    const payloadEnd = compressed.length - 8;
+    console.warn(`Full gzip decode failed: ${error.message}`);
+  }
 
-    if (payloadEnd <= payloadStart) {
-      throw error;
+  for (let end = 18; end <= compressed.length; end += 1) {
+    try {
+      const source = gunzipSync(compressed.subarray(0, end));
+      if (source.length === expectedBytes) {
+        console.warn(`Recovered App.jsx from first ${end} compressed bytes.`);
+        return source;
+      }
+    } catch {
+      // Keep scanning until a valid gzip stream is found.
     }
-
-    console.warn(`Standard gzip validation failed: ${error.message}`);
-    console.warn("Falling back to raw deflate recovery and ignoring the gzip trailer checksum.");
-
-    return inflateRawSync(compressed.subarray(payloadStart, payloadEnd)).toString("utf8");
   }
+
+  throw new Error("Unable to recover a valid App.jsx file from the source chunks.");
 }
 
-for (const part of parts) {
-  const partPath = join(sourceDir, part);
-  if (!existsSync(partPath)) {
-    throw new Error(`Missing source chunk: ${partPath}`);
-  }
-}
+const { parts, compressed } = loadCompressedSource();
+const source = recoverSource(compressed);
+const sourceText = source.toString("utf8");
 
-const base64 = parts.map((part) => readFileSync(join(sourceDir, part), "utf8").trim()).join("");
-const compressed = Buffer.from(base64, "base64");
-const source = decompressSourcePayload(compressed);
-
-if (!source.includes("export default function AndwellGrowthPlanApp")) {
-  throw new Error("Rebuilt App.jsx did not contain the expected React export.");
+if (!sourceText.includes("export default function AndwellGrowthPlanApp")) {
+  throw new Error("Recovered App.jsx is missing the expected React export.");
 }
 
 mkdirSync(dirname(outputPath), { recursive: true });
-writeFileSync(outputPath, source, "utf8");
-console.log(`Rebuilt ${outputPath} from ${parts.length} compressed source chunks.`);
+writeFileSync(outputPath, sourceText, "utf8");
+console.log(`Rebuilt ${outputPath} from ${parts.length} chunk file(s).`);
