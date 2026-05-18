@@ -1,223 +1,79 @@
 import React, { useMemo, useState } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  ComposedChart,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-
-const COLORS = {
-  blue: "#2563eb",
-  green: "#16a34a",
-  purple: "#7c3aed",
-  red: "#dc2626",
-  amber: "#f59e0b",
-  slate: "#64748b",
-};
-
-const services = {
-  "Home Healthcare": { color: COLORS.blue, role: "Foundation service line", unit: "admissions", reimbursement: 3189, margin: 0.18, conversion: 0.75, demandRate: 0.08 },
-  "Mobile Wound": { color: COLORS.red, role: "Specialty growth line", unit: "wound service starts", reimbursement: 1800, margin: 0.24, conversion: 0.75, demandRate: 0.025 },
-  "Therapy Care": { color: COLORS.green, role: "Referral retention line", unit: "therapy service starts", reimbursement: 1650, margin: 0.2, conversion: 0.75, demandRate: 0.05 },
-  GUIDE: { color: COLORS.purple, role: "Validation only line", unit: "validated dementia care enrollments", reimbursement: 0, margin: 0, conversion: 0.75, demandRate: 0 },
-  Hospice: { color: "#9333ea", role: "Future expansion line", unit: "hospice admissions", reimbursement: 0, margin: 0, conversion: 0.75, demandRate: 0 },
-};
-
-const launchPlan = [
-  { county: "York", service: "Home Healthcare", age65: 45362, launchGroup: "Priority 1", current: "Hospice, Palliative Medicine, Community and Behavioral Health", missing: "Home Healthcare, GUIDE, CareGivers, Therapy Care, Audiology, Mobile Wound, Grief Support Groups", reason: "Largest modeled opportunity. Andwell is already visible in serious illness care, but Home Healthcare would create the upstream skilled care funnel before patients reach hospice eligibility.", action: "Confirm staffing capacity, hospital discharge access, physician referral workflow, and Home Healthcare launch readiness.", accounts: ["MaineHealth Maine Medical Center Biddeford and Sanford", "York Hospital", "Primary care groups", "SNF and short stay rehabilitation centers", "Senior living communities"] },
-  { county: "Cumberland", service: "Therapy Care", age65: 59705, launchGroup: "Priority 1", current: "Home Healthcare, Mobile Wound, GUIDE, CareGivers, Palliative Medicine, Hospice, Community and Behavioral Health", missing: "Therapy Care, Audiology, Grief Support Groups", reason: "Largest older adult market. Andwell already has a strong platform, so Therapy Care protects referrals that could otherwise leak to agencies able to accept nursing plus therapy together.", action: "Confirm therapy staffing, post acute referral demand, rehab partner workflows, and Therapy Care launch readiness.", accounts: ["MaineHealth Maine Medical Center Portland", "Northern Light Mercy Hospital", "New England Rehabilitation Hospital of Portland", "Specialty practices", "Large senior living communities"] },
-  { county: "Penobscot", service: "Mobile Wound", age65: 29983, launchGroup: "Priority 1", current: "CareGivers, Home Healthcare, Palliative Medicine, Community and Behavioral Health, Hospice", missing: "GUIDE, Therapy Care, Audiology, Mobile Wound, Grief Support Groups", reason: "Strong regional referral density and existing Home Healthcare platform make Mobile Wound the clearest specialty growth opportunity.", action: "Confirm wound referral volume from hospitals, SNFs, vascular, diabetes, podiatry, surgical, and wound related practices.", accounts: ["Northern Light Eastern Maine Medical Center", "St. Joseph Hospital", "Bangor primary care and specialty practices", "SNF and rehab centers", "Wound, vascular, diabetes, podiatry, and surgical practices"] },
-  { county: "Kennebec", service: "Mobile Wound", age65: 26088, launchGroup: "Priority 1", current: "GUIDE, CareGivers, Home Healthcare, Palliative Medicine, Community and Behavioral Health, Hospice", missing: "Therapy Care, Audiology, Mobile Wound, Grief Support Groups", reason: "Existing Home Healthcare platform plus a large older adult base supports a wound specialty add on.", action: "Confirm referral opportunity with MaineGeneral, Augusta and Waterville provider networks, SNFs, and wound related specialty practices.", accounts: ["MaineGeneral Medical Center", "Augusta and Waterville primary care networks", "SNF and rehabilitation centers", "Vascular, podiatry, diabetes, and surgical practices", "Senior living communities"] },
-  { county: "Knox", service: "Home Healthcare", age65: 10923, launchGroup: "Priority 2", current: "Hospice, Palliative Medicine, Community and Behavioral Health", missing: "GUIDE, CareGivers, Home Healthcare, Therapy Care, Audiology, Mobile Wound, Grief Support Groups", reason: "Andwell has downstream serious illness presence but lacks the skilled care front door. Home Healthcare creates earlier patient capture.", action: "Confirm hospital discharge relationships, primary care referral access, and home health staffing coverage.", accounts: ["MaineHealth Pen Bay Hospital", "Coastal primary care practices", "SNF and rehabilitation centers", "Senior living communities", "Community aging organizations"] },
-  { county: "Lincoln", service: "Home Healthcare", age65: 10395, launchGroup: "Priority 2", current: "GUIDE, Hospice, Palliative Medicine, Community and Behavioral Health", missing: "CareGivers, Home Healthcare, Therapy Care, Audiology, Mobile Wound, Grief Support Groups", reason: "High aging profile and current serious illness footprint. Home Healthcare fills the missing middle between dementia support, palliative needs, and hospice.", action: "Confirm hospital discharge flow, dementia related skilled needs, and clinical coverage before launch.", accounts: ["MaineHealth Lincoln Hospital", "LincolnHealth primary care", "Damariscotta area senior living", "SNF and rehabilitation centers", "Memory care and caregiver organizations"] },
-  { county: "Sagadahoc", service: "Home Healthcare", age65: 8698, launchGroup: "Priority 2", current: "GUIDE, Hospice, Mobile Wound, Palliative Medicine, Community and Behavioral Health", missing: "CareGivers, Home Healthcare, Therapy Care, Audiology, Grief Support Groups", reason: "Mobile Wound is visible, but Home Healthcare is missing. Adding Home Healthcare strengthens the existing specialty and serious illness platform.", action: "Confirm whether current Mobile Wound visibility can support broader skilled home health referrals.", accounts: ["MaineHealth Mid Coast Hospital", "Bath and Brunswick area primary care", "SNF and rehabilitation centers", "Assisted living communities", "Wound referral sources"] },
-  { county: "Washington", service: "Home Healthcare", age65: 8116, launchGroup: "Priority 2", current: "CareGivers, Community and Behavioral Health", missing: "GUIDE, Home Healthcare, Hospice, Palliative Medicine, Therapy Care, Audiology, Mobile Wound, Grief Support Groups", reason: "Thinnest visible Andwell footprint. Home Healthcare is the first clinical platform needed before Hospice, Palliative Medicine, Mobile Wound, or Therapy Care can scale logically.", action: "Confirm rural staffing feasibility, hospital discharge access, referral source commitment, and travel model before launch.", accounts: ["Down East Community Hospital", "Calais Community Hospital", "Rural health clinics and FQHCs", "SNF and long term care facilities", "Senior centers and caregiver support organizations"] },
-  { county: "Aroostook", service: "Mobile Wound", age65: 16978, launchGroup: "Priority 3", current: "GUIDE, CareGivers, Home Healthcare, Palliative Medicine, Community and Behavioral Health, Hospice", missing: "Therapy Care, Audiology, Mobile Wound, Grief Support Groups", reason: "Rural access burden makes mobile wound capability strategically valuable, but the geography requires careful staffing and routing validation.", action: "Confirm wound referral demand, geography based routing, wound nurse capacity, and visit productivity before launch.", accounts: ["Northern Light A.R. Gould Hospital", "Cary Medical Center", "Houlton Regional Hospital", "Northern Maine Medical Center", "Rural primary care and specialty practices"] },
-  { county: "Oxford", service: "Therapy Care", age65: 13173, launchGroup: "Priority 3", current: "GUIDE, CareGivers, Mobile Wound, Home Healthcare, Palliative Medicine, Grief Support Groups, Community and Behavioral Health, Hospice", missing: "Therapy Care, Audiology", reason: "Near complete continuum. Therapy Care is the meaningful missing line that protects post acute referrals from leaking to competitors.", action: "Confirm therapy staffing, falls and deconditioning demand, and post acute referral patterns.", accounts: ["MaineHealth Stephens Hospital", "Rumford Hospital referral corridor", "Rural primary care practices", "SNF and rehabilitation centers", "Senior living and community aging programs"] },
-  { county: "Somerset", service: "Mobile Wound", age65: 11155, launchGroup: "Priority 3", current: "GUIDE, CareGivers, Home Healthcare, Palliative Medicine, Community and Behavioral Health, Hospice", missing: "Therapy Care, Audiology, Mobile Wound, Grief Support Groups", reason: "Existing Home Healthcare platform supports Mobile Wound, but the opportunity should follow larger wound launches unless local referral volume is validated.", action: "Confirm diabetes, vascular, pressure injury, and post surgical wound referral volume before launch.", accounts: ["Redington Fairview General Hospital", "Northern Light Sebasticook Valley Hospital corridor", "Rural primary care and diabetes practices", "SNF and rehabilitation centers", "Senior living and community aging programs"] },
-  { county: "Franklin", service: "Therapy Care", age65: 6952, launchGroup: "Priority 3", current: "GUIDE, CareGivers, Mobile Wound, Home Healthcare, Palliative Medicine, Grief Support Groups, Community and Behavioral Health, Hospice", missing: "Therapy Care, Audiology", reason: "Small rural continuum completion opportunity. Therapy Care strengthens existing Home Healthcare, but should use a lean staffing model.", action: "Confirm shared therapy staffing, falls and mobility demand, and referral density before launch.", accounts: ["MaineHealth Franklin Hospital", "Franklin Health primary care network", "Rural health clinics", "SNF and rehabilitation centers", "Senior living and caregiver organizations"] },
-];
-
-const cmsCountyMarket = {
-  York: { ffs: 32287, hh: { prov: 11, users: 2191, rate: 0.0679, pay: 10448386, ppu: 4769 }, hos: { prov: 9, users: 851, ppu: 14723 } },
-  Cumberland: { ffs: 35113, hh: { prov: 8, users: 2196, rate: 0.0625, pay: 10598866, ppu: 4826 }, hos: { prov: 9, users: 1011, ppu: 15736 } },
-  Penobscot: { ffs: 20564, hh: { prov: 5, users: 1056, rate: 0.0514, pay: 4812225, ppu: 4557 }, hos: { prov: 6, users: 473, ppu: 15839 } },
-  Kennebec: { ffs: 15639, hh: { prov: 5, users: 708, rate: 0.0453, pay: 2762228, ppu: 3901 }, hos: { prov: 5, users: 407, ppu: 15340 } },
-  Knox: { ffs: 6927, hh: { prov: 2, users: 351, rate: 0.0507, pay: 1302451, ppu: 3711 }, hos: { prov: 4, users: 176, ppu: 14083 } },
-  Lincoln: { ffs: 5990, hh: { prov: 4, users: 319, rate: 0.0533, pay: 1282277, ppu: 4020 }, hos: { prov: 3, users: 157, ppu: 13274 } },
-  Sagadahoc: { ffs: 5475, hh: { prov: 3, users: 267, rate: 0.0488, pay: 1198675, ppu: 4489 }, hos: { prov: 3, users: 131, ppu: 10997 } },
-  Washington: { ffs: 6508, hh: { prov: 1, users: 174, rate: 0.0267, pay: 716751, ppu: 4119 }, hos: { prov: 2, users: 99, ppu: 9759 } },
-  Aroostook: { ffs: 11867, hh: { prov: 4, users: 689, rate: 0.0581, pay: 2671380, ppu: 3877 }, hos: { prov: 1, users: 172, ppu: 9971 } },
-  Oxford: { ffs: 8359, hh: { prov: 1, users: 389, rate: 0.0465, pay: 1515465, ppu: 3896 }, hos: { prov: 2, users: 210, ppu: 13991 } },
-  Somerset: { ffs: 7342, hh: { prov: 4, users: 367, rate: 0.05, pay: 1389545, ppu: 3786 }, hos: { prov: 5, users: 171, ppu: 15551 } },
-  Franklin: { ffs: 3543, hh: { prov: 2, users: 181, rate: 0.0511, pay: 801499, ppu: 4428 }, hos: { prov: 2, users: 96, ppu: 14348 } },
-};
-
-const namedProviderRows = [
-  { service: "Home Healthcare", providerName: "Northern Light Home Care & Hospice", locationCounty: "Cumberland", beneficiaries: 2305, episodes: 5459, payment: 9608504, providerVolumeShare: 0.2026, isAndwellCmsRecord: false },
-  { service: "Home Healthcare", providerName: "Androscoggin Home Healthcare And Hospice", locationCounty: "Androscoggin", beneficiaries: 1566, episodes: 3176, payment: 5862624, providerVolumeShare: 0.1376, isAndwellCmsRecord: true },
-  { service: "Home Healthcare", providerName: "Mainehealth Care At Home", locationCounty: "York", beneficiaries: 1501, episodes: 3347, payment: 6556192, providerVolumeShare: 0.1319, isAndwellCmsRecord: false },
-  { service: "Home Healthcare", providerName: "Amedisys Home Health", locationCounty: "Cumberland", beneficiaries: 952, episodes: 1950, payment: 3685427, providerVolumeShare: 0.0837, isAndwellCmsRecord: false },
-  { service: "Home Healthcare", providerName: "Centerwell Home Health", locationCounty: "Cumberland", beneficiaries: 724, episodes: 1815, payment: 3484282, providerVolumeShare: 0.0636, isAndwellCmsRecord: false },
-  { service: "Home Healthcare", providerName: "Mainegeneral Community Care", locationCounty: "Kennebec", beneficiaries: 575, episodes: 1067, payment: 1912380, providerVolumeShare: 0.0505, isAndwellCmsRecord: false },
-  { service: "Home Healthcare", providerName: "Amedisys Maine Pllc", locationCounty: "Penobscot", beneficiaries: 529, episodes: 1143, payment: 2079674, providerVolumeShare: 0.0465, isAndwellCmsRecord: false },
-  { service: "Home Healthcare", providerName: "Chans Home Health Care", locationCounty: "Cumberland", beneficiaries: 490, episodes: 1057, payment: 2004834, providerVolumeShare: 0.0431, isAndwellCmsRecord: false },
-  { service: "Home Healthcare", providerName: "Centerwell Home Health", locationCounty: "Penobscot", beneficiaries: 483, episodes: 1240, payment: 2315864, providerVolumeShare: 0.0424, isAndwellCmsRecord: false },
-  { service: "Home Healthcare", providerName: "Community Health & Counseling Services", locationCounty: "Penobscot", beneficiaries: 454, episodes: 1083, payment: 1716117, providerVolumeShare: 0.0399, isAndwellCmsRecord: false },
-  { service: "Home Healthcare", providerName: "Elara Caring", locationCounty: "Cumberland", beneficiaries: 364, episodes: 809, payment: 1550879, providerVolumeShare: 0.032, isAndwellCmsRecord: false },
-  { service: "Home Healthcare", providerName: "York Hospital Home Care", locationCounty: "York", beneficiaries: 363, episodes: 789, payment: 1665054, providerVolumeShare: 0.0319, isAndwellCmsRecord: false },
-  { service: "Home Healthcare", providerName: "St Joseph Homecare", locationCounty: "Penobscot", beneficiaries: 291, episodes: 483, payment: 976813, providerVolumeShare: 0.0256, isAndwellCmsRecord: false },
-  { service: "Home Healthcare", providerName: "Valley Home Health Services", locationCounty: "Aroostook", beneficiaries: 205, episodes: 372, payment: 700554, providerVolumeShare: 0.018, isAndwellCmsRecord: false },
-  { service: "Home Healthcare", providerName: "Professional Home Nursing Inc", locationCounty: "Aroostook", beneficiaries: 170, episodes: 431, payment: 609637, providerVolumeShare: 0.0149, isAndwellCmsRecord: false },
-  { service: "Home Healthcare", providerName: "Pathways Healthcare Llc", locationCounty: "York", beneficiaries: 160, episodes: 264, payment: 542507, providerVolumeShare: 0.0141, isAndwellCmsRecord: false },
-  { service: "Home Healthcare", providerName: "Sunrise County Homecare Svcs.", locationCounty: "Washington", beneficiaries: 89, episodes: 327, payment: 474347, providerVolumeShare: 0.0078, isAndwellCmsRecord: false },
-  { service: "Home Healthcare", providerName: "Mount Desert Nursing Assoc", locationCounty: "Hancock", beneficiaries: 84, episodes: 217, payment: 394077, providerVolumeShare: 0.0074, isAndwellCmsRecord: false },
-  { service: "Home Healthcare", providerName: "Constellation Home Care Me Llc", locationCounty: "Out of state or corporate address", beneficiaries: 44, episodes: 67, payment: 134851, providerVolumeShare: 0.0039, isAndwellCmsRecord: false },
-  { service: "Home Healthcare", providerName: "Madigan Home Health Care Inc.", locationCounty: "Aroostook", beneficiaries: 30, episodes: 71, payment: 111170, providerVolumeShare: 0.0026, isAndwellCmsRecord: false },
-  { service: "Hospice", providerName: "Androscoggin Home Healthcare & Hospice", locationCounty: "Androscoggin", beneficiaries: 1655, episodes: 1667, payment: 20023210, providerVolumeShare: 0.1726, isAndwellCmsRecord: true },
-  { service: "Hospice", providerName: "Hospice Of Southern Maine", locationCounty: "Cumberland", beneficiaries: 1642, episodes: 1660, payment: 17155728, providerVolumeShare: 0.1713, isAndwellCmsRecord: false },
-  { service: "Hospice", providerName: "Northern Light Home Care & Hospice", locationCounty: "Cumberland", beneficiaries: 1145, episodes: 1181, payment: 12571499, providerVolumeShare: 0.1194, isAndwellCmsRecord: false },
-  { service: "Hospice", providerName: "Beacon Hospice An Amedisys Company", locationCounty: "Androscoggin", beneficiaries: 832, episodes: 846, payment: 9418604, providerVolumeShare: 0.0868, isAndwellCmsRecord: false },
-  { service: "Hospice", providerName: "Gentiva", locationCounty: "Penobscot", beneficiaries: 658, episodes: 678, payment: 7966619, providerVolumeShare: 0.0686, isAndwellCmsRecord: false },
-  { service: "Hospice", providerName: "Beacon Hospice An Amedisys Company", locationCounty: "Penobscot", beneficiaries: 581, episodes: 593, payment: 6428567, providerVolumeShare: 0.0606, isAndwellCmsRecord: false },
-  { service: "Hospice", providerName: "Mainegeneral Community Care", locationCounty: "Kennebec", beneficiaries: 558, episodes: 565, payment: 6142220, providerVolumeShare: 0.0582, isAndwellCmsRecord: false },
-  { service: "Hospice", providerName: "Compassus Greater Maine", locationCounty: "Cumberland", beneficiaries: 556, episodes: 570, payment: 8413236, providerVolumeShare: 0.058, isAndwellCmsRecord: false },
-  { service: "Hospice", providerName: "Mainehealth Care At Home", locationCounty: "York", beneficiaries: 522, episodes: 530, payment: 4472969, providerVolumeShare: 0.0545, isAndwellCmsRecord: false },
-  { service: "Hospice", providerName: "Chans Home Health & Hospice", locationCounty: "Cumberland", beneficiaries: 436, episodes: 450, payment: 4777642, providerVolumeShare: 0.0455, isAndwellCmsRecord: false },
-  { service: "Hospice", providerName: "Beacon Hospice An Amedisys Company", locationCounty: "Cumberland", beneficiaries: 385, episodes: 391, payment: 6452302, providerVolumeShare: 0.0402, isAndwellCmsRecord: false },
-  { service: "Hospice", providerName: "Community Health & Counseling Services", locationCounty: "Penobscot", beneficiaries: 196, episodes: 203, payment: 1802606, providerVolumeShare: 0.0204, isAndwellCmsRecord: false },
-  { service: "Hospice", providerName: "Constellation Hospice", locationCounty: "Androscoggin", beneficiaries: 164, episodes: 165, payment: 2709235, providerVolumeShare: 0.0171, isAndwellCmsRecord: false },
-  { service: "Hospice", providerName: "St. Joseph Hospice", locationCounty: "Penobscot", beneficiaries: 123, episodes: 124, payment: 1269678, providerVolumeShare: 0.0128, isAndwellCmsRecord: false },
-  { service: "Hospice", providerName: "Affinity Care Of Maine Llc", locationCounty: "Cumberland", beneficiaries: 72, episodes: 73, payment: 805303, providerVolumeShare: 0.0075, isAndwellCmsRecord: false },
-  { service: "Hospice", providerName: "Kindred Hospice", locationCounty: "Cumberland", beneficiaries: 61, episodes: 63, payment: 622094, providerVolumeShare: 0.0064, isAndwellCmsRecord: false },
-];
-
-const marketShareBuildRows = [
-  { layer: "County market volume", status: "Built in", data: "CMS county home health users, hospice users, provider counts, utilization, payment, and FFS beneficiaries.", limitation: "Shows total county market size but not which named agency owns the county volume.", need: "Use as the county denominator for market share and opportunity sizing." },
-  { layer: "Andwell actual volume", status: "Partially built", data: "Provider files show the Androscoggin Home Healthcare and Hospice CMS record at the provider level.", limitation: "Not Andwell actual volume by county served and not all service lines.", need: "Upload Andwell actual county and service line volume for the same period as CMS market data." },
-  { layer: "Named competitor list", status: "Built in for HH and Hospice", data: "Named Maine home health and hospice provider rows with provider name, location, beneficiaries, episodes, and payment.", limitation: "Provider location is not the same as every county served.", need: "Add provider service area ZIP files or a curated local competitor matrix by county." },
-  { layer: "Competitor volume", status: "Built in at provider level", data: "Provider level beneficiary, episode, and Medicare payment volume for Home Healthcare and Hospice.", limitation: "The uploaded files do not allocate each provider's patients to each Maine county.", need: "Add county served volume, claims attribution, provider ZIP service areas, or an accepted allocation model." },
-  { layer: "Service line overlap", status: "Partially inferred", data: "Andwell visible service footprint plus provider file rows for Home Healthcare and Hospice.", limitation: "Does not prove each named competitor offers Mobile Wound, Therapy Care, GUIDE, or other service lines.", need: "Add competitor service matrix by county and service line." },
-  { layer: "Share calculation", status: "Partially built", data: "Statewide provider file share and modeled Year 1 capture against county CMS market volume.", limitation: "True county level Andwell versus competitor share still requires county attributed volume by provider.", need: "Use Andwell actual volume divided by CMS county market volume, and competitor county volume divided by CMS county market volume." },
-];
-
-const marketShareFormulaRows = [
-  { metric: "Andwell provider file share", formula: "Andwell CMS provider beneficiaries divided by total Maine provider file beneficiaries", state: "Built in" },
-  { metric: "Named competitor provider file share", formula: "Named competitor beneficiaries divided by total Maine provider file beneficiaries", state: "Built in" },
-  { metric: "Andwell actual county market share", formula: "Andwell actual county service line volume divided by comparable CMS county market volume", state: "Needs Andwell data" },
-  { metric: "Named competitor county market share", formula: "Named competitor county service line volume divided by comparable CMS county market volume", state: "Needs county attribution" },
-  { metric: "Modeled Year 1 capture", formula: "Modeled Year 1 growth volume divided by comparable CMS county market volume", state: "Built in" },
-  { metric: "Provider density", formula: "CMS provider count divided by FFS beneficiaries times 10,000", state: "Built in" },
-];
-
-const tabs = ["Executive View", "County Plan", "Referral Plan", "Competitive View", "Service Lines", "CMS Data", "Financial Model", "Launch Checklist"];
-
-function currency(value) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value || 0); }
-function number(value) { return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value || 0); }
-function percent(value) { return `${((value || 0) * 100).toFixed(1)}%`; }
-function badgeTone(value) { return value.includes("Built in") ? "green" : value.includes("Partially") ? "blue" : "amber"; }
-
-function Card({ title, eyebrow, children }) {
-  return <section className="rounded-3xl border border-slate-200 bg-white/95 p-6 shadow-sm shadow-slate-200/70 backdrop-blur"><p className="mb-2 text-xs font-black uppercase tracking-[0.22em] text-blue-700">{eyebrow}</p><h2 className="text-xl font-black text-slate-950">{title}</h2><div className="mt-4">{children}</div></section>;
-}
-function Metric({ label, value, detail }) {
-  return <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-sm font-semibold text-slate-500">{label}</p><p className="mt-2 text-3xl font-black text-slate-950">{value}</p><p className="mt-2 text-sm leading-6 text-slate-600">{detail}</p></div>;
-}
-function Badge({ children, tone = "blue" }) {
-  const tones = { blue: "bg-blue-50 text-blue-800 border-blue-200", green: "bg-green-50 text-green-800 border-green-200", amber: "bg-amber-50 text-amber-800 border-amber-200", red: "bg-red-50 text-red-800 border-red-200", purple: "bg-purple-50 text-purple-800 border-purple-200", slate: "bg-slate-50 text-slate-800 border-slate-200" };
-  return <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-black ${tones[tone]}`}>{children}</span>;
-}
-function ServiceBadge({ service }) {
-  const color = services[service]?.color || COLORS.slate;
-  return <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-black text-slate-800 shadow-sm"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />{service}</span>;
-}
-function SectionHeader({ eyebrow, title, children }) {
-  return <div className="mb-5"><p className="text-xs font-black uppercase tracking-[0.22em] text-blue-700">{eyebrow}</p><h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950 md:text-3xl">{title}</h2>{children ? <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-600">{children}</p> : null}</div>;
-}
-
-function getCountyMath(row) {
-  const meta = services[row.service];
-  const market = cmsCountyMarket[row.county];
-  let demandPool = row.age65 * meta.demandRate;
-  let reimbursement = meta.reimbursement;
-  let basis = "Planning proxy";
-  if (market && row.service === "Home Healthcare") { demandPool = market.hh.users; reimbursement = market.hh.ppu; basis = "CMS direct HH market"; }
-  if (market && row.service === "Mobile Wound") { demandPool = Math.round(market.hh.users * 0.2); basis = "CMS HH wound proxy"; }
-  if (market && row.service === "Therapy Care") { demandPool = Math.round(market.hh.users * 0.4); basis = "CMS HH therapy proxy"; }
-  const capture = row.service === "Home Healthcare" ? [0.1, 0.15, 0.2] : row.service === "Mobile Wound" ? [0.25, 0.35, 0.45] : [0.2, 0.3, 0.4];
-  const starts = capture.map((rate) => Math.round(demandPool * rate));
-  const referrals = starts.map((value) => Math.ceil(value / meta.conversion));
-  const revenue = starts.map((value) => value * reimbursement);
-  return { ...row, meta, market, basis, demandPool, reimbursement, starts, referrals, revenue, totalStarts: starts.reduce((a, b) => a + b, 0), totalReferrals: referrals.reduce((a, b) => a + b, 0), totalRevenue: revenue.reduce((a, b) => a + b, 0), totalContribution: revenue.reduce((a, b) => a + Math.round(b * meta.margin), 0) };
-}
-function buildRows() { return launchPlan.map(getCountyMath); }
-function rollupByService(rows) {
-  return Object.keys(services).map((service) => {
-    const group = rows.filter((row) => row.service === service);
-    return { service, starts: group.reduce((sum, row) => sum + row.starts[0], 0), revenue: group.reduce((sum, row) => sum + row.revenue[0], 0), color: services[service].color };
-  }).filter((row) => row.starts > 0);
-}
-function getProviderSummary(service) {
-  const rows = namedProviderRows.filter((provider) => provider.service === service);
-  const ranked = [...rows].sort((a, b) => b.beneficiaries - a.beneficiaries);
-  const andwell = ranked.find((provider) => provider.isAndwellCmsRecord);
-  return { service, providers: rows.length, beneficiaries: rows.reduce((sum, row) => sum + row.beneficiaries, 0), payment: rows.reduce((sum, row) => sum + row.payment, 0), andwellShare: andwell?.providerVolumeShare || 0, andwellRank: andwell ? ranked.findIndex((row) => row.isAndwellCmsRecord) + 1 : null };
-}
-
-function ExecutiveView({ rows, totals }) {
-  return <div className="space-y-6"><div className="grid gap-4 md:grid-cols-4"><Metric label="Active growth counties" value={rows.length} detail="County and service line recommendations in the active model." /><Metric label="Year 1 referrals" value={number(totals.y1Referrals)} detail="Gross referrals needed at a 75 percent conversion baseline." /><Metric label="Year 1 revenue" value={currency(totals.y1Revenue)} detail="Modeled Year 1 gross revenue from active lines." /><Metric label="Named competitors" value={namedProviderRows.length} detail="Home Healthcare and Hospice provider rows loaded into the competitive view." /></div><Card title="Growth thesis" eyebrow="Executive summary"><p className="text-lg leading-8 text-slate-700">This dashboard connects Andwell service gaps, CMS market volume, referral math, financial upside, and named provider competition. The competitor layer now shows the actual named Home Healthcare and Hospice providers from the uploaded provider file, including Andwell provider file share and rank.</p></Card><div className="grid gap-6 lg:grid-cols-2"><Card title="Year 1 service mix" eyebrow="Revenue mix"><div className="h-80"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={rollupByService(rows)} dataKey="revenue" nameKey="service" innerRadius={70} outerRadius={115} paddingAngle={3}>{rollupByService(rows).map((row) => <Cell key={row.service} fill={row.color} />)}</Pie><Tooltip formatter={(value) => currency(value)} /></PieChart></ResponsiveContainer></div></Card><Card title="Year 1 referral ramp" eyebrow="Execution math"><div className="h-80"><ResponsiveContainer width="100%" height="100%"><BarChart data={rows.slice(0, 8)}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="county" tick={{ fontSize: 12 }} /><YAxis /><Tooltip /><Bar dataKey={(row) => row.referrals[0]} name="Year 1 referrals" fill={COLORS.blue} radius={[8, 8, 0, 0]} /></BarChart></ResponsiveContainer></div></Card></div></div>;
-}
-
-function CountyPlan({ rows, selectedCounty, setSelectedCounty }) {
-  const selected = rows.find((row) => row.county === selectedCounty) || rows[0];
-  return <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]"><Card title="County launch queue" eyebrow="Prioritization"><div className="space-y-3">{rows.map((row) => <button key={row.county} onClick={() => setSelectedCounty(row.county)} className={`w-full rounded-2xl border p-4 text-left transition ${selectedCounty === row.county ? "border-blue-500 bg-blue-50" : "border-slate-200 bg-white hover:border-blue-300"}`}><div className="flex items-center justify-between gap-3"><div><p className="font-black text-slate-950">{row.county}</p><ServiceBadge service={row.service} /></div><Badge tone={row.launchGroup.includes("1") ? "green" : row.launchGroup.includes("2") ? "blue" : "amber"}>{row.launchGroup}</Badge></div></button>)}</div></Card><Card title={`${selected.county} County`} eyebrow="County detail"><div className="grid gap-4 md:grid-cols-3"><Metric label="Year 1 goal" value={number(selected.starts[0])} detail={selected.meta.unit} /><Metric label="Year 1 referrals" value={number(selected.referrals[0])} detail="At 75 percent modeled conversion." /><Metric label="Year 1 revenue" value={currency(selected.revenue[0])} detail={selected.basis} /></div><div className="mt-5 space-y-4"><div className="rounded-2xl bg-slate-50 p-4"><p className="font-black text-slate-950">Why this county</p><p className="mt-2 leading-7 text-slate-700">{selected.reason}</p></div><div className="rounded-2xl bg-slate-50 p-4"><p className="font-black text-slate-950">Current Andwell presence</p><p className="mt-2 leading-7 text-slate-700">{selected.current}</p></div><div className="rounded-2xl bg-slate-50 p-4"><p className="font-black text-slate-950">Missing service lines</p><p className="mt-2 leading-7 text-slate-700">{selected.missing}</p></div><div className="grid gap-2">{selected.accounts.map((account) => <div key={account} className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">{account}</div>)}</div></div></Card></section>;
-}
-
-function ReferralPlan({ rows }) {
-  return <Card title="Referral requirements by county" eyebrow="Referral plan"><div className="overflow-x-auto rounded-2xl border border-slate-100"><table className="w-full min-w-[1050px] text-left text-sm"><thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-5 py-4">County</th><th className="px-5 py-4">Service</th><th className="px-5 py-4 text-right">Year 1 goal</th><th className="px-5 py-4 text-right">Year 1 referrals</th><th className="px-5 py-4 text-right">Year 2 goal</th><th className="px-5 py-4 text-right">Year 2 referrals</th><th className="px-5 py-4 text-right">Year 3 goal</th><th className="px-5 py-4 text-right">Year 3 referrals</th></tr></thead><tbody className="divide-y divide-slate-100">{rows.map((row) => <tr key={row.county} className="hover:bg-slate-50"><td className="px-5 py-4 font-black">{row.county}</td><td className="px-5 py-4"><ServiceBadge service={row.service} /></td><td className="px-5 py-4 text-right">{number(row.starts[0])}</td><td className="px-5 py-4 text-right font-black text-blue-700">{number(row.referrals[0])}</td><td className="px-5 py-4 text-right">{number(row.starts[1])}</td><td className="px-5 py-4 text-right">{number(row.referrals[1])}</td><td className="px-5 py-4 text-right">{number(row.starts[2])}</td><td className="px-5 py-4 text-right">{number(row.referrals[2])}</td></tr>)}</tbody></table></div></Card>;
-}
-
-function CompetitiveView({ selectedCounty, setSelectedCounty }) {
-  const [service, setService] = useState("Home Healthcare");
-  const summary = getProviderSummary(service);
-  const providers = namedProviderRows.filter((row) => row.service === service).sort((a, b) => b.beneficiaries - a.beneficiaries);
-  const countyProviders = providers.filter((row) => row.locationCounty === selectedCounty);
-  const chartRows = providers.slice(0, 10).map((provider) => ({ ...provider, sharePct: Number((provider.providerVolumeShare * 100).toFixed(1)) }));
-  return <div className="space-y-6"><SectionHeader eyebrow="Competitive view" title="Named provider competitor layer">This section is built from the named Home Healthcare and Hospice provider rows in the uploaded code. It shows Andwell's provider file rank, provider file share, named competitors, and the limits of what can and cannot be called true county market share without county attributed volume.</SectionHeader><div className="grid gap-4 md:grid-cols-4"><Metric label={`${service} providers`} value={summary.providers} detail="Named Maine provider rows loaded." /><Metric label="Total beneficiaries" value={number(summary.beneficiaries)} detail="Provider file beneficiary volume." /><Metric label="Andwell rank" value={summary.andwellRank ? `#${summary.andwellRank}` : "N/A"} detail="Ranked by beneficiary volume in the provider file." /><Metric label="Andwell provider file share" value={percent(summary.andwellShare)} detail="Not county market share. This is provider file share." /></div><div className="flex flex-wrap gap-2">{["Home Healthcare", "Hospice"].map((item) => <button key={item} onClick={() => setService(item)} className={`rounded-full px-4 py-2 text-sm font-black transition ${service === item ? "bg-blue-600 text-white" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-blue-50"}`}>{item}</button>)}{Object.keys(cmsCountyMarket).map((county) => <button key={county} onClick={() => setSelectedCounty(county)} className={`rounded-full px-4 py-2 text-sm font-black transition ${selectedCounty === county ? "bg-slate-950 text-white" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"}`}>{county}</button>)}</div><section className="grid gap-6 lg:grid-cols-[1fr_1fr]"><Card title={`Top ${service} providers`} eyebrow="Provider file share"><div className="h-96"><ResponsiveContainer width="100%" height="100%"><BarChart data={chartRows} layout="vertical" margin={{ left: 10, right: 20 }}><CartesianGrid strokeDasharray="3 3" /><XAxis type="number" tickFormatter={(value) => `${value}%`} /><YAxis type="category" dataKey="providerName" width={170} tick={{ fontSize: 11 }} /><Tooltip formatter={(value, name) => name === "sharePct" ? `${value}%` : number(value)} /><Bar dataKey="sharePct" name="Provider file share" radius={[0, 8, 8, 0]}>{chartRows.map((row) => <Cell key={row.providerName} fill={row.isAndwellCmsRecord ? COLORS.blue : COLORS.slate} />)}</Bar></BarChart></ResponsiveContainer></div></Card><Card title={`${selectedCounty} named providers`} eyebrow="County located providers"><div className="space-y-3">{countyProviders.length ? countyProviders.map((provider) => <div key={`${provider.service}-${provider.providerName}`} className={`rounded-2xl border p-4 ${provider.isAndwellCmsRecord ? "border-blue-300 bg-blue-50" : "border-slate-200 bg-white"}`}><div className="flex items-start justify-between gap-3"><div><p className="font-black text-slate-950">{provider.providerName}</p><p className="text-sm text-slate-500">{provider.service} located in {provider.locationCounty}</p></div>{provider.isAndwellCmsRecord ? <Badge tone="blue">Andwell CMS record</Badge> : <Badge tone="slate">Competitor</Badge>}</div><div className="mt-3 grid grid-cols-3 gap-3 text-sm"><div><p className="text-slate-500">Beneficiaries</p><p className="font-black">{number(provider.beneficiaries)}</p></div><div><p className="text-slate-500">Episodes</p><p className="font-black">{number(provider.episodes)}</p></div><div><p className="text-slate-500">Payment</p><p className="font-black">{currency(provider.payment)}</p></div></div></div>) : <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-900"><p className="font-black">No named provider row located in {selectedCounty} for {service}.</p><p className="mt-2 text-sm leading-6">This does not mean no provider serves the county. It means the uploaded provider file does not have a provider headquarters row located in that county for this selected service.</p></div>}</div></Card></section><Card title="Market share build path" eyebrow="What is built versus what is still needed"><div className="overflow-x-auto rounded-2xl border border-slate-100"><table className="w-full min-w-[1200px] text-left text-sm"><thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-5 py-4">Layer</th><th className="px-5 py-4">Status</th><th className="px-5 py-4">Current data</th><th className="px-5 py-4">Limitation</th><th className="px-5 py-4">Required for full picture</th></tr></thead><tbody className="divide-y divide-slate-100">{marketShareBuildRows.map((row) => <tr key={row.layer} className="align-top hover:bg-slate-50"><td className="px-5 py-4 font-black">{row.layer}</td><td className="px-5 py-4"><Badge tone={badgeTone(row.status)}>{row.status}</Badge></td><td className="px-5 py-4 text-slate-700">{row.data}</td><td className="px-5 py-4 text-slate-600">{row.limitation}</td><td className="px-5 py-4 text-slate-600">{row.need}</td></tr>)}</tbody></table></div></Card><Card title="Market share formulas" eyebrow="Formula transparency"><div className="grid gap-3 md:grid-cols-2">{marketShareFormulaRows.map((row) => <div key={row.metric} className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><div className="flex items-center justify-between gap-3"><p className="font-black text-slate-950">{row.metric}</p><Badge tone={row.state.includes("Built") ? "green" : "amber"}>{row.state}</Badge></div><p className="mt-2 text-sm leading-6 text-slate-600">{row.formula}</p></div>)}</div></Card></div>;
-}
-
-function ServiceLines() {
-  return <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">{Object.entries(services).map(([service, meta]) => <Card key={service} title={service} eyebrow={meta.role}><div className="space-y-3"><ServiceBadge service={service} /><p className="text-sm leading-6 text-slate-600">Modeled reimbursement: {meta.reimbursement ? currency(meta.reimbursement) : "Validation only"}</p><p className="text-sm leading-6 text-slate-600">Margin: {meta.margin ? percent(meta.margin) : "Validate"}</p><p className="text-sm leading-6 text-slate-600">Unit: {meta.unit}</p></div></Card>)}</div>;
-}
-
-function CmsData() {
-  const rows = Object.entries(cmsCountyMarket).map(([county, market]) => ({ county, ...market })).sort((a, b) => b.ffs - a.ffs);
-  return <div className="space-y-6"><div className="grid gap-4 md:grid-cols-3"><Metric label="CMS counties loaded" value={rows.length} detail="County market rows included in this dashboard." /><Metric label="HH users" value={number(rows.reduce((sum, row) => sum + row.hh.users, 0))} detail="Home health users across loaded rows." /><Metric label="Hospice users" value={number(rows.reduce((sum, row) => sum + row.hos.users, 0))} detail="Hospice users across loaded rows." /></div><Card title="CMS county market data" eyebrow="Market data"><div className="h-96"><ResponsiveContainer width="100%" height="100%"><ComposedChart data={rows}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="county" tick={{ fontSize: 12 }} /><YAxis /><Tooltip /><Bar dataKey="hh.users" name="HH users" fill={COLORS.blue} radius={[8, 8, 0, 0]} /><Line type="monotone" dataKey="hos.users" name="Hospice users" stroke="#9333ea" strokeWidth={3} /></ComposedChart></ResponsiveContainer></div></Card></div>;
-}
-
-function FinancialModel({ rows }) {
-  const yearRows = [0, 1, 2].map((index) => ({ year: `Year ${index + 1}`, starts: rows.reduce((sum, row) => sum + row.starts[index], 0), referrals: rows.reduce((sum, row) => sum + row.referrals[index], 0), revenue: rows.reduce((sum, row) => sum + row.revenue[index], 0) }));
-  return <Card title="Three year financial and referral outlook" eyebrow="Financial impact"><div className="h-96"><ResponsiveContainer width="100%" height="100%"><LineChart data={yearRows}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="year" /><YAxis yAxisId="left" tickFormatter={(value) => `$${Math.round(value / 1000000)}M`} /><YAxis yAxisId="right" orientation="right" /><Tooltip formatter={(value, name) => name === "revenue" ? currency(value) : number(value)} /><Line yAxisId="left" type="monotone" dataKey="revenue" name="Revenue" stroke={COLORS.blue} strokeWidth={3} /><Line yAxisId="right" type="monotone" dataKey="referrals" name="Referrals" stroke={COLORS.amber} strokeWidth={3} /><Line yAxisId="right" type="monotone" dataKey="starts" name="Starts" stroke={COLORS.green} strokeWidth={3} /></LineChart></ResponsiveContainer></div></Card>;
-}
-
-function LaunchChecklist() {
-  const items = ["Confirm service footprint by county", "Confirm referral source commitment", "Confirm staffing capacity and routing", "Validate reimbursement, payer mix, cost to serve, and margin", "Add Andwell actual county volume for true market share", "Add competitor county attribution for true competitor share"];
-  return <Card title="Validation checklist" eyebrow="Before launch approval"><div className="grid gap-3 md:grid-cols-2">{items.map((item, index) => <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><p className="font-black text-slate-950">{index + 1}. {item}</p></div>)}</div></Card>;
-}
+import { TABS, DEFAULT_SCENARIO } from "./data/constants.js";
+import { buildRows } from "./utils/calculations.js";
+import ScenarioPanel from "./components/ScenarioPanel.jsx";
+import ExportButton from "./components/ExportButton.jsx";
+import ExecutiveView from "./views/ExecutiveView.jsx";
+import CountyPlan from "./views/CountyPlan.jsx";
+import ReferralPlan from "./views/ReferralPlan.jsx";
+import CompetitiveView from "./views/CompetitiveView.jsx";
+import ServiceLines from "./views/ServiceLines.jsx";
+import CmsData from "./views/CmsData.jsx";
+import FinancialModel from "./views/FinancialModel.jsx";
+import LaunchChecklist from "./views/LaunchChecklist.jsx";
 
 export default function AndwellGrowthPlanApp() {
   const [activeTab, setActiveTab] = useState("Executive View");
   const [selectedCounty, setSelectedCounty] = useState("York");
-  const rows = useMemo(() => buildRows(), []);
-  const totals = useMemo(() => ({ y1Revenue: rows.reduce((sum, row) => sum + row.revenue[0], 0), y1Referrals: rows.reduce((sum, row) => sum + row.referrals[0], 0) }), [rows]);
-  return <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#eff6ff_0,#f8fafc_34%,#f1f5f9_100%)] text-slate-900"><div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:px-10"><header className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 p-8 text-white shadow-xl"><div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,.12)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.12)_1px,transparent_1px)] [background-size:40px_40px]" /><div className="relative max-w-5xl"><p className="text-sm font-bold uppercase tracking-[0.25em] text-blue-300">Andwell Maine Innovation and Growth Plan</p><h1 className="mt-4 text-4xl font-black tracking-tight sm:text-6xl">Innovation and growth vision with competitor intelligence.</h1><p className="mt-5 max-w-4xl text-lg leading-8 text-slate-300">A leadership ready dashboard connecting county opportunity, referral requirements, CMS market data, named competitors, provider file share, financial upside, and launch validation.</p></div></header><nav className="mt-6 flex flex-wrap gap-2 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-sm backdrop-blur">{tabs.map((tab) => <button key={tab} onClick={() => setActiveTab(tab)} className={`rounded-2xl px-4 py-3 text-sm font-black transition ${activeTab === tab ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"}`}>{tab}</button>)}</nav><div className="mt-6">{activeTab === "Executive View" && <ExecutiveView rows={rows} totals={totals} />}{activeTab === "County Plan" && <CountyPlan rows={rows} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} />}{activeTab === "Referral Plan" && <ReferralPlan rows={rows} />}{activeTab === "Competitive View" && <CompetitiveView selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} />}{activeTab === "Service Lines" && <ServiceLines />}{activeTab === "CMS Data" && <CmsData />}{activeTab === "Financial Model" && <FinancialModel rows={rows} />}{activeTab === "Launch Checklist" && <LaunchChecklist />}</div></div></main>;
+  const [scenario, setScenario] = useState(DEFAULT_SCENARIO);
+  const [showScenario, setShowScenario] = useState(false);
+
+  const rows = useMemo(() => buildRows(scenario), [scenario]);
+  const totals = useMemo(
+    () => ({
+      y1Revenue: rows.reduce((sum, row) => sum + row.revenue[0], 0),
+      y1Referrals: rows.reduce((sum, row) => sum + row.referrals[0], 0),
+    }),
+    [rows],
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white px-4 py-10 sm:px-6 lg:px-10">
+      <header className="mx-auto mb-8 max-w-7xl rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-8 py-12 text-white shadow-xl">
+        <p className="text-xs font-black uppercase tracking-[0.3em] text-blue-300">Andwell Maine Innovation and Growth Plan</p>
+        <h1 className="mt-4 text-4xl font-black leading-tight tracking-tight md:text-5xl">
+          Innovation and growth vision with competitor intelligence.
+        </h1>
+        <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-300">
+          A leadership ready dashboard connecting county opportunity, referral requirements, CMS market data, named competitors, provider file share, financial upside, and launch validation.
+        </p>
+      </header>
+
+      <div className="mx-auto max-w-7xl space-y-6">
+        <div className="flex flex-wrap items-center gap-2">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`rounded-full px-5 py-2.5 text-sm font-black transition ${activeTab === tab ? "bg-slate-900 text-white shadow-md" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"}`}
+            >
+              {tab}
+            </button>
+          ))}
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={() => setShowScenario((prev) => !prev)}
+              className={`rounded-full px-4 py-2 text-sm font-black transition ${showScenario ? "bg-blue-600 text-white" : "bg-white text-blue-700 ring-1 ring-blue-200 hover:bg-blue-50"}`}
+            >
+              {showScenario ? "Hide Scenarios" : "Scenario Model"}
+            </button>
+            <ExportButton targetId="tab-content" filename={`Andwell - ${activeTab}`} />
+          </div>
+        </div>
+
+        {showScenario && <ScenarioPanel scenario={scenario} setScenario={setScenario} />}
+
+        <div id="tab-content">
+          {activeTab === "Executive View" && <ExecutiveView rows={rows} totals={totals} />}
+          {activeTab === "County Plan" && <CountyPlan rows={rows} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} />}
+          {activeTab === "Referral Plan" && <ReferralPlan rows={rows} />}
+          {activeTab === "Competitive View" && <CompetitiveView selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} />}
+          {activeTab === "Service Lines" && <ServiceLines />}
+          {activeTab === "CMS Data" && <CmsData />}
+          {activeTab === "Financial Model" && <FinancialModel rows={rows} />}
+          {activeTab === "Launch Checklist" && <LaunchChecklist />}
+        </div>
+      </div>
+    </div>
+  );
 }
