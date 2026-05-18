@@ -7,6 +7,16 @@ export const COLORS = {
   slate: "#64748b",
 };
 
+export const DARK_COLORS = {
+  bg: "#0f172a",
+  surface: "#1e293b",
+  surfaceHover: "#334155",
+  border: "#334155",
+  text: "#f1f5f9",
+  textMuted: "#94a3b8",
+  accent: "#3b82f6",
+};
+
 export const DEFAULT_SCENARIO = {
   conversionRate: 0.75,
   hhCapture: [0.1, 0.15, 0.2],
@@ -24,4 +34,12 @@ export const TABS = [
   "CMS Data",
   "Financial Model",
   "Launch Checklist",
+];
+
+export const HEATMAP_MODES = [
+  { key: "priority", label: "Priority Group" },
+  { key: "revenue", label: "Revenue Opportunity" },
+  { key: "demand", label: "Demand Pool" },
+  { key: "competition", label: "Competition Density" },
+  { key: "penetration", label: "Market Penetration" },
 ];
