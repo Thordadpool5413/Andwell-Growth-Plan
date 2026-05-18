@@ -33,8 +33,36 @@ export const TABS = [
   "Service Lines",
   "CMS Data",
   "Financial Model",
+  "Staffing Model",
+  "Sensitivity",
+  "Opportunity Score",
+  "Launch Timeline",
+  "Board Report",
   "Launch Checklist",
 ];
+
+export const STAFFING_RATIOS = {
+  "Home Healthcare": { role: "RN / LPN", patientsPerFTE: 25, avgSalary: 78000 },
+  "Mobile Wound": { role: "Wound Care Specialist", patientsPerFTE: 15, avgSalary: 85000 },
+  "Therapy Care": { role: "PT / OT / SLP", patientsPerFTE: 20, avgSalary: 82000 },
+};
+
+export const SENSITIVITY_VARIABLES = [
+  { key: "conversionRate", label: "Conversion Rate", base: 0.75, low: 0.55, high: 0.95, format: "percent" },
+  { key: "hhCapture", label: "HH Y1 Capture Rate", base: 0.10, low: 0.05, high: 0.20, format: "percent" },
+  { key: "woundCapture", label: "Wound Y1 Capture Rate", base: 0.25, low: 0.10, high: 0.40, format: "percent" },
+  { key: "therapyCapture", label: "Therapy Y1 Capture Rate", base: 0.20, low: 0.10, high: 0.35, format: "percent" },
+  { key: "hhReimbursement", label: "HH Reimbursement", base: 3189, low: 2500, high: 4000, format: "currency" },
+  { key: "woundReimbursement", label: "Wound Reimbursement", base: 1800, low: 1200, high: 2400, format: "currency" },
+];
+
+export const OPPORTUNITY_WEIGHTS = {
+  marketSize: 0.25,
+  lowCompetition: 0.20,
+  andwellPresence: 0.15,
+  revenueEfficiency: 0.20,
+  growthPotential: 0.20,
+};
 
 export const HEATMAP_MODES = [
   { key: "priority", label: "Priority Group" },

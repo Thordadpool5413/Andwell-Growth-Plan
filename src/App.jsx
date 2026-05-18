@@ -12,6 +12,11 @@ import CompetitiveView from "./views/CompetitiveView.jsx";
 import ServiceLines from "./views/ServiceLines.jsx";
 import CmsData from "./views/CmsData.jsx";
 import FinancialModel from "./views/FinancialModel.jsx";
+import StaffingModel from "./views/StaffingModel.jsx";
+import SensitivityAnalysis from "./views/SensitivityAnalysis.jsx";
+import OpportunityScore from "./views/OpportunityScore.jsx";
+import LaunchTimeline from "./views/LaunchTimeline.jsx";
+import BoardReport from "./views/BoardReport.jsx";
 import LaunchChecklist from "./views/LaunchChecklist.jsx";
 
 function Dashboard() {
@@ -114,6 +119,11 @@ function Dashboard() {
             {activeTab === "Service Lines" && <ServiceLines />}
             {activeTab === "CMS Data" && <CmsData />}
             {activeTab === "Financial Model" && <FinancialModel rows={rows} />}
+            {activeTab === "Staffing Model" && <StaffingModel rows={rows} />}
+            {activeTab === "Sensitivity" && <SensitivityAnalysis rows={rows} />}
+            {activeTab === "Opportunity Score" && <OpportunityScore rows={rows} />}
+            {activeTab === "Launch Timeline" && <LaunchTimeline rows={rows} />}
+            {activeTab === "Board Report" && <BoardReport rows={rows} totals={totals} />}
             {activeTab === "Launch Checklist" && <LaunchChecklist />}
           </div>
         </div>
