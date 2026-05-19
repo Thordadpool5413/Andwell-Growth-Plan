@@ -1,27 +1,16 @@
 import React from "react";
-import { useDarkMode } from "./DarkModeContext.jsx";
 
 export default function Card({ title, eyebrow, children, className = "" }) {
-  const { dark } = useDarkMode();
   return (
     <section className={`
-      rounded-xl border p-6 shadow-md transition-smooth
-      ${dark 
-        ? "border-slate-700/60 bg-gradient-to-br from-slate-800/80 to-slate-800/60 backdrop-blur-sm hover:from-slate-800/90 hover:to-slate-800/70" 
-        : "border-slate-200/60 bg-gradient-to-br from-white/90 to-slate-50/90 backdrop-blur-sm hover:from-white hover:to-slate-50"}
-      hover:shadow-lg hover:scale-[1.01]
+      rounded-lg border border-slate-800/50 bg-slate-900/40 backdrop-blur-sm p-6 
+      transition-all duration-200 hover:border-slate-700 hover:bg-slate-800/50
       ${className}
     `}>
-      <p className={`
-        mb-2 text-label 
-        ${dark ? "text-blue-400" : "text-blue-600"}
-      `}>
+      <p className="mb-2 text-xs font-bold uppercase tracking-wider text-blue-400">
         {eyebrow}
       </p>
-      <h2 className={`
-        text-heading-sm font-bold 
-        ${dark ? "text-white" : "text-slate-950"}
-      `}>
+      <h2 className="text-lg font-bold text-white">
         {title}
       </h2>
       <div className="mt-5">{children}</div>
