@@ -133,15 +133,6 @@ function Dashboard() {
               <ExportButton targetId="tab-content" filename={`Andwell - ${activeTab}`} />
             </div>
           </div>
-              <button
-                onClick={() => setShowInsights((p) => !p)}
-                className={`rounded-full px-4 py-2 text-sm font-black transition ${showInsights ? "bg-green-600 text-white" : dark ? "bg-slate-800 text-green-400 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-green-700 ring-1 ring-green-200 hover:bg-green-50"}`}
-              >
-                {showInsights ? "Hide Insights" : "Insights"}
-              </button>
-              <ExportButton targetId="tab-content" filename={`Andwell - ${activeTab}`} />
-            </div>
-          </div>
 
           {showScenario && (
             <div className="space-y-4">
