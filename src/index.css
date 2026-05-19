@@ -77,7 +77,7 @@ a:focus-visible {
 
   /* Metric card styling */
   .metric-card {
-    @apply rounded-2xl border p-5 shadow-elevation-2 transition-colors duration-300;
+    @apply rounded-2xl border p-5 shadow-lg transition-colors duration-300;
   }
 
   /* Button base */
@@ -89,20 +89,6 @@ a:focus-visible {
   .badge {
     @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
   }
-
-  /* Elevation system */
-  .elevation-0 { @apply shadow-elevation-0; }
-  .elevation-1 { @apply shadow-elevation-1; }
-  .elevation-2 { @apply shadow-elevation-2; }
-  .elevation-3 { @apply shadow-elevation-3; }
-  .elevation-4 { @apply shadow-elevation-4; }
-  .elevation-5 { @apply shadow-elevation-5; }
-
-  /* Status glow effects */
-  .glow-success { @apply shadow-success-glow; }
-  .glow-error { @apply shadow-error-glow; }
-  .glow-warning { @apply shadow-warning-glow; }
-  .glow-info { @apply shadow-info-glow; }
 
   /* Glass morphism */
   .glass {

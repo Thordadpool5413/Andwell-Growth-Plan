@@ -25,7 +25,7 @@ export function WaterfallChart({
   const scale = 100 / (maxValue * 1.2);
 
   return (
-    <div className={`rounded-2xl border p-6 shadow-elevation-2 ${dark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"} ${className}`}>
+    <div className={`rounded-2xl border p-6 shadow-shadow-md ${dark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"} ${className}`}>
       <h3 className={`text-lg font-bold mb-6 ${dark ? "text-white" : "text-slate-900"}`}>
         {title}
       </h3>
@@ -98,7 +98,7 @@ export function Heatmap({
   const maxValue = Math.max(...data.flat());
 
   return (
-    <div className={`rounded-2xl border p-6 shadow-elevation-2 ${dark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"} ${className} overflow-x-auto`}>
+    <div className={`rounded-2xl border p-6 shadow-shadow-md ${dark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"} ${className} overflow-x-auto`}>
       {title && (
         <h3 className={`text-lg font-bold mb-4 ${dark ? "text-white" : "text-slate-900"}`}>
           {title}

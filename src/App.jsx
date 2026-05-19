@@ -62,7 +62,7 @@ function Dashboard() {
     <div className={`min-h-screen transition-smooth ${dark ? "bg-slate-950 text-slate-100" : "bg-gradient-to-b from-slate-50 via-blue-50 to-white text-slate-900"}`}>
       <div className="px-4 py-8 sm:px-6 lg:px-10">
         {/* Professional Header with Hero Section */}
-        <header className={`mx-auto mb-12 max-w-7xl rounded-2xl overflow-hidden elevation-4 transition-smooth ${dark ? "bg-gradient-to-br from-blue-950/80 via-slate-900/80 to-slate-950/80 border border-slate-800/50 backdrop-blur-sm" : "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"}`}>
+        <header className={`mx-auto mb-12 max-w-7xl rounded-2xl overflow-hidden shadow-xl transition-smooth ${dark ? "bg-gradient-to-br from-blue-950/80 via-slate-900/80 to-slate-950/80 border border-slate-800/50 backdrop-blur-sm" : "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"}`}>
           <div className="px-8 py-14 flex items-start justify-between gap-8">
             <div className="flex-1 min-w-0">
               <p className="text-caption text-blue-300 mb-3 animate-fade-in">Andwell Maine Innovation and Growth Plan</p>
@@ -75,7 +75,7 @@ function Dashboard() {
             </div>
             <button
               onClick={toggle}
-              className={`shrink-0 rounded-full p-4 transition-all duration-300 hover:scale-110 ${dark ? "bg-slate-700/60 text-amber-300 hover:bg-slate-600 hover:shadow-warning-glow" : "bg-slate-700 text-slate-300 hover:bg-slate-600"}`}
+              className={`shrink-0 rounded-full p-4 transition-all duration-300 hover:scale-110 ${dark ? "bg-slate-700/60 text-amber-300 hover:bg-slate-600 hover:shadow-lg" : "bg-slate-700 text-slate-300 hover:bg-slate-600"}`}
               title={dark ? "Switch to light mode" : "Switch to dark mode"}
             >
               {dark ? (
@@ -101,7 +101,7 @@ function Dashboard() {
                   onClick={() => setActiveTab(tab)}
                   className={`rounded-lg px-5 py-2.5 text-sm font-bold transition-all duration-200 focus-ring ${
                     activeTab === tab
-                      ? dark ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-600/30" : "bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-elevation-2"
+                      ? dark ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-600/30" : "bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-md"
                       : dark ? "bg-slate-800/60 text-slate-300 hover:bg-slate-700/80 hover:text-slate-100 border border-slate-700/50" : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"
                   }`}
                 >

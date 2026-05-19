@@ -10,7 +10,7 @@ export default function EnhancedTooltip({
 }) {
   return (
     <div className={`
-      rounded-xl border shadow-elevation-3 p-4 w-max max-w-xs
+      rounded-xl border shadow-shadow-lg p-4 w-max max-w-xs
       ${dark ? "bg-slate-900 border-slate-700" : "bg-white border-slate-200"}
     `}>
       {title && (
@@ -115,7 +115,7 @@ export function DataAnnotation({
       ${className}
     `} style={{ transform: `translate(${offset.x}px, ${offset.y}px)` }}>
       <div className={`
-        px-2 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shadow-elevation-2
+        px-2 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shadow-shadow-md
         ${dark 
           ? "bg-slate-800 text-white border border-slate-700" 
           : "bg-white text-slate-900 border border-slate-200"}

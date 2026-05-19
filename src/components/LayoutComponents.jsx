@@ -128,8 +128,8 @@ export function EnhancedNavBar({
                   flex items-center gap-2
                   ${activeTab === tab
                     ? dark
-                      ? "bg-blue-600 text-white shadow-elevation-2"
-                      : "bg-slate-900 text-white shadow-elevation-1"
+                      ? "bg-blue-600 text-white shadow-shadow-md"
+                      : "bg-slate-900 text-white shadow-shadow-sm"
                     : dark
                       ? "text-slate-300 hover:bg-slate-700"
                       : "text-slate-600 hover:bg-slate-100"

@@ -25,7 +25,7 @@ export function MetricCard({
 
   return (
     <div className={`
-      rounded-2xl border p-6 shadow-elevation-2 transition-all duration-300
+      rounded-2xl border p-6 shadow-shadow-md transition-all duration-300
       ${statusColors[status] || statusColors.neutral}
       ${className}
     `}>
@@ -71,7 +71,7 @@ export function MetricTile({
 
   return (
     <div className={`
-      rounded-xl border shadow-elevation-1 p-4 transition-smooth
+      rounded-xl border shadow-shadow-sm p-4 transition-smooth
       ${dark ? "bg-slate-800 border-slate-700 hover:bg-slate-750" : "bg-white border-slate-200 hover:bg-slate-50"}
       ${className}
     `}>
@@ -112,7 +112,7 @@ export function ComparisonMetric({
 
   return (
     <div className={`
-      rounded-2xl border p-6 shadow-elevation-2
+      rounded-2xl border p-6 shadow-shadow-md
       ${dark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"}
       ${className}
     `}>

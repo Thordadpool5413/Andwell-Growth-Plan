@@ -5,7 +5,7 @@ export default function Card({ title, eyebrow, children, className = "" }) {
   const { dark } = useDarkMode();
   return (
     <section className={`
-      rounded-xl border p-6 elevation-2 transition-smooth
+      rounded-xl border p-6 shadow-md transition-smooth
       ${dark 
         ? "border-slate-700/60 bg-gradient-to-br from-slate-800/80 to-slate-800/60 backdrop-blur-sm hover:from-slate-800/90 hover:to-slate-800/70" 
         : "border-slate-200/60 bg-gradient-to-br from-white/90 to-slate-50/90 backdrop-blur-sm hover:from-white hover:to-slate-50"}

@@ -56,7 +56,7 @@ export function AlertCenter({
   const activeAlerts = alerts.filter((a) => !snoozedAlerts.has(a.id));
 
   return (
-    <div className={`rounded-2xl border shadow-elevation-2 p-6 ${dark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"} ${className}`}>
+    <div className={`rounded-2xl border shadow-shadow-md p-6 ${dark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"} ${className}`}>
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h3 className={`text-lg font-bold ${dark ? "text-white" : "text-slate-900"}`}>

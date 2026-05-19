@@ -22,7 +22,7 @@ export default function Metric({ label, value, detail, sparkData, sparkColor, co
 
   return (
     <div className={`
-      rounded-xl border elevation-1 p-5 transition-smooth
+      rounded-xl border shadow-sm p-5 transition-smooth
       ${dark 
         ? "border-slate-700/50 bg-gradient-to-br from-slate-800/60 to-slate-800/40 hover:from-slate-800/80 hover:to-slate-800/60" 
         : "border-slate-200/50 bg-gradient-to-br from-white/80 to-slate-50/80 hover:from-white hover:to-slate-100"}
