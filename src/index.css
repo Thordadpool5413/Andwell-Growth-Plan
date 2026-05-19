@@ -63,7 +63,7 @@ a:focus-visible {
 
   /* Hover effect for cards */
   .card-hover {
-    @apply hover:shadow-elevation-3 hover:scale-[1.01] transition-smooth;
+    @apply hover:shadow-lg hover:scale-[1.01] transition-smooth;
   }
 
   /* Professional card with glass effect */
