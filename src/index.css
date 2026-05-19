@@ -63,12 +63,21 @@ a:focus-visible {
 
   /* Hover effect for cards */
   .card-hover {
-    @apply hover:shadow-lg hover:scale-[1.02] transition-smooth;
+    @apply hover:shadow-elevation-3 hover:scale-[1.01] transition-smooth;
+  }
+
+  /* Professional card with glass effect */
+  .card-glass {
+    @apply backdrop-blur-md bg-glass border border-white/10;
+  }
+
+  .card-glass[data-dark="true"] {
+    @apply bg-glass-dark;
   }
 
   /* Metric card styling */
   .metric-card {
-    @apply rounded-2xl border p-5 shadow-sm transition-colors duration-300;
+    @apply rounded-2xl border p-5 shadow-elevation-2 transition-colors duration-300;
   }
 
   /* Button base */
@@ -80,6 +89,40 @@ a:focus-visible {
   .badge {
     @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
   }
+
+  /* Elevation system */
+  .elevation-0 { @apply shadow-elevation-0; }
+  .elevation-1 { @apply shadow-elevation-1; }
+  .elevation-2 { @apply shadow-elevation-2; }
+  .elevation-3 { @apply shadow-elevation-3; }
+  .elevation-4 { @apply shadow-elevation-4; }
+  .elevation-5 { @apply shadow-elevation-5; }
+
+  /* Status glow effects */
+  .glow-success { @apply shadow-success-glow; }
+  .glow-error { @apply shadow-error-glow; }
+  .glow-warning { @apply shadow-warning-glow; }
+  .glow-info { @apply shadow-info-glow; }
+
+  /* Glass morphism */
+  .glass {
+    @apply backdrop-blur-md bg-white/30 border border-white/20;
+  }
+
+  .glass[data-dark="true"] {
+    @apply bg-black/30 border border-white/10;
+  }
+
+  /* Typography utilities */
+  .text-heading-xl { @apply text-4xl font-black leading-tight tracking-tight; }
+  .text-heading-lg { @apply text-3xl font-black leading-tight tracking-tight; }
+  .text-heading-md { @apply text-2xl font-bold leading-snug; }
+  .text-heading-sm { @apply text-xl font-bold; }
+  .text-body-lg { @apply text-lg leading-relaxed; }
+  .text-body-md { @apply text-base leading-relaxed; }
+  .text-body-sm { @apply text-sm leading-normal; }
+  .text-caption { @apply text-xs leading-tight uppercase tracking-wide; }
+  .text-label { @apply text-xs font-semibold uppercase tracking-[0.05em]; }
 
   /* Skeleton loading animation */
   @keyframes skeleton {
@@ -112,6 +155,36 @@ a:focus-visible {
   .toast-container {
     @apply fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm;
   }
+
+  /* Data visualization utilities */
+  .trend-positive {
+    @apply text-positive font-semibold;
+  }
+
+  .trend-negative {
+    @apply text-negative font-semibold;
+  }
+
+  .trend-neutral {
+    @apply text-neutral font-semibold;
+  }
+
+  /* Responsive grid */
+  .grid-responsive {
+    @apply grid gap-4 md:gap-6;
+  }
+
+  .grid-2 {
+    @apply grid-responsive grid-cols-1 md:grid-cols-2;
+  }
+
+  .grid-3 {
+    @apply grid-responsive grid-cols-1 md:grid-cols-2 lg:grid-cols-3;
+  }
+
+  .grid-4 {
+    @apply grid-responsive grid-cols-1 md:grid-cols-2 lg:grid-cols-4;
+  }
 }
 
 /* Scrollbar styling */
@@ -143,4 +216,43 @@ a:focus-visible {
 
 [data-dark-mode="true"] ::-webkit-scrollbar-thumb:hover {
   background: #64748b;
+}
+
+/* Print styles */
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .card-glass,
+  .glass {
+    background: white !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+
+  .elevation-0,
+  .elevation-1,
+  .elevation-2,
+  .elevation-3,
+  .elevation-4,
+  .elevation-5 {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  }
+
+  a {
+    text-decoration: underline;
+  }
+
+  .page-break {
+    page-break-after: always;
+  }
 }
