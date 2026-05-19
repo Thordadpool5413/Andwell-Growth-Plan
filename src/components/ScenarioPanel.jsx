@@ -1,5 +1,6 @@
 import React from "react";
 import { DEFAULT_SCENARIO } from "../data/constants.js";
+import Button from "./Button.jsx";
 
 function SliderRow({ label, value, min, max, step, format, onChange }) {
   return (
@@ -46,12 +47,13 @@ export default function ScenarioPanel({ scenario, setScenario }) {
           <p className="mt-1 text-sm text-slate-600">Adjust assumptions to see real-time financial impact</p>
         </div>
         {!isDefault && (
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => setScenario(DEFAULT_SCENARIO)}
-            className="rounded-full bg-white px-4 py-2 text-xs font-black text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50"
           >
             Reset defaults
-          </button>
+          </Button>
         )}
       </div>
 

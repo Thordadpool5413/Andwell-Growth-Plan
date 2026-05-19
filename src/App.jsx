@@ -2,10 +2,13 @@ import React, { useMemo, useState } from "react";
 import { TABS, DEFAULT_SCENARIO } from "./data/constants.js";
 import { buildRows } from "./utils/calculations.js";
 import { DarkModeProvider, useDarkMode } from "./components/DarkModeContext.jsx";
-import { ToastProvider } from "./components/ToastContainer.jsx";
+import { ToastProvider, useToast } from "./components/ToastContainer.jsx";
 import ScenarioPanel from "./components/ScenarioPanel.jsx";
 import ScenarioCompare from "./components/ScenarioCompare.jsx";
+import ScenarioManager from "./components/ScenarioManager.jsx";
 import ExportButton from "./components/ExportButton.jsx";
+import InsightsPanel from "./components/InsightsPanel.jsx";
+import { InsightsEngine } from "./utils/insights.js";
 import ExecutiveView from "./views/ExecutiveView.jsx";
 import CountyPlan from "./views/CountyPlan.jsx";
 import ReferralPlan from "./views/ReferralPlan.jsx";
@@ -22,11 +25,13 @@ import LaunchChecklist from "./views/LaunchChecklist.jsx";
 
 function Dashboard() {
   const { dark, toggle } = useDarkMode();
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState("Executive View");
   const [selectedCounty, setSelectedCounty] = useState("York");
   const [scenario, setScenario] = useState(DEFAULT_SCENARIO);
   const [showScenario, setShowScenario] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
+  const [showInsights, setShowInsights] = useState(false);
 
   const rows = useMemo(() => buildRows(scenario), [scenario]);
   const totals = useMemo(
@@ -44,6 +49,14 @@ function Dashboard() {
     }),
     [rows],
   );
+
+  // Generate insights
+  const insightsEngine = useMemo(() => new InsightsEngine(rows, totals), [rows, totals]);
+  const insights = useMemo(() => insightsEngine.getAllInsights(), [insightsEngine]);
+
+  const handleExportSuccess = () => {
+    showToast("Export started!", "success");
+  };
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${dark ? "bg-slate-950 text-slate-100" : "bg-gradient-to-b from-slate-50 to-white text-slate-900"}`}>
@@ -105,12 +118,24 @@ function Dashboard() {
               >
                 {showScenario ? "Hide Scenarios" : "Scenario Model"}
               </button>
+              <button
+                onClick={() => setShowInsights((p) => !p)}
+                className={`rounded-full px-4 py-2 text-sm font-black transition ${showInsights ? "bg-green-600 text-white" : dark ? "bg-slate-800 text-green-400 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-green-700 ring-1 ring-green-200 hover:bg-green-50"}`}
+              >
+                {showInsights ? "Hide Insights" : "Insights"}
+              </button>
               <ExportButton targetId="tab-content" filename={`Andwell - ${activeTab}`} />
             </div>
           </div>
 
-          {showScenario && <ScenarioPanel scenario={scenario} setScenario={setScenario} />}
+          {showScenario && (
+            <div className="space-y-4">
+              <ScenarioPanel scenario={scenario} setScenario={setScenario} />
+              <ScenarioManager />
+            </div>
+          )}
           {showCompare && <ScenarioCompare currentScenario={scenario} />}
+          {showInsights && <InsightsPanel insights={insights} onActionClick={(county) => setSelectedCounty(county)} />}
 
           <div id="tab-content">
             {activeTab === "Executive View" && <ExecutiveView rows={rows} totals={totals} />}
