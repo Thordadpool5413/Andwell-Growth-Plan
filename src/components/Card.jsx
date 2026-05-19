@@ -2,18 +2,16 @@ import React from "react";
 
 export default function Card({ title, eyebrow, children, className = "" }) {
   return (
-    <section className={`
-      rounded-lg border border-slate-800/50 bg-slate-900/40 backdrop-blur-sm p-6 
-      transition-all duration-200 hover:border-slate-700 hover:bg-slate-800/50
-      ${className}
-    `}>
-      <p className="mb-2 text-xs font-bold uppercase tracking-wider text-blue-400">
-        {eyebrow}
-      </p>
-      <h2 className="text-lg font-bold text-white">
+    <div className={`card ${className}`}>
+      {eyebrow && (
+        <h6 style={{ marginBottom: "0.5rem", marginTop: 0, color: "var(--accent-blue)" }}>
+          {eyebrow}
+        </h6>
+      )}
+      <h3 style={{ marginTop: 0, marginBottom: "1.5rem", fontSize: "18px", fontWeight: 600, color: "var(--text-primary)" }}>
         {title}
-      </h2>
-      <div className="mt-5">{children}</div>
-    </section>
+      </h3>
+      <div>{children}</div>
+    </div>
   );
 }

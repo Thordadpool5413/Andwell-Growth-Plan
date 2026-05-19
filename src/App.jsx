@@ -50,35 +50,29 @@ function Dashboard() {
     [rows],
   );
 
-  // Generate insights
   const insightsEngine = useMemo(() => new InsightsEngine(rows, totals), [rows, totals]);
   const insights = useMemo(() => insightsEngine.getAllInsights(), [insightsEngine]);
 
-  const handleExportSuccess = () => {
-    showToast("Export started!", "success");
-  };
-
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex">
-      {/* Sidebar Navigation */}
-      <aside className="w-64 border-r border-slate-800 bg-black/40 backdrop-blur-sm p-6 flex flex-col gap-8 overflow-y-auto sticky top-0 h-screen">
-        {/* Logo/Branding */}
-        <div className="flex items-center justify-between">
+    <div className="flex h-screen bg-slate-950 text-slate-100">
+      {/* Sidebar */}
+      <aside className="w-72 border-r flex flex-col" style={{ borderColor: "var(--border-primary)" }}>
+        {/* Logo */}
+        <div className="h-20 border-b flex items-center justify-between px-6" style={{ borderColor: "var(--border-primary)" }}>
           <div>
-            <h1 className="text-lg font-black text-white">Andwell</h1>
-            <p className="text-xs text-slate-400 mt-1">Growth Plan</p>
+            <div className="text-xl font-bold">Andwell</div>
+            <div className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>Growth Plan</div>
           </div>
           <button
             onClick={toggle}
-            className="rounded-full p-2 hover:bg-slate-800 transition-colors"
-            title={dark ? "Switch to light mode" : "Switch to dark mode"}
+            className="p-2 rounded-lg hover:bg-gray-800 transition-colors"
           >
             {dark ? (
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-amber-400">
                 <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z" />
               </svg>
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-slate-400">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
                 <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clipRule="evenodd" />
               </svg>
             )}
@@ -86,66 +80,60 @@ function Dashboard() {
         </div>
 
         {/* Navigation */}
-        <nav className="space-y-1 flex-1">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider px-3 mb-3">Views</p>
+        <nav className="flex-1 overflow-y-auto px-3 py-6 space-y-1">
+          <div className="px-3 mb-4">
+            <h6 style={{ color: "var(--text-tertiary)" }}>Views</h6>
+          </div>
           {TABS.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                activeTab === tab
-                  ? "bg-blue-600/20 text-blue-400 border border-blue-500/30"
-                  : "text-slate-400 hover:text-slate-300 hover:bg-slate-800/50"
-              }`}
+              className={`nav-item w-full text-left ${activeTab === tab ? 'active' : ''}`}
             >
               {tab}
             </button>
           ))}
         </nav>
 
-        {/* Bottom Actions */}
-        <div className="space-y-2 border-t border-slate-800 pt-4">
+        {/* Actions */}
+        <div className="border-t px-3 py-4 space-y-2" style={{ borderColor: "var(--border-primary)" }}>
           <button
-            onClick={() => { setShowScenario((p) => !p); if (showCompare) setShowCompare(false); }}
-            className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${showScenario ? "bg-blue-600/30 text-blue-300 border border-blue-500/40" : "text-slate-400 hover:text-slate-300 hover:bg-slate-800/50"}`}
+            onClick={() => { setShowScenario(p => !p); if (showCompare) setShowCompare(false); }}
+            className={`nav-item w-full text-left ${showScenario ? 'active' : ''}`}
           >
-            {showScenario ? "✓" : "○"} Scenario Model
+            {showScenario ? '✓' : '○'} Scenario Model
           </button>
           <button
-            onClick={() => { setShowCompare((p) => !p); if (showScenario) setShowScenario(false); }}
-            className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${showCompare ? "bg-indigo-600/30 text-indigo-300 border border-indigo-500/40" : "text-slate-400 hover:text-slate-300 hover:bg-slate-800/50"}`}
+            onClick={() => { setShowCompare(p => !p); if (showScenario) setShowScenario(false); }}
+            className={`nav-item w-full text-left ${showCompare ? 'active' : ''}`}
           >
-            {showCompare ? "✓" : "○"} Compare
+            {showCompare ? '✓' : '○'} Compare
           </button>
           <button
-            onClick={() => setShowInsights((p) => !p)}
-            className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${showInsights ? "bg-emerald-600/30 text-emerald-300 border border-emerald-500/40" : "text-slate-400 hover:text-slate-300 hover:bg-slate-800/50"}`}
+            onClick={() => setShowInsights(p => !p)}
+            className={`nav-item w-full text-left ${showInsights ? 'active' : ''}`}
           >
-            {showInsights ? "✓" : "○"} Insights
+            {showInsights ? '✓' : '○'} Insights
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col">
-        {/* Top Header */}
-        <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-40">
-          <div className="px-8 py-5 flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-white">{activeTab}</h2>
-              <p className="text-sm text-slate-400 mt-1">Professional growth analytics</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <ExportButton targetId="tab-content" filename={`Andwell - ${activeTab}`} />
-            </div>
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <header className="h-20 border-b flex items-center justify-between px-8" style={{ borderColor: "var(--border-primary)", background: "linear-gradient(135deg, rgba(31, 41, 55, 0.2) 0%, rgba(15, 23, 42, 0.1) 100%)" }}>
+          <div>
+            <h1 className="text-2xl font-semibold">{activeTab}</h1>
+            <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>Professional healthcare analytics</p>
           </div>
+          <ExportButton targetId="tab-content" filename={`Andwell - ${activeTab}`} />
         </header>
 
-        {/* Content Area */}
+        {/* Content */}
         <div className="flex-1 overflow-y-auto">
-          <div className="px-8 py-8 max-w-7xl mx-auto">
+          <div className="p-8 max-w-7xl mx-auto">
             {showScenario && (
-              <div className="mb-8 space-y-4">
+              <div className="mb-8 space-y-6">
                 <ScenarioPanel scenario={scenario} setScenario={setScenario} />
                 <ScenarioManager />
               </div>
@@ -153,7 +141,7 @@ function Dashboard() {
             {showCompare && <ScenarioCompare currentScenario={scenario} />}
             {showInsights && <InsightsPanel insights={insights} onActionClick={(county) => setSelectedCounty(county)} />}
 
-            <div id="tab-content">
+            <div id="tab-content" className="space-y-8">
               {activeTab === "Executive View" && <ExecutiveView rows={rows} totals={totals} />}
               {activeTab === "County Plan" && <CountyPlan rows={rows} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} />}
               {activeTab === "Referral Plan" && <ReferralPlan rows={rows} />}
@@ -175,7 +163,7 @@ function Dashboard() {
   );
 }
 
-export default function AndwellGrowthPlanApp() {
+export default function App() {
   return (
     <DarkModeProvider>
       <ToastProvider>

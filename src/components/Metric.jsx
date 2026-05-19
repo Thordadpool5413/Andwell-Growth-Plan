@@ -5,37 +5,32 @@ export default function Metric({ label, value, detail, sparkData, sparkColor, co
   const getConfidenceBadge = (level) => {
     if (!level) return null;
     const colors = {
-      high: "bg-emerald-900/40 border-emerald-700/50 text-emerald-300",
-      medium: "bg-amber-900/40 border-amber-700/50 text-amber-300",
-      low: "bg-red-900/40 border-red-700/50 text-red-300",
+      high: "badge-success",
+      medium: "badge-warning",
+      low: "badge-error",
     };
-    const style = colors[level] || colors.medium;
     return (
-      <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${style}`}>
+      <span className={`badge ${colors[level] || colors.medium}`}>
         {level}
       </span>
     );
   };
 
   return (
-    <div className={`
-      rounded-lg border border-slate-800/50 bg-slate-900/40 backdrop-blur-sm p-5 
-      transition-all duration-200 hover:border-slate-700 hover:bg-slate-800/50
-      ${className}
-    `}>
-      <div className="flex items-start justify-between mb-3">
-        <p className="text-sm font-semibold text-slate-400">
+    <div className={`metric-card ${className}`}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
+        <p style={{ margin: 0, fontSize: "14px", fontWeight: 500, color: "var(--text-tertiary)" }}>
           {label}
         </p>
-        <div className="flex items-center gap-2">
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
           {confidence && getConfidenceBadge(confidence)}
           {sparkData && <Sparkline data={sparkData} color={sparkColor} />}
         </div>
       </div>
-      <p className="text-3xl font-black text-white">
+      <p style={{ margin: "1rem 0", fontSize: "32px", fontWeight: 700, color: "var(--text-primary)" }}>
         {value}
       </p>
-      <p className="mt-3 text-sm text-slate-400">
+      <p style={{ margin: 0, fontSize: "14px", color: "var(--text-tertiary)", lineHeight: 1.6 }}>
         {detail}
       </p>
     </div>
