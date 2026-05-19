@@ -54,94 +54,122 @@ function Dashboard() {
   const insights = useMemo(() => insightsEngine.getAllInsights(), [insightsEngine]);
 
   return (
-    <div className="flex h-screen bg-slate-950 text-slate-100">
+    <div className="container-page">
       {/* Sidebar */}
-      <aside className="w-72 border-r flex flex-col" style={{ borderColor: "var(--border-primary)" }}>
-        {/* Logo */}
-        <div className="h-20 border-b flex items-center justify-between px-6" style={{ borderColor: "var(--border-primary)" }}>
+      <aside className="container-sidebar">
+        {/* Header */}
+        <div style={{ padding: "2rem 1.5rem", borderBottom: "1px solid var(--color-border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
-            <div className="text-xl font-bold">Andwell</div>
-            <div className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>Growth Plan</div>
+            <h2 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0, color: "var(--color-text-primary)" }}>Andwell</h2>
+            <p style={{ fontSize: "0.75rem", color: "var(--color-text-tertiary)", margin: "0.5rem 0 0 0" }}>Growth Plan</p>
           </div>
           <button
             onClick={toggle}
-            className="p-2 rounded-lg hover:bg-gray-800 transition-colors"
+            style={{
+              padding: "0.5rem",
+              borderRadius: "0.5rem",
+              background: "rgba(59, 130, 246, 0.1)",
+              border: "1px solid rgba(59, 130, 246, 0.2)",
+              color: dark ? "#fbbf24" : "#94a3b8",
+              cursor: "pointer",
+              transition: "all 250ms ease",
+              fontSize: "1rem"
+            }}
           >
-            {dark ? (
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-amber-400">
-                <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-                <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clipRule="evenodd" />
-              </svg>
-            )}
+            {dark ? "☀" : "🌙"}
           </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto px-3 py-6 space-y-1">
-          <div className="px-3 mb-4">
-            <h6 style={{ color: "var(--text-tertiary)" }}>Views</h6>
+        <nav style={{ flex: 1, overflowY: "auto", padding: "1.5rem 0.75rem" }}>
+          <h6 style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.1em", padding: "0 1rem", marginBottom: "1rem", margin: 0 }}>
+            Views
+          </h6>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            {TABS.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`nav-item w-full text-left ${activeTab === tab ? "active" : ""}`}
+                style={{
+                  padding: "0.75rem 1rem",
+                  fontSize: "0.875rem",
+                  fontWeight: activeTab === tab ? 500 : 400,
+                  borderRadius: "0.5rem",
+                }}
+              >
+                {tab}
+              </button>
+            ))}
           </div>
-          {TABS.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`nav-item w-full text-left ${activeTab === tab ? 'active' : ''}`}
-            >
-              {tab}
-            </button>
-          ))}
         </nav>
 
         {/* Actions */}
-        <div className="border-t px-3 py-4 space-y-2" style={{ borderColor: "var(--border-primary)" }}>
+        <div style={{ borderTop: "1px solid var(--color-border)", padding: "1rem 0.75rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           <button
-            onClick={() => { setShowScenario(p => !p); if (showCompare) setShowCompare(false); }}
-            className={`nav-item w-full text-left ${showScenario ? 'active' : ''}`}
+            onClick={() => {
+              setShowScenario((p) => !p);
+              if (showCompare) setShowCompare(false);
+            }}
+            className={`nav-item w-full text-left ${showScenario ? "active" : ""}`}
+            style={{ padding: "0.75rem 1rem", fontSize: "0.875rem" }}
           >
-            {showScenario ? '✓' : '○'} Scenario Model
+            {showScenario ? "✓" : "○"} Scenario Model
           </button>
           <button
-            onClick={() => { setShowCompare(p => !p); if (showScenario) setShowScenario(false); }}
-            className={`nav-item w-full text-left ${showCompare ? 'active' : ''}`}
+            onClick={() => {
+              setShowCompare((p) => !p);
+              if (showScenario) setShowScenario(false);
+            }}
+            className={`nav-item w-full text-left ${showCompare ? "active" : ""}`}
+            style={{ padding: "0.75rem 1rem", fontSize: "0.875rem" }}
           >
-            {showCompare ? '✓' : '○'} Compare
+            {showCompare ? "✓" : "○"} Compare
           </button>
           <button
-            onClick={() => setShowInsights(p => !p)}
-            className={`nav-item w-full text-left ${showInsights ? 'active' : ''}`}
+            onClick={() => setShowInsights((p) => !p)}
+            className={`nav-item w-full text-left ${showInsights ? "active" : ""}`}
+            style={{ padding: "0.75rem 1rem", fontSize: "0.875rem" }}
           >
-            {showInsights ? '✓' : '○'} Insights
+            {showInsights ? "✓" : "○"} Insights
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <div className="container-main">
         {/* Header */}
-        <header className="h-20 border-b flex items-center justify-between px-8" style={{ borderColor: "var(--border-primary)", background: "linear-gradient(135deg, rgba(31, 41, 55, 0.2) 0%, rgba(15, 23, 42, 0.1) 100%)" }}>
+        <header className="container-header" style={{ background: "linear-gradient(135deg, rgba(31, 41, 55, 0.3) 0%, rgba(15, 23, 42, 0.15) 100%)" }}>
           <div>
-            <h1 className="text-2xl font-semibold">{activeTab}</h1>
-            <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>Professional healthcare analytics</p>
+            <h1 style={{ fontSize: "1.875rem", fontWeight: 700, margin: 0, color: "var(--color-text-primary)" }}>{activeTab}</h1>
+            <p style={{ fontSize: "0.875rem", color: "var(--color-text-tertiary)", margin: "0.5rem 0 0 0" }}>Professional healthcare analytics & insights</p>
           </div>
           <ExportButton targetId="tab-content" filename={`Andwell - ${activeTab}`} />
         </header>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-8 max-w-7xl mx-auto">
+        <div className="container-content">
+          <div className="content-area">
             {showScenario && (
-              <div className="mb-8 space-y-6">
+              <div style={{ marginBottom: "2rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem" }}>
                 <ScenarioPanel scenario={scenario} setScenario={setScenario} />
                 <ScenarioManager />
               </div>
             )}
-            {showCompare && <ScenarioCompare currentScenario={scenario} />}
-            {showInsights && <InsightsPanel insights={insights} onActionClick={(county) => setSelectedCounty(county)} />}
 
-            <div id="tab-content" className="space-y-8">
+            {showCompare && (
+              <div style={{ marginBottom: "2rem" }}>
+                <ScenarioCompare currentScenario={scenario} />
+              </div>
+            )}
+
+            {showInsights && (
+              <div style={{ marginBottom: "2rem" }}>
+                <InsightsPanel insights={insights} onActionClick={(county) => setSelectedCounty(county)} />
+              </div>
+            )}
+
+            <div id="tab-content" style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
               {activeTab === "Executive View" && <ExecutiveView rows={rows} totals={totals} />}
               {activeTab === "County Plan" && <CountyPlan rows={rows} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} />}
               {activeTab === "Referral Plan" && <ReferralPlan rows={rows} />}
@@ -158,7 +186,7 @@ function Dashboard() {
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
