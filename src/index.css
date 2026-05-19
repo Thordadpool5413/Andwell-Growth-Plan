@@ -8,10 +8,21 @@
   background: #f8fafc;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark mode styles */
+[data-dark-mode="true"] {
+  color: #f1f5f9;
+  background: #0f172a;
 }
 
 button,
@@ -19,4 +30,117 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+/* Focus states for accessibility */
+*:focus-visible {
+  outline: 2px solid #0ea5e9;
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #0ea5e9;
+  outline-offset: 2px;
+}
+
+/* Component utilities */
+@layer components {
+  /* Smooth transitions */
+  .transition-smooth {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  /* Focus ring for buttons and inputs */
+  .focus-ring {
+    @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-info-500;
+  }
+
+  /* Interactive element base */
+  .interactive {
+    @apply cursor-pointer transition-smooth;
+  }
+
+  /* Hover effect for cards */
+  .card-hover {
+    @apply hover:shadow-lg hover:scale-[1.02] transition-smooth;
+  }
+
+  /* Metric card styling */
+  .metric-card {
+    @apply rounded-2xl border p-5 shadow-sm transition-colors duration-300;
+  }
+
+  /* Button base */
+  .btn-base {
+    @apply px-4 py-2 rounded-lg font-medium transition-smooth focus-ring;
+  }
+
+  /* Badge styling */
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  /* Skeleton loading animation */
+  @keyframes skeleton {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  .skeleton {
+    @apply animate-pulse bg-slate-200;
+  }
+
+  .skeleton[data-dark="true"] {
+    @apply bg-slate-700;
+  }
+
+  /* Empty state */
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-12 px-6 text-center;
+  }
+
+  .empty-state-icon {
+    @apply text-5xl mb-4 opacity-50;
+  }
+
+  /* Toast base (styled separately in component) */
+  .toast-container {
+    @apply fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+[data-dark-mode="true"] ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+[data-dark-mode="true"] ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+[data-dark-mode="true"] ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }

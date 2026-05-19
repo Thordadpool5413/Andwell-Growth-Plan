@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { TABS, DEFAULT_SCENARIO } from "./data/constants.js";
 import { buildRows } from "./utils/calculations.js";
 import { DarkModeProvider, useDarkMode } from "./components/DarkModeContext.jsx";
+import { ToastProvider } from "./components/ToastContainer.jsx";
 import ScenarioPanel from "./components/ScenarioPanel.jsx";
 import ScenarioCompare from "./components/ScenarioCompare.jsx";
 import ExportButton from "./components/ExportButton.jsx";
@@ -135,7 +136,9 @@ function Dashboard() {
 export default function AndwellGrowthPlanApp() {
   return (
     <DarkModeProvider>
-      <Dashboard />
+      <ToastProvider>
+        <Dashboard />
+      </ToastProvider>
     </DarkModeProvider>
   );
 }
