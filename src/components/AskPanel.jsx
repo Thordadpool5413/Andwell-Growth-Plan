@@ -7,6 +7,7 @@ export default function AskPanel({ rows, totals }) {
   const { dark } = useDarkMode();
   const [open, setOpen] = useState(false);
   const [question, setQuestion] = useState("");
+  const [lastQuestion, setLastQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
@@ -17,8 +18,8 @@ export default function AskPanel({ rows, totals }) {
     return Object.fromEntries(counties.map((c) => [c, getCountyIntelligence(c, rows)]));
   }, [rows]);
 
-  const handleAsk = useCallback(() => {
-    if (!question.trim() || generating) return;
+  const runQuery = useCallback((q) => {
+    if (!q.trim() || generating) return;
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -26,9 +27,10 @@ export default function AskPanel({ rows, totals }) {
     setAnswer("");
     setError(null);
     setGenerating(true);
+    setLastQuestion(q);
 
     streamChat({
-      messages: buildAskPrompt(question, rows, totals, intelMap),
+      messages: buildAskPrompt(q, rows, totals, intelMap),
       signal: controller.signal,
       onChunk: (_, full) => setAnswer(full),
       onDone: () => setGenerating(false),
@@ -37,17 +39,23 @@ export default function AskPanel({ rows, totals }) {
         setGenerating(false);
       },
     });
-  }, [question, rows, totals, intelMap, generating]);
+  }, [rows, totals, intelMap, generating]);
+
+  const handleAsk = useCallback(() => runQuery(question), [question, runQuery]);
+  const handleRegenerate = useCallback(() => runQuery(lastQuestion), [lastQuestion, runQuery]);
 
   const handleClear = useCallback(() => {
     abortRef.current?.abort();
     setQuestion("");
+    setLastQuestion("");
     setAnswer("");
     setError(null);
     setGenerating(false);
   }, []);
 
   if (!AI_AVAILABLE) return null;
+
+  const hasAnswer = Boolean(answer || generating);
 
   return (
     <div className="fixed bottom-6 right-6 z-50 print:hidden">
@@ -71,6 +79,17 @@ export default function AskPanel({ rows, totals }) {
                 AI
               </span>
               <span className={`text-sm font-black ${dark ? "text-white" : "text-slate-900"}`}>Ask the data</span>
+              {generating && (
+                <span className="inline-flex items-center gap-0.5">
+                  {[0, 1, 2].map((i) => (
+                    <span
+                      key={i}
+                      className="inline-block h-1.5 w-1.5 rounded-full bg-violet-400 animate-bounce"
+                      style={{ animationDelay: `${i * 0.15}s` }}
+                    />
+                  ))}
+                </span>
+              )}
             </div>
             <button
               onClick={() => setOpen(false)}
@@ -109,36 +128,59 @@ export default function AskPanel({ rows, totals }) {
               </button>
             </div>
 
-            {(answer || generating) && (
+            {hasAnswer && (
               <div
-                className={`max-h-64 overflow-y-auto rounded-xl p-3 text-sm leading-6 ${
-                  dark ? "bg-slate-800 text-slate-200" : "bg-slate-50 text-slate-700"
+                className={`rounded-2xl border p-3 ${
+                  dark ? "border-violet-800/50 bg-violet-950/30" : "border-violet-200 bg-violet-50"
                 }`}
               >
-                {answer ? (
-                  <>
-                    <span className="whitespace-pre-wrap">{answer}</span>
-                    {generating && (
-                      <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-violet-400" />
-                    )}
-                  </>
-                ) : (
-                  <span className={dark ? "text-slate-500" : "text-slate-400"}>Thinking…</span>
+                <div className="max-h-56 overflow-y-auto text-sm leading-6">
+                  {answer ? (
+                    <>
+                      <span
+                        className={`whitespace-pre-wrap ${dark ? "text-slate-200" : "text-slate-700"}`}
+                      >
+                        {answer}
+                      </span>
+                      {generating && (
+                        <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-violet-400" />
+                      )}
+                    </>
+                  ) : (
+                    <span className={dark ? "text-slate-500" : "text-slate-400"}>Thinking…</span>
+                  )}
+                </div>
+                {!generating && answer && lastQuestion && (
+                  <div className="mt-2 flex items-center justify-between border-t pt-2 ${dark ? 'border-violet-800/40' : 'border-violet-200'}">
+                    <p className={`text-[10px] ${dark ? "text-violet-600" : "text-violet-400"}`}>
+                      AI-generated from modeled data · Not verified advice
+                    </p>
+                    <button
+                      onClick={handleRegenerate}
+                      className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                        dark
+                          ? "text-violet-400 hover:bg-violet-900/40"
+                          : "text-violet-600 hover:bg-violet-100"
+                      }`}
+                    >
+                      ↻ Regenerate
+                    </button>
+                  </div>
                 )}
               </div>
             )}
 
             {error && (
-              <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600 dark:bg-red-950/30 dark:text-red-400">
+              <p className={`rounded-lg px-3 py-2 text-xs ${dark ? "bg-red-950/30 text-red-400" : "bg-red-50 text-red-600"}`}>
                 {error}
               </p>
             )}
 
             <div className="flex items-center justify-between">
               <p className={`text-[10px] ${dark ? "text-slate-600" : "text-slate-400"}`}>
-                AI-generated from modeled data · Not verified advice
+                AI · Not verified advice
               </p>
-              {(answer || question) && (
+              {(answer || question) && !generating && (
                 <button
                   onClick={handleClear}
                   className={`text-xs ${dark ? "text-slate-500 hover:text-slate-300" : "text-slate-400 hover:text-slate-600"}`}
@@ -154,13 +196,7 @@ export default function AskPanel({ rows, totals }) {
           onClick={() => setOpen(true)}
           className="flex items-center gap-2 rounded-full bg-violet-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-violet-500/25 transition hover:scale-105 hover:bg-violet-500"
         >
-          <span
-            className={`rounded-sm px-1 text-[10px] font-black uppercase ${
-              dark ? "bg-violet-500/50" : "bg-violet-500/40"
-            }`}
-          >
-            AI
-          </span>
+          <span className="rounded-sm bg-violet-500/40 px-1 text-[10px] font-black uppercase">AI</span>
           Ask the data
         </button>
       )}

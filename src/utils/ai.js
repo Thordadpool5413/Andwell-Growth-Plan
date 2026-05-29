@@ -72,7 +72,7 @@ export async function streamChat({ messages, onChunk, onDone, onError, signal })
 }
 
 export function buildCountyPrompt(selected, intel, rows) {
-  const { county, revenue, starts, referrals, reason, missing, launchGroup, service } = selected;
+  const { county, revenue, starts, referrals, launchGroup, service } = selected;
   const threat = intel?.threat;
   const pen = intel?.penetration;
   const opp = intel?.opportunityScore;
@@ -91,30 +91,34 @@ export function buildCountyPrompt(selected, intel, rows) {
     {
       role: "system",
       content:
-        "You are a healthcare strategy analyst specializing in Maine home health and hospice market analysis. Write concise plain-English insights grounded in the data provided. Be specific about numbers. Do not invent data not in the context. Respond in 3–5 sentences.",
+        "You are a healthcare strategy analyst specializing in Maine home health and hospice market analysis. Write concise plain-English insights grounded only in the computed metrics provided. Be specific about numbers. Do not invent data not in the context. Respond in 3–5 sentences.",
     },
     {
       role: "user",
-      content: `Generate a strategic intelligence summary for ${county} County, Maine.
+      content: `Generate a strategic intelligence summary for ${county} County, Maine based solely on the following computed metrics.
 
-Key metrics:
+Computed metrics:
 - Service focus: ${service}
-- Launch priority: ${launchGroup}
-- Opportunity score: ${opp?.score ?? "N/A"}/100 (${opp?.tier ?? "N/A"}) — composite of market size, competition, Andwell presence, revenue efficiency, and growth potential
-- Year 1 revenue projection: $${Math.round(revenue[0]).toLocaleString()}
+- Launch priority group: ${launchGroup}
+- Opportunity score: ${opp?.score ?? "N/A"}/100 (tier: ${opp?.tier ?? "N/A"}) — composite of market size, low competition, Andwell presence, revenue efficiency, and growth potential
+- Opportunity factors: ${opp?.factors?.map((f) => `${f.name} ${f.value}/100`).join(", ") ?? "N/A"}
+- Year 1 revenue: $${Math.round(revenue[0]).toLocaleString()}
+- Year 2 revenue: $${Math.round(revenue[1]).toLocaleString()}
+- Year 3 revenue: $${Math.round(revenue[2]).toLocaleString()}
 - Year 1 patient starts: ${starts[0]}
+- Year 3 patient starts: ${starts[2]}
 - Year 1 referrals needed: ${referrals[0]}
-- Year 3 revenue projection: $${Math.round(revenue[2]).toLocaleString()}
 - Staffing requirement: ${y1FTE} FTEs (Year 1) → ${y3FTE} FTEs (Year 3)
-- Competitive threat: ${threat?.score ?? "N/A"}/100 (${threat?.level ?? "unknown"})${threat?.hasNationalChain ? " — national chain present" : ""}
+- Competitive threat score: ${threat?.score ?? "N/A"}/100 (level: ${threat?.level ?? "unknown"})${threat?.hasNationalChain ? " — national chain present" : ""}
+- Competitor count: ${threat?.competitorCount ?? "N/A"} providers
+- Competitor beneficiary share: ${threat?.totalShare != null ? (threat.totalShare * 100).toFixed(1) + "%" : "N/A"}
 - Year 1 market penetration: ${pen ? (pen.y1Penetration * 100).toFixed(1) + "%" : "N/A"}
-- Year 3 penetration target: ${pen ? (pen.y3Penetration * 100).toFixed(1) + "%" : "N/A"}
+- Year 3 market penetration target: ${pen ? (pen.y3Penetration * 100).toFixed(1) + "%" : "N/A"}
 - Total Medicare market: ${pen ? pen.totalMarket.toLocaleString() + " beneficiaries" : "N/A"}
 - HH provider density: ${intel?.providerDensityHH ?? "N/A"} per 10K FFS beneficiaries
-- Why this county: ${reason}
-- Missing service lines to add: ${missing}
+- FFS beneficiaries: ${intel?.ffs?.toLocaleString() ?? "N/A"}
 
-Summarize the opportunity score rationale, staffing readiness, key competitive risks, and recommended next action in plain English suitable for a board briefing.`,
+Based only on these computed metrics, summarize: (1) the opportunity score rationale, (2) staffing readiness relative to patient starts, (3) key competitive risks from the threat score, and (4) recommended next action. Suitable for a board briefing.`,
     },
   ];
 }
