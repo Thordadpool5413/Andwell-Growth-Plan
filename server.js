@@ -218,14 +218,7 @@ app.post("/api/ai/cms-analyze", strictOriginCheck, tokenCheck, rateLimit, async 
     const mod = await loadCms();
     const tools = mod?.CMS_TOOLS || [];
 
-    const openaiTools = tools.map((t) => ({
-      type: "function",
-      function: {
-        name: t.name,
-        description: t.description,
-        parameters: t.inputSchema || { type: "object", properties: {} },
-      },
-    }));
+    const openaiTools = tools;
 
     const messages = [
       {
@@ -361,7 +354,7 @@ app.get("/api/cms/competitors", async (req, res) => {
   }
 });
 
-app.post("/api/cms/sync", async (req, res) => {
+app.post("/api/cms/sync", strictOriginCheck, async (req, res) => {
   try {
     const mod = await loadCms();
     if (!mod) { res.status(503).json({ error: "CMS module not ready" }); return; }
@@ -373,7 +366,7 @@ app.post("/api/cms/sync", async (req, res) => {
   }
 });
 
-app.post("/api/cms/crawl", async (req, res) => {
+app.post("/api/cms/crawl", strictOriginCheck, async (req, res) => {
   try {
     const { crawlAllCompetitors } = await import("./server/cms/competitorCrawler.js");
     res.json({ status: "started", message: "Crawl running in background." });
@@ -387,7 +380,7 @@ app.post("/api/cms/crawl", async (req, res) => {
   }
 });
 
-app.post("/api/cms/match", async (req, res) => {
+app.post("/api/cms/match", strictOriginCheck, async (req, res) => {
   try {
     const mod = await loadCms();
     if (!mod) { res.status(503).json({ error: "CMS module not ready" }); return; }
@@ -403,7 +396,7 @@ app.post("/api/cms/match", async (req, res) => {
   }
 });
 
-app.post("/api/cms/search-datasets", async (req, res) => {
+app.post("/api/cms/search-datasets", strictOriginCheck, async (req, res) => {
   try {
     const mod = await loadCms();
     if (!mod) { res.status(503).json({ error: "CMS module not ready" }); return; }
@@ -416,7 +409,7 @@ app.post("/api/cms/search-datasets", async (req, res) => {
   }
 });
 
-app.post("/api/cms/query-dataset", async (req, res) => {
+app.post("/api/cms/query-dataset", strictOriginCheck, async (req, res) => {
   try {
     const mod = await loadCms();
     if (!mod) { res.status(503).json({ error: "CMS module not ready" }); return; }
@@ -429,7 +422,7 @@ app.post("/api/cms/query-dataset", async (req, res) => {
   }
 });
 
-app.post("/api/cms/tool", async (req, res) => {
+app.post("/api/cms/tool", strictOriginCheck, async (req, res) => {
   try {
     const mod = await loadCms();
     if (!mod) { res.status(503).json({ error: "CMS module not ready" }); return; }
