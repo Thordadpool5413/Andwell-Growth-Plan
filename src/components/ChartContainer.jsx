@@ -9,22 +9,19 @@ export default function ChartContainer({ height = "h-80", children }) {
     const el = wrapperRef.current;
     if (!el) return;
 
-    const measure = () => {
-      const { width, height } = el.getBoundingClientRect();
+    const update = (width, height) => {
       if (width > 0 && height > 0) {
         setDims({ width, height });
       }
     };
 
-    measure();
+    const { width, height } = el.getBoundingClientRect();
+    update(width, height);
 
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
       if (entry) {
-        const { width, height } = entry.contentRect;
-        if (width > 0 && height > 0) {
-          setDims({ width, height });
-        }
+        update(entry.contentRect.width, entry.contentRect.height);
       }
     });
 

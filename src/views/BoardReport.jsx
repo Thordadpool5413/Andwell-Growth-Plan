@@ -1,12 +1,14 @@
-import React, { useMemo, useRef } from "react";
+import React, { useMemo, useRef, useState, useCallback } from "react";
 import { PieChart, Pie, Cell } from "recharts";
 import ChartContainer from "../components/ChartContainer.jsx";
 import Card from "../components/Card.jsx";
 import Badge from "../components/Badge.jsx";
 import Abbr from "../components/Abbr.jsx";
+import AiBadge from "../components/AiBadge.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
 import { rollupByService, getOpportunityScore, getCompetitiveThreatScore, getMarketPenetration } from "../utils/calculations.js";
+import { streamChat, buildBoardNarrativePrompt, AI_AVAILABLE } from "../utils/ai.js";
 import { currency, number, percent } from "../utils/formatters.js";
 
 const trafficLight = (value, thresholds) => {
@@ -20,6 +22,12 @@ export default function BoardReport({ rows, totals }) {
   const reportRef = useRef(null);
   const counties = [...new Set(rows.map((r) => r.county))];
   const serviceMix = useMemo(() => rollupByService(rows), [rows]);
+
+  const [narrativeText, setNarrativeText] = useState("");
+  const [narrativeGenerating, setNarrativeGenerating] = useState(false);
+  const [narrativeError, setNarrativeError] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const abortRef = useRef(null);
 
   const countyStatus = useMemo(() => {
     return counties.map((county) => {
@@ -52,9 +60,37 @@ export default function BoardReport({ rows, totals }) {
   const riskCounties = countyStatus.filter((c) => c.threatScore > 60 || c.penetration < 0.02);
   const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 
-  const handlePrint = () => {
-    window.print();
-  };
+  const generateNarrative = useCallback(() => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    setNarrativeText("");
+    setNarrativeError(null);
+    setNarrativeGenerating(true);
+    setCopied(false);
+
+    streamChat({
+      messages: buildBoardNarrativePrompt(countyStatus, totals),
+      signal: controller.signal,
+      onChunk: (_, full) => setNarrativeText(full),
+      onDone: () => setNarrativeGenerating(false),
+      onError: (err) => {
+        setNarrativeError(err.message);
+        setNarrativeGenerating(false);
+      },
+    });
+  }, [countyStatus, totals]);
+
+  const handleCopy = useCallback(() => {
+    if (!narrativeText) return;
+    navigator.clipboard.writeText(narrativeText).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [narrativeText]);
+
+  const handlePrint = () => window.print();
 
   return (
     <div className="space-y-6">
@@ -63,13 +99,65 @@ export default function BoardReport({ rows, totals }) {
           <p className={`text-sm font-semibold uppercase tracking-wide ${dark ? "text-blue-400" : "text-blue-600"}`}>Board report</p>
           <h2 className={`text-2xl font-black ${dark ? "text-white" : "text-slate-950"}`}>Andwell Growth Plan — Executive Summary</h2>
         </div>
-        <button
-          onClick={handlePrint}
-          className={`rounded-2xl px-5 py-2.5 text-sm font-black transition ${dark ? "bg-blue-600 text-white hover:bg-blue-500" : "bg-blue-600 text-white hover:bg-blue-700"}`}
-        >
-          Print / PDF
-        </button>
+        <div className="flex items-center gap-2">
+          {AI_AVAILABLE && (
+            <button
+              onClick={generateNarrative}
+              disabled={narrativeGenerating}
+              className={`rounded-2xl px-4 py-2.5 text-sm font-black transition disabled:opacity-50 ${
+                dark
+                  ? "bg-violet-700 text-white hover:bg-violet-600"
+                  : "bg-violet-600 text-white hover:bg-violet-500"
+              }`}
+            >
+              {narrativeGenerating ? "Drafting…" : "✦ Draft narrative"}
+            </button>
+          )}
+          <button
+            onClick={handlePrint}
+            className={`rounded-2xl px-5 py-2.5 text-sm font-black transition ${dark ? "bg-blue-600 text-white hover:bg-blue-500" : "bg-blue-600 text-white hover:bg-blue-700"}`}
+          >
+            Print / PDF
+          </button>
+        </div>
       </div>
+
+      {(narrativeText || narrativeGenerating || narrativeError) && (
+        <AiBadge
+          label="Board narrative"
+          generating={narrativeGenerating}
+          onRegenerate={!narrativeGenerating ? generateNarrative : undefined}
+        >
+          {narrativeError ? (
+            <p className={`text-sm ${dark ? "text-red-400" : "text-red-600"}`}>{narrativeError}</p>
+          ) : narrativeText ? (
+            <div>
+              <p className={`text-sm leading-7 whitespace-pre-wrap ${dark ? "text-slate-200" : "text-slate-700"}`}>
+                {narrativeText}
+                {narrativeGenerating && (
+                  <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-violet-400" />
+                )}
+              </p>
+              {!narrativeGenerating && (
+                <button
+                  onClick={handleCopy}
+                  className={`mt-3 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                    copied
+                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400"
+                      : dark
+                      ? "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                      : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
+                  }`}
+                >
+                  {copied ? "✓ Copied" : "Copy to clipboard"}
+                </button>
+              )}
+            </div>
+          ) : (
+            <p className={`text-sm ${dark ? "text-slate-500" : "text-slate-400"}`}>Drafting executive summary…</p>
+          )}
+        </AiBadge>
+      )}
 
       <div ref={reportRef} className="space-y-6 print:space-y-4">
         <div className={`rounded-3xl border p-6 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
