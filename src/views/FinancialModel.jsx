@@ -7,6 +7,7 @@ import Card from "../components/Card.jsx";
 import Metric from "../components/Metric.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
 import SourceBadge from "../components/SourceBadge.jsx";
+import Abbr from "../components/Abbr.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
 import { currency, number } from "../utils/formatters.js";
@@ -30,7 +31,7 @@ export default function FinancialModel({ rows }) {
   return (
     <div className="space-y-6">
       <SectionHeader eyebrow="Financial model" title="3-year revenue and contribution projections">
-        Revenue is modeled from CMS beneficiary volumes multiplied by internal capture rate assumptions and Medicare reimbursement rates. Contribution margin reflects the modeled gross margin per service line. Use the Scenario Model sliders to stress-test different capture and conversion rate assumptions.
+        Revenue is modeled from CMS beneficiary volumes multiplied by internal capture rate assumptions and Medicare reimbursement rates. Contribution margin reflects the modeled gross margin per service line. Use the Scenario Model sliders to stress-test different capture and <Abbr term="Conversion Rate">conversion rate</Abbr> assumptions.
       </SectionHeader>
 
       <div className="grid gap-4 md:grid-cols-4">

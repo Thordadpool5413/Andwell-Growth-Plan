@@ -87,6 +87,13 @@ export default function ExecutiveView({ rows, totals }) {
         </div>
       </div>
 
+      <div className={`flex items-start gap-3 rounded-2xl border px-5 py-4 ${dark ? "border-amber-800/50 bg-amber-950/30 text-amber-300" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
+        <span className="mt-0.5 shrink-0 text-base">⚠️</span>
+        <p className="text-sm leading-6">
+          <strong>Provider file share ≠ market share.</strong> The share figures in this dashboard reflect each provider's share of CMS provider file beneficiary volume — <em>not</em> county-attributed claims. True county market share requires county-level claims data not available in the CMS Public Use File. Use share figures for competitive benchmarking only, not revenue attribution.
+        </p>
+      </div>
+
       <Card title="Strategic rationale" eyebrow="Executive summary">
         <p className={`text-lg leading-8 ${dark ? "text-slate-300" : "text-slate-700"}`}>
           This dashboard connects Andwell service gaps, CMS market volume, referral math, financial upside, and named provider competition across 12 target Maine counties. The competitive layer reflects actual named Home Healthcare and Hospice providers from the CMS provider file — including Andwell's provider file rank and share. Note: <strong>provider file share is not county market share</strong>; county-attributed claims data would be required to calculate true market share.

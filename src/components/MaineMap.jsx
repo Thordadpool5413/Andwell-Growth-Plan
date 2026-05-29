@@ -91,23 +91,21 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty }) {
     return interpolateColor(val, heatMin, heatMax, dark);
   }
 
-  const legendItems = heatmapMode === "priority"
+  const isGradientMode = heatmapMode !== "priority" && heatmapMode !== "competition";
+  const gradientLow = interpolateColor(0, 0, 1, dark);
+  const gradientHigh = interpolateColor(1, 0, 1, dark);
+
+  const discreteLegendItems = heatmapMode === "priority"
     ? [
         ...Object.entries(priorityColors).map(([label, color]) => ({ label, color })),
         { label: "Not in plan", color: dark ? "#334155" : "#d1d5db" },
       ]
-    : heatmapMode === "competition"
-      ? [
-          { label: "Low (<30)", color: dark ? "#166534" : "#bbf7d0" },
-          { label: "Moderate (30-49)", color: dark ? "#1e40af" : "#bfdbfe" },
-          { label: "High (50-69)", color: dark ? "#92400e" : "#fed7aa" },
-          { label: "Fortress (70+)", color: dark ? "#991b1b" : "#fecaca" },
-        ]
-      : [
-          { label: "Low", color: interpolateColor(0, 0, 1, dark) },
-          { label: "Medium", color: interpolateColor(0.5, 0, 1, dark) },
-          { label: "High", color: interpolateColor(1, 0, 1, dark) },
-        ];
+    : [
+        { label: "Low (<30)", color: dark ? "#166534" : "#bbf7d0" },
+        { label: "Moderate (30–49)", color: dark ? "#1e40af" : "#bfdbfe" },
+        { label: "High (50–69)", color: dark ? "#92400e" : "#fed7aa" },
+        { label: "Fortress (70+)", color: dark ? "#991b1b" : "#fecaca" },
+      ];
 
   return (
     <div className="relative">
@@ -156,14 +154,56 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty }) {
         })}
       </svg>
 
-      <div className="mt-3 flex flex-wrap justify-center gap-3">
-        {legendItems.map(({ label, color }) => (
-          <div key={label} className={`flex items-center gap-1.5 text-xs font-semibold ${dark ? "text-slate-400" : "text-slate-600"}`}>
-            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />
-            {label}
-          </div>
-        ))}
+      <MapLegend
+        isGradientMode={isGradientMode}
+        gradientLow={gradientLow}
+        gradientHigh={gradientHigh}
+        discreteItems={discreteLegendItems}
+        heatmapMode={heatmapMode}
+        heatMin={heatMin}
+        heatMax={heatMax}
+        dark={dark}
+      />
+    </div>
+  );
+}
+
+function MapLegend({ isGradientMode, gradientLow, gradientHigh, discreteItems, heatmapMode, heatMin, heatMax, dark }) {
+  if (isGradientMode) {
+    const formatVal = (v) => {
+      if (heatmapMode === "penetration") return `${v.toFixed(1)}%`;
+      if (heatmapMode === "revenue") return `$${Math.round(v).toLocaleString()}`;
+      return Math.round(v).toLocaleString();
+    };
+    return (
+      <div className="mt-4 flex flex-col items-center gap-1">
+        <p className={`mb-1 text-[10px] font-semibold uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-400"}`}>
+          {heatmapMode === "penetration" ? "Market penetration" : heatmapMode === "revenue" ? "Modeled Y1 revenue" : "65+ population"} — low to high
+        </p>
+        <div className="flex w-48 items-center gap-2">
+          <span className={`text-[10px] font-semibold ${dark ? "text-slate-400" : "text-slate-600"}`}>{formatVal(heatMin)}</span>
+          <div
+            className="h-3 flex-1 rounded-full"
+            style={{ background: `linear-gradient(to right, ${gradientLow}, ${gradientHigh})` }}
+          />
+          <span className={`text-[10px] font-semibold ${dark ? "text-slate-400" : "text-slate-600"}`}>{formatVal(heatMax)}</span>
+        </div>
+        <div className={`flex items-center gap-1.5 text-[10px] font-semibold ${dark ? "text-slate-500" : "text-slate-400"}`}>
+          <span className="h-3 w-3 rounded-full" style={{ backgroundColor: dark ? "#334155" : "#d1d5db" }} />
+          Not in plan
+        </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="mt-3 flex flex-wrap justify-center gap-3">
+      {discreteItems.map(({ label, color }) => (
+        <div key={label} className={`flex items-center gap-1.5 text-xs font-semibold ${dark ? "text-slate-400" : "text-slate-600"}`}>
+          <span className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />
+          {label}
+        </div>
+      ))}
     </div>
   );
 }
