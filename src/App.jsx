@@ -19,6 +19,7 @@ import OpportunityScore from "./views/OpportunityScore.jsx";
 import LaunchTimeline from "./views/LaunchTimeline.jsx";
 import BoardReport from "./views/BoardReport.jsx";
 import LaunchChecklist from "./views/LaunchChecklist.jsx";
+import AskPanel from "./components/AskPanel.jsx";
 
 function Dashboard() {
   const { dark, toggle } = useDarkMode();
@@ -136,6 +137,7 @@ function Dashboard() {
           </div>
         </div>
       </div>
+      <AskPanel rows={rows} totals={totals} />
     </div>
   );
 }
