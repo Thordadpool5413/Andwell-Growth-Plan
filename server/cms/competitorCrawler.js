@@ -150,6 +150,14 @@ export async function crawlCompetitorWebsite(competitorSeedId, url, seedParent) 
     }
 
     await updateStatus("success", { services, counties, qualityClaims, parentCompany, staffInfo, contactInfo });
+    // Upgrade CMS Verified → CMS and Website Verified when crawl succeeds
+    try {
+      await query(
+        `UPDATE competitor_cms_matches SET match_status='CMS and Website Verified', updated_at=NOW()
+         WHERE competitor_seed_id=$1 AND match_status='CMS Verified'`,
+        [competitorSeedId]
+      );
+    } catch (_) {}
     return { status: "success", services, counties, qualityClaims, parentCompany };
   } catch (err) {
     console.error(`[Crawler] Failed to crawl ${url}:`, err.message);
