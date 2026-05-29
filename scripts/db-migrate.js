@@ -95,6 +95,8 @@ async function migrate() {
         id SERIAL PRIMARY KEY,
         name TEXT UNIQUE NOT NULL,
         aliases TEXT[],
+        estimated_beneficiaries INTEGER,
+        quality_star_rating FLOAT,
         parent_company TEXT,
         provider_type TEXT,
         website_url TEXT,
@@ -105,6 +107,8 @@ async function migrate() {
     `);
     await col(client, "competitor_seeds", "aliases", "TEXT[]");
     await col(client, "competitor_seeds", "website_url", "TEXT");
+    await col(client, "competitor_seeds", "estimated_beneficiaries", "INTEGER");
+    await col(client, "competitor_seeds", "quality_star_rating", "FLOAT");
     await col(client, "competitor_seeds", "updated_at", "TIMESTAMPTZ DEFAULT NOW()");
 
     await client.query(`

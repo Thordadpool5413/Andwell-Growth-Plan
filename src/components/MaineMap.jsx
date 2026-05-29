@@ -518,7 +518,7 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty }) {
   const [showRings, setShowRings] = useState(false);
   const [showCompetitors, setShowCompetitors] = useState(false);
   const [competitors, setCompetitors] = useState([]);
-  const [compFilter, setCompFilter] = useState({ providerType: "all", cmsStatus: "all", nationalOnly: false, overlapOnly: false, parentSearch: "" });
+  const [compFilter, setCompFilter] = useState({ providerType: "all", cmsStatus: "all", nationalOnly: false, overlapOnly: false, parentSearch: "", countyFilter: "all", healthSystemOnly: false, seededOnly: false });
 
   React.useEffect(() => {
     if (showCompetitors && competitors.length === 0) {
@@ -534,12 +534,24 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty }) {
     }
   }, [showCompetitors]);
 
+  const HEALTH_SYSTEMS_MAP = ["northern light", "mainhealth", "mainehealth", "emhs", "mercy", "central maine", "mount desert"];
+  const hasHealthSystem = (c) => {
+    const hay = `${c.name || ""} ${c.parent_company || ""}`.toLowerCase();
+    return HEALTH_SYSTEMS_MAP.some((h) => hay.includes(h));
+  };
+
   const filteredCompetitors = React.useMemo(() => {
     return competitors.filter((c) => {
       if (compFilter.providerType !== "all" && c.provider_type !== compFilter.providerType) return false;
       if (compFilter.cmsStatus !== "all" && c.match_status !== compFilter.cmsStatus) return false;
       if (compFilter.nationalOnly && !isNationalChainComp(c)) return false;
       if (compFilter.overlapOnly && !competitorOverlapsAndwell(c)) return false;
+      if (compFilter.healthSystemOnly && !hasHealthSystem(c)) return false;
+      if (compFilter.seededOnly && c.cms_only) return false;
+      if (compFilter.countyFilter !== "all") {
+        const counties = [...(c.known_counties || []), ...(c.counties_raw || [])].map((x) => x.toLowerCase());
+        if (!counties.includes(compFilter.countyFilter.toLowerCase())) return false;
+      }
       if (compFilter.parentSearch) {
         const q = compFilter.parentSearch.toLowerCase();
         const match = (c.name || "").toLowerCase().includes(q) || (c.parent_company || "").toLowerCase().includes(q);
@@ -708,6 +720,34 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty }) {
               />
               Andwell overlap
             </label>
+            <label className={`flex items-center gap-1.5 text-xs font-semibold cursor-pointer ${dark ? "text-slate-300" : "text-slate-700"}`}>
+              <input
+                type="checkbox"
+                checked={compFilter.healthSystemOnly}
+                onChange={(e) => setCompFilter((f) => ({ ...f, healthSystemOnly: e.target.checked }))}
+                className="rounded"
+              />
+              Health system
+            </label>
+            <label className={`flex items-center gap-1.5 text-xs font-semibold cursor-pointer ${dark ? "text-slate-300" : "text-slate-700"}`}>
+              <input
+                type="checkbox"
+                checked={compFilter.seededOnly}
+                onChange={(e) => setCompFilter((f) => ({ ...f, seededOnly: e.target.checked }))}
+                className="rounded"
+              />
+              Seeded only
+            </label>
+            <select
+              value={compFilter.countyFilter}
+              onChange={(e) => setCompFilter((f) => ({ ...f, countyFilter: e.target.value }))}
+              className={`rounded-lg border px-2 py-1 text-xs font-semibold ${dark ? "border-slate-600 bg-slate-700 text-slate-200" : "border-slate-200 bg-white text-slate-700"}`}
+            >
+              <option value="all">All counties</option>
+              {["Androscoggin","Aroostook","Cumberland","Franklin","Hancock","Kennebec","Knox","Lincoln","Oxford","Penobscot","Piscataquis","Sagadahoc","Somerset","Waldo","Washington","York"].map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
             <span className={`ml-auto text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>
               {filteredCompetitors.length} of {competitors.length} shown
             </span>
