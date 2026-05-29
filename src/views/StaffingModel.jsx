@@ -47,6 +47,8 @@ export default function StaffingModel({ rows }) {
 
       <Card title="FTE breakdown by service line" eyebrow="Staffing detail">
         <p className={`mb-2 text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>Scroll right to see all columns →</p>
+        <div className="relative">
+          <div className={`pointer-events-none absolute inset-y-0 right-0 z-10 w-12 rounded-r-2xl bg-gradient-to-l ${dark ? "from-slate-800/90" : "from-white/90"}`} />
         <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
           <table className="w-full text-left text-sm">
             <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
@@ -80,6 +82,7 @@ export default function StaffingModel({ rows }) {
               ))}
             </tbody>
           </table>
+        </div>
         </div>
         <p className={`mt-2 text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>
           * <Abbr term="FTE">FTE</Abbr> = Full-Time Equivalent (40 hrs/week). Ratios represent modeled clinical capacity assumptions — actual caseloads vary by acuity, geography, and payer mix. Salary figures are planning estimates; validate against current Maine market rates before budgeting.
