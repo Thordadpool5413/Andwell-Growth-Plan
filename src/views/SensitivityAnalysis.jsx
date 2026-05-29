@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import Card from "../components/Card.jsx";
 import Metric from "../components/Metric.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
+import Abbr from "../components/Abbr.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
 import { getSensitivityAnalysis } from "../utils/calculations.js";
@@ -78,7 +79,7 @@ export default function SensitivityAnalysis({ rows }) {
       <Card title="Revenue sensitivity tornado" eyebrow="Ranked by impact range">
         <div className={`mb-3 rounded-xl border px-3 py-2 text-xs ${dark ? "border-slate-700 bg-slate-800/60 text-slate-400" : "border-slate-100 bg-slate-50 text-slate-500"}`}>
           <span className="font-black">Range sources: </span>
-          HH reimbursement $2,500–$4,000 (CMS national HH reimbursement range) · Conversion rate 60–90% (NAHC 2023 industry median 72–78%) · Capture rate 5–20% (internal Andwell planning assumptions; industry first-year median 8–15%) · Hospice reimbursement mirrors CMS hospice per-diem schedule range.
+          <Abbr term="HH">HH</Abbr> reimbursement $2,500–$4,000 (CMS national <Abbr term="HH">HH</Abbr> reimbursement range) · <Abbr term="Conversion Rate">Conversion rate</Abbr> 60–90% (<Abbr term="NAHC">NAHC</Abbr> 2023 industry median 72–78%) · Capture rate 5–20% (internal Andwell planning assumptions; industry first-year median 8–15%) · Hospice reimbursement mirrors CMS hospice per-diem schedule range.
         </div>
         <div className="space-y-3">
           {analysis.map((variable) => (

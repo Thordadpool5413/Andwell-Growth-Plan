@@ -3,6 +3,7 @@ import Card from "../components/Card.jsx";
 import ServiceBadge from "../components/ServiceBadge.jsx";
 import SourceBadge from "../components/SourceBadge.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
+import Abbr from "../components/Abbr.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { number } from "../utils/formatters.js";
 import { exportReferralCSV } from "../utils/csvExport.js";
@@ -12,7 +13,7 @@ export default function ReferralPlan({ rows }) {
   return (
     <div className="space-y-6">
       <SectionHeader eyebrow="Referral plan" title="Required referrals by county and service line">
-        Referral requirements are derived from patient start goals using a 75% conversion baseline (industry median: 72–78% per NAHC 2023). For every 100 referrals, ~75 are expected to convert to patient starts. Adjust the Scenario Model to see how different conversion rates affect the referral load.
+        Referral requirements are derived from patient start goals using a 75% <Abbr term="Conversion Rate">conversion</Abbr> baseline (industry median: 72–78% per <Abbr term="NAHC">NAHC</Abbr> 2023). For every 100 referrals, ~75 are expected to convert to patient starts. Adjust the Scenario Model to see how different conversion rates affect the referral load.
       </SectionHeader>
       <Card title="Referral requirements by county" eyebrow="Referral plan">
       <div className="mb-4 flex items-center justify-between">
