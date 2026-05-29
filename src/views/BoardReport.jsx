@@ -136,7 +136,7 @@ export default function BoardReport({ rows, totals }) {
                     <th className="px-4 py-3">Priority</th>
                     <th className="px-4 py-3 text-right">Y1 rev</th>
                     <th className="px-4 py-3 text-center">Competition</th>
-                    <th className="px-4 py-3 text-center">Penetration</th>
+                    <th className="px-4 py-3 text-center"><Abbr term="Market Penetration">Penetration</Abbr></th>
                     <th className="px-4 py-3 text-center">Opp score</th>
                   </tr>
                 </thead>
@@ -243,7 +243,7 @@ export default function BoardReport({ rows, totals }) {
         <div className={`text-center text-xs ${dark ? "text-slate-600" : "text-slate-400"} print:mt-8`}>
           <p>Andwell Maine Innovation and Growth Plan — Board Report</p>
           <p>Generated {today} | Data sources: CMS Provider Files, County Market Data, Modeled Projections</p>
-          <p className="mt-1">Key assumptions: 75% conversion rate, Priority 1–3 phased launch, CMS reimbursement rates</p>
+          <p className="mt-1">Key assumptions: 75% <Abbr term="Conversion Rate">conversion rate</Abbr>, Priority 1–3 phased launch, <Abbr term="CMS">CMS</Abbr> reimbursement rates</p>
         </div>
       </div>
     </div>
