@@ -1,9 +1,10 @@
 import React from "react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart,
-  ResponsiveContainer, Tooltip, XAxis, YAxis,
+  Tooltip, XAxis, YAxis,
 } from "recharts";
 import Card from "../components/Card.jsx";
+import ChartContainer from "../components/ChartContainer.jsx";
 import Metric from "../components/Metric.jsx";
 import Badge from "../components/Badge.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
@@ -102,8 +103,7 @@ export default function ExecutiveView({ rows, totals }) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card title="Year 1 service mix" eyebrow="Revenue mix — modeled projections">
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
+          <ChartContainer height="h-80">
               <PieChart>
                 <Pie
                   data={serviceMix}
@@ -126,12 +126,10 @@ export default function ExecutiveView({ rows, totals }) {
                   )}
                 />
               </PieChart>
-            </ResponsiveContainer>
-          </div>
+          </ChartContainer>
         </Card>
         <Card title="Year 1 referral ramp by county" eyebrow="Execution math — gross referrals needed">
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
+          <ChartContainer height="h-80">
               <BarChart data={rows.slice(0, 8)} margin={{ bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
                 <XAxis
@@ -148,8 +146,7 @@ export default function ExecutiveView({ rows, totals }) {
                 />
                 <Bar dataKey={(row) => row.referrals[0]} name="Year 1 referrals" fill={COLORS.blue} radius={[8, 8, 0, 0]} />
               </BarChart>
-            </ResponsiveContainer>
-          </div>
+          </ChartContainer>
         </Card>
       </div>
     </div>

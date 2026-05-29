@@ -1,9 +1,10 @@
 import React from "react";
 import {
   CartesianGrid, Line, LineChart, Bar, BarChart,
-  ResponsiveContainer, Tooltip, XAxis, YAxis, Legend,
+  Tooltip, XAxis, YAxis, Legend,
 } from "recharts";
 import Card from "../components/Card.jsx";
+import ChartContainer from "../components/ChartContainer.jsx";
 import Metric from "../components/Metric.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
 import SourceBadge from "../components/SourceBadge.jsx";
@@ -72,8 +73,7 @@ export default function FinancialModel({ rows }) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card title="3-year financial and referral outlook" eyebrow="Revenue · Contribution · Referrals · Starts">
-          <div className="h-96">
-            <ResponsiveContainer width="100%" height="100%">
+          <ChartContainer height="h-96">
               <LineChart data={yearRows} margin={{ left: 10, right: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
                 <XAxis dataKey="year" tick={{ fill: dark ? "#94a3b8" : "#475569" }} />
@@ -99,12 +99,10 @@ export default function FinancialModel({ rows }) {
                 <Line yAxisId="right" type="monotone" dataKey="referrals" name="Referrals" stroke={COLORS.amber} strokeWidth={3} dot={{ r: 5 }} />
                 <Line yAxisId="right" type="monotone" dataKey="starts" name="Starts" stroke={COLORS.purple} strokeWidth={3} dot={{ r: 5 }} />
               </LineChart>
-            </ResponsiveContainer>
-          </div>
+          </ChartContainer>
         </Card>
         <Card title="Year over year breakdown" eyebrow="Revenue vs. contribution by year">
-          <div className="h-96">
-            <ResponsiveContainer width="100%" height="100%">
+          <ChartContainer height="h-96">
               <BarChart data={yearRows} margin={{ left: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
                 <XAxis dataKey="year" tick={{ fill: dark ? "#94a3b8" : "#475569" }} />
@@ -118,8 +116,7 @@ export default function FinancialModel({ rows }) {
                 <Bar dataKey="revenue" name="Revenue" fill={COLORS.blue} radius={[8, 8, 0, 0]} />
                 <Bar dataKey="contribution" name="Contribution" fill={COLORS.green} radius={[8, 8, 0, 0]} />
               </BarChart>
-            </ResponsiveContainer>
-          </div>
+          </ChartContainer>
         </Card>
       </div>
 

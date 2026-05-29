@@ -1,9 +1,10 @@
 import React from "react";
 import {
   Bar, CartesianGrid, ComposedChart, Line,
-  ResponsiveContainer, Tooltip, XAxis, YAxis, Legend,
+  Tooltip, XAxis, YAxis, Legend,
 } from "recharts";
 import Card from "../components/Card.jsx";
+import ChartContainer from "../components/ChartContainer.jsx";
 import Metric from "../components/Metric.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
 import Abbr from "../components/Abbr.jsx";
@@ -49,8 +50,7 @@ export default function CmsData() {
       </div>
 
       <Card title="HH users vs. Hospice users by county" eyebrow="CMS 2022 PUF — beneficiary volumes">
-        <div className="h-96">
-          <ResponsiveContainer width="100%" height="100%">
+        <ChartContainer height="h-96">
             <ComposedChart data={rows} margin={{ left: 10, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
               <XAxis
@@ -67,8 +67,7 @@ export default function CmsData() {
               <Bar dataKey="hh.users" name="HH users" fill={COLORS.blue} radius={[8, 8, 0, 0]} />
               <Line type="monotone" dataKey="hos.users" name="Hospice users" stroke="#9333ea" strokeWidth={3} dot={{ r: 4 }} />
             </ComposedChart>
-          </ResponsiveContainer>
-        </div>
+        </ChartContainer>
       </Card>
 
       <Card title="Provider density and revenue efficiency" eyebrow="Market intelligence">
