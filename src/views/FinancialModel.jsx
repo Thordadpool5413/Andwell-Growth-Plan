@@ -167,6 +167,43 @@ export default function FinancialModel({ rows }) {
           </table>
         </div>
       </Card>
+
+      <Card title="County & service line detail" eyebrow="Revenue basis by row">
+        <p className={`mb-3 text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>
+          Each row shows the data provenance for its revenue projection. <SourceBadge basis="CMS-backed" /> = derived from CMS provider file beneficiary volumes. <SourceBadge basis="Est." /> = internal capture rate proxy.
+        </p>
+        <div className="relative">
+          <div className={`pointer-events-none absolute inset-y-0 right-0 z-10 w-12 rounded-r-2xl bg-gradient-to-l ${dark ? "from-slate-800/90" : "from-white/90"}`} />
+          <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
+            <table className="w-full text-left text-sm">
+              <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
+                <tr>
+                  <th className="px-5 py-3">County</th>
+                  <th className="px-5 py-3">Service</th>
+                  <th className="px-5 py-3">Source</th>
+                  <th className="px-5 py-3 text-right">Y1 revenue</th>
+                  <th className="px-5 py-3 text-right">Y2 revenue</th>
+                  <th className="px-5 py-3 text-right">Y3 revenue</th>
+                  <th className="px-5 py-3 text-right">Y1 starts</th>
+                </tr>
+              </thead>
+              <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-slate-100"}`}>
+                {rows.map((row) => (
+                  <tr key={`${row.county}-${row.service}`} className={dark ? "hover:bg-slate-700/50" : "hover:bg-slate-50"}>
+                    <td className={`px-5 py-3 font-black ${dark ? "text-white" : ""}`}>{row.county}</td>
+                    <td className={`px-5 py-3 ${dark ? "text-slate-300" : "text-slate-600"}`}>{row.service}</td>
+                    <td className="px-5 py-3"><SourceBadge basis={row.basis} /></td>
+                    <td className={`px-5 py-3 text-right font-black ${dark ? "text-blue-400" : "text-blue-700"}`}>{currency(row.revenue[0])}</td>
+                    <td className={`px-5 py-3 text-right ${dark ? "text-slate-300" : ""}`}>{currency(row.revenue[1])}</td>
+                    <td className={`px-5 py-3 text-right font-black ${dark ? "text-emerald-400" : "text-emerald-600"}`}>{currency(row.revenue[2])}</td>
+                    <td className={`px-5 py-3 text-right ${dark ? "text-slate-300" : ""}`}>{number(row.starts[0])}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }
