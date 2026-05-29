@@ -146,18 +146,59 @@ export async function queryCmsDataset({ datasetId, filters = {}, columns = [], l
   }
 }
 
+const STATE_COL_CANDIDATES = ["state", "provider_state", "state_cd", "hhcahps_state", "facility_state", "st"];
+
+async function discoverStateColumn(datasetId) {
+  try {
+    const url = `${DATA_API_BASE}/datastore/query/${datasetId}?limit=1`;
+    const sample = await fetchWithRetry(url);
+    const rowKeys = sample?.data?.[0]
+      ? Object.keys(sample.data[0]).map((k) => k.toLowerCase())
+      : (sample?.schema?.[datasetId]?.fields || []).map((f) => f.name.toLowerCase());
+    const found = STATE_COL_CANDIDATES.find((c) => rowKeys.includes(c));
+    if (!found) console.warn(`[CMS] No state column found in dataset ${datasetId} — state filter skipped`);
+    return found || null;
+  } catch (err) {
+    console.warn(`[CMS] discoverStateColumn error for ${datasetId}:`, err.message);
+    return null;
+  }
+}
+
+export async function geocodeAddress({ address, city, state = "ME", zip = null }) {
+  const MAPS_KEY = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
+  if (!MAPS_KEY) return null;
+  const parts = [address, city, state, zip].filter(Boolean);
+  if (!parts.length) return null;
+  try {
+    const q = encodeURIComponent(parts.join(", "));
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${q}&key=${MAPS_KEY}&region=us&components=country:US|administrative_area:ME`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const data = await res.json();
+    if (data.status === "OK" && data.results?.[0]?.geometry?.location) {
+      const { lat, lng } = data.results[0].geometry.location;
+      return { lat: parseFloat(lat.toFixed(6)), lng: parseFloat(lng.toFixed(6)) };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchMaineProviders(providerType, filters = {}) {
   const cachedDatasets = await getCachedDatasets(providerType);
   const results = [];
 
   for (const ds of cachedDatasets.slice(0, 3)) {
     try {
+      const stateCol = await discoverStateColumn(ds.cms_dataset_identifier);
+      const stateFilter = stateCol ? { [stateCol]: DEFAULT_STATE } : {};
+
       let page = 0;
       let hasMore = true;
       while (hasMore) {
         const r = await queryCmsDataset({
           datasetId: ds.cms_dataset_identifier,
-          filters: { state: DEFAULT_STATE, ...filters },
+          filters: { ...stateFilter, ...filters },
           limit: MAX_PAGE,
           offset: page * MAX_PAGE,
         });
