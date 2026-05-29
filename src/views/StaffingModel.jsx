@@ -46,6 +46,7 @@ export default function StaffingModel({ rows }) {
       </div>
 
       <Card title="FTE breakdown by service line" eyebrow="Staffing detail">
+        <p className={`mb-2 text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>Scroll right to see all columns →</p>
         <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
           <table className="w-full text-left text-sm">
             <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>

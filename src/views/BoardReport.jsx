@@ -95,31 +95,29 @@ export default function BoardReport({ rows, totals }) {
           <Card title="County status matrix" eyebrow="Traffic light indicators">
             <div className={`mb-3 rounded-xl border px-4 py-2.5 ${dark ? "border-slate-700 bg-slate-800/60" : "border-slate-100 bg-slate-50"}`}>
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-                <p className={`text-[10px] font-black uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-400"}`}>Traffic light key:</p>
-                <div className="flex items-center gap-4">
-                  <p className={`text-[10px] font-semibold ${dark ? "text-slate-500" : "text-slate-400"}`}>Competition dot</p>
-                  {[
-                    { color: "bg-emerald-500", label: "On track — threat ≤40" },
-                    { color: "bg-amber-500", label: "Watch — threat 40–60" },
-                    { color: "bg-red-500", label: "At risk — threat >60" },
-                  ].map(({ color, label }) => (
-                    <div key={label} className="flex items-center gap-1.5">
-                      <span className={`inline-block h-2.5 w-2.5 rounded-full ${color}`} />
-                      <span className={`text-[10px] ${dark ? "text-slate-400" : "text-slate-500"}`}>{label}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className={`flex items-center gap-4 border-l pl-4 ${dark ? "border-slate-700" : "border-slate-200"}`}>
-                  <p className={`text-[10px] font-semibold ${dark ? "text-slate-500" : "text-slate-400"}`}>Penetration dot</p>
+                <p className={`text-[10px] font-black uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-400"}`}>Traffic light key</p>
+                {[
+                  { color: "bg-emerald-500", label: "On track", sub: "≥60% position (threat ≤40)" },
+                  { color: "bg-amber-500", label: "Watch", sub: "40–59% position (threat 41–60)" },
+                  { color: "bg-red-500", label: "At risk", sub: "<40% position (threat >60)" },
+                ].map(({ color, label, sub }) => (
+                  <div key={label} className="flex items-center gap-1.5">
+                    <span className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${color}`} />
+                    <span className={`text-[10px] font-semibold ${dark ? "text-slate-300" : "text-slate-600"}`}>{label}</span>
+                    <span className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>{sub}</span>
+                  </div>
+                ))}
+                <div className={`border-l pl-4 ${dark ? "border-slate-700" : "border-slate-200"}`}>
+                  <span className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>Penetration dot: </span>
                   {[
                     { color: "bg-emerald-500", label: "On track ≥5%" },
                     { color: "bg-amber-500", label: "Watch 2–5%" },
                     { color: "bg-red-500", label: "At risk <2%" },
                   ].map(({ color, label }) => (
-                    <div key={label} className="flex items-center gap-1.5">
-                      <span className={`inline-block h-2.5 w-2.5 rounded-full ${color}`} />
+                    <span key={label} className="inline-flex items-center gap-1 ml-2">
+                      <span className={`inline-block h-2 w-2 rounded-full ${color}`} />
                       <span className={`text-[10px] ${dark ? "text-slate-400" : "text-slate-500"}`}>{label}</span>
-                    </div>
+                    </span>
                   ))}
                 </div>
               </div>
