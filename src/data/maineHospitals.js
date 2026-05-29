@@ -1,0 +1,26 @@
+const MAINE_HOSPITALS = [
+  { id: 1, name: "Maine Medical Center", county: "Cumberland", lat: 43.6591, lng: -70.2568, system: "MaineHealth" },
+  { id: 2, name: "Mercy Hospital", county: "Cumberland", lat: 43.6482, lng: -70.2814, system: "Northern Light Health" },
+  { id: 3, name: "Southern Maine Health Care", county: "York", lat: 43.3860, lng: -70.4731, system: "MaineHealth" },
+  { id: 4, name: "York Hospital", county: "York", lat: 43.1637, lng: -70.6327, system: "Independent" },
+  { id: 5, name: "Mid Coast Hospital", county: "Sagadahoc", lat: 44.0007, lng: -69.8117, system: "MaineHealth" },
+  { id: 6, name: "Miles Memorial Hospital", county: "Lincoln", lat: 44.0418, lng: -69.6100, system: "MaineHealth" },
+  { id: 7, name: "Pen Bay Medical Center", county: "Knox", lat: 44.1059, lng: -69.1073, system: "MaineHealth" },
+  { id: 8, name: "Waldo County General Hospital", county: "Waldo", lat: 44.4203, lng: -69.0081, system: "MaineHealth" },
+  { id: 9, name: "Eastern Maine Medical Center", county: "Penobscot", lat: 44.8012, lng: -68.7783, system: "Northern Light Health" },
+  { id: 10, name: "St. Joseph Hospital", county: "Penobscot", lat: 44.7800, lng: -68.7785, system: "Covenant Health" },
+  { id: 11, name: "Maine General Medical Center", county: "Kennebec", lat: 44.3263, lng: -69.7653, system: "MaineGeneral Health" },
+  { id: 12, name: "Sebasticook Valley Hospital", county: "Somerset", lat: 44.6937, lng: -69.6301, system: "Northern Light Health" },
+  { id: 13, name: "Inland Hospital", county: "Kennebec", lat: 44.5504, lng: -69.6273, system: "Northern Light Health" },
+  { id: 14, name: "Franklin Memorial Hospital", county: "Franklin", lat: 44.5660, lng: -70.1528, system: "MaineHealth" },
+  { id: 15, name: "Rumford Hospital", county: "Oxford", lat: 44.5518, lng: -70.5513, system: "Central Maine Healthcare" },
+  { id: 16, name: "Bridgton Hospital", county: "Cumberland", lat: 44.0557, lng: -70.7135, system: "Central Maine Healthcare" },
+  { id: 17, name: "Stephens Memorial Hospital", county: "Oxford", lat: 44.2565, lng: -70.5409, system: "MaineHealth" },
+  { id: 18, name: "Calais Regional Hospital", county: "Washington", lat: 45.1876, lng: -67.2775, system: "Independent" },
+  { id: 19, name: "Down East Community Hospital", county: "Washington", lat: 44.6726, lng: -67.4627, system: "Northern Light Health" },
+  { id: 20, name: "Aroostook Medical Center", county: "Aroostook", lat: 46.8671, lng: -68.0162, system: "Northern Light Health" },
+  { id: 21, name: "Cary Medical Center", county: "Aroostook", lat: 46.6535, lng: -68.0057, system: "Independent" },
+  { id: 22, name: "Ellsworth Affiliated Hospital (BCMH)", county: "Hancock", lat: 44.5434, lng: -68.4198, system: "Northern Light Health" },
+];
+
+export default MAINE_HOSPITALS;
