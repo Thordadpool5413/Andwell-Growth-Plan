@@ -211,3 +211,37 @@ Question: ${question}`,
     },
   ];
 }
+
+const CMS_KEYWORDS = [
+  "competitor", "amedisys", "gentiva", "kindred", "compassus", "constellation",
+  "cms", "medicare provider", "hospice provider", "home health agency", "home health agencies",
+  "ccn", "cms certified", "certification number", "maine provider", "beacon hospice",
+  "northern light", "mainehealth", "mainegeneral", "chans", "vna", "bristol hospice",
+  "affinity care", "york hospital hospice", "miles st", "hospice of aroostook",
+  "community health and counseling", "st joseph hospice", "provider data catalog",
+  "provider match", "verified", "cms verified", "market share", "provider file",
+];
+
+function isCmsQuestion(q) {
+  const lower = q.toLowerCase();
+  return CMS_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
+export async function callCmsAnalyze(question) {
+  const token = await getToken();
+  const res = await fetch("/api/ai/cms-analyze", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-ai-token": token,
+    },
+    body: JSON.stringify({ question }),
+  });
+  if (!res.ok) {
+    const errJson = await res.json().catch(() => ({}));
+    throw new Error(errJson.error || `CMS AI error ${res.status}`);
+  }
+  return res.json();
+}
+
+export { isCmsQuestion };

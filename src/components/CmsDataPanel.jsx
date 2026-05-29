@@ -3,6 +3,21 @@ import { useDarkMode } from "./DarkModeContext.jsx";
 import VerificationBadge from "./VerificationBadge.jsx";
 import CmsAnalyzer from "./CmsAnalyzer.jsx";
 
+let _cachedCmsToken = null;
+let _cmsTokenFetchedAt = 0;
+const CMS_TOKEN_TTL = 3.5 * 60 * 60 * 1000;
+
+async function getCmsToken() {
+  const now = Date.now();
+  if (_cachedCmsToken && now - _cmsTokenFetchedAt < CMS_TOKEN_TTL) return _cachedCmsToken;
+  const res = await fetch("/api/ai/token");
+  if (!res.ok) throw new Error("Could not obtain session token.");
+  const { token } = await res.json();
+  _cachedCmsToken = token;
+  _cmsTokenFetchedAt = now;
+  return token;
+}
+
 function StatBox({ label, value, sub, dark }) {
   return (
     <div className={`rounded-2xl border p-4 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
@@ -46,9 +61,10 @@ export default function CmsDataPanel() {
     setSyncing(true);
     setSyncResult(null);
     try {
+      const token = await getCmsToken();
       const res = await fetch("/api/cms/sync", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-ai-token": token },
         body: JSON.stringify({ provider_type: syncType }),
       });
       const data = await res.json();
@@ -64,7 +80,11 @@ export default function CmsDataPanel() {
   const runCrawl = async () => {
     setSyncing(true);
     try {
-      const res = await fetch("/api/cms/crawl", { method: "POST" });
+      const token = await getCmsToken();
+      const res = await fetch("/api/cms/crawl", {
+        method: "POST",
+        headers: { "x-ai-token": token },
+      });
       const data = await res.json();
       setSyncResult(data);
     } catch (err) {
@@ -76,9 +96,10 @@ export default function CmsDataPanel() {
 
   const runMatch = async (competitorName) => {
     try {
+      const token = await getCmsToken();
       const res = await fetch("/api/cms/match", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-ai-token": token },
         body: JSON.stringify({ competitor_name: competitorName }),
       });
       const data = await res.json();
