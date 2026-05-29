@@ -46,12 +46,43 @@ const DIMENSIONS = [
   { key: "affiliations", label: "Parent affiliation", andwellValue: "None", tooltip: "National chain affiliation" },
 ];
 
-function DimCell({ value, andwellGood, dark, isAndwell }) {
-  const good = isAndwell
+const COMPETITOR_LEADS = {
+  national_chain: (v) => v === "Yes",
+  maine_focus: (v) => v === "Yes",
+  health_system: (v) => v !== "None" && v !== "—",
+  cms_status: (v) => v === "Verified",
+  hospice_cert: (v) => v === "Yes",
+  hh_cert: (v) => v === "Yes",
+  quality_star: (v) => v !== "—",
+  est_beneficiaries: (v) => v !== "—",
+  counties: (v) => v !== "Unknown" && v !== "—",
+  services: (v) => v !== "Unknown" && v !== "—",
+  affiliations: (v) => v !== "None" && v !== "—",
+};
+const ANDWELL_LEADS = {
+  national_chain: (v) => v === "No",
+  maine_focus: (v) => v === "No",
+  health_system: (v) => false,
+  affiliations: (v) => v === "None" || v === "—",
+};
+
+function getAdvantage(dimKey, compValue) {
+  if (COMPETITOR_LEADS[dimKey]?.(compValue)) return "competitor";
+  if (ANDWELL_LEADS[dimKey]?.(compValue)) return "andwell";
+  return "neutral";
+}
+
+function DimCell({ value, dark, isAndwell, dimKey }) {
+  const cls = isAndwell
     ? dark ? "bg-blue-900/30 text-blue-300" : "bg-blue-100 text-blue-700"
-    : dark ? "bg-slate-700/40 text-slate-300" : "bg-slate-50 text-slate-600";
+    : (() => {
+      const adv = dimKey ? getAdvantage(dimKey, value) : "neutral";
+      if (adv === "competitor") return dark ? "bg-amber-900/30 text-amber-300" : "bg-amber-50 text-amber-700";
+      if (adv === "andwell") return dark ? "bg-emerald-900/30 text-emerald-300" : "bg-emerald-50 text-emerald-700";
+      return dark ? "bg-slate-700/40 text-slate-300" : "bg-slate-50 text-slate-600";
+    })();
   return (
-    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${good}`}>
+    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${cls}`}>
       {value}
     </span>
   );
@@ -258,10 +289,15 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE })
           return (
             <div key={comp.id || comp.name} className={`w-48 shrink-0 rounded-2xl border p-4 ${borderCls} ${dark ? "bg-slate-800/50" : "bg-white"}`}>
               <div className="mb-3">
-                {national && (
-                  <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase ${dark ? "bg-red-900/40 text-red-400" : "bg-red-50 text-red-600"}`}>National</span>
-                )}
-                <p className={`text-sm font-black mt-1 leading-5 ${dark ? "text-white" : "text-slate-950"}`}>{comp.name}</p>
+                <div className="flex flex-wrap gap-1 mb-1">
+                  {national && (
+                    <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase ${dark ? "bg-red-900/40 text-red-400" : "bg-red-50 text-red-600"}`}>National</span>
+                  )}
+                  {comp.cms_only && (
+                    <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase ${dark ? "bg-violet-900/40 text-violet-400" : "bg-violet-50 text-violet-600"}`}>CMS discovered</span>
+                  )}
+                </div>
+                <p className={`text-sm font-black leading-5 ${dark ? "text-white" : "text-slate-950"}`}>{comp.name}</p>
                 {comp.parent_company && <p className={`text-[10px] mt-0.5 ${dark ? "text-slate-400" : "text-slate-500"}`}>{comp.parent_company}</p>}
                 <div className="mt-1.5">
                   <VerificationBadge status={status} size="xs" />
@@ -271,7 +307,7 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE })
                 {DIMENSIONS.map((dim) => (
                   <div key={dim.key} className="flex items-center justify-between gap-1 text-[11px]">
                     <span className={`${dark ? "text-slate-400" : "text-slate-500"} truncate`} title={dim.tooltip}>{dim.label}</span>
-                    <DimCell value={getCompValue(comp, dim)} dark={dark} />
+                    <DimCell value={getCompValue(comp, dim)} dark={dark} dimKey={dim.key} />
                   </div>
                 ))}
               </div>
@@ -308,10 +344,20 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
 
   useEffect(() => {
     setLoading(true);
-    fetch("/api/cms/competitors")
-      .then((r) => (r.ok ? r.json() : Promise.reject(r.statusText)))
-      .then((data) => { setCompetitors(data.competitors || []); setLoading(false); })
-      .catch((err) => { setError(err.toString()); setLoading(false); });
+    (async () => {
+      try {
+        const tr = await fetch("/api/ai/token");
+        const { token } = tr.ok ? await tr.json() : { token: "" };
+        const r = await fetch("/api/cms/competitors", { headers: { "x-ai-token": token } });
+        if (!r.ok) throw new Error(r.statusText);
+        const data = await r.json();
+        setCompetitors(data.competitors || []);
+      } catch (err) {
+        setError(err.toString());
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   const filtered = useMemo(() => {

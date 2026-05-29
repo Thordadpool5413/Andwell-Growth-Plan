@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Bar, BarChart, CartesianGrid, Cell,
   Tooltip, XAxis, YAxis,
@@ -10,6 +10,7 @@ import Badge from "../components/Badge.jsx";
 import Abbr from "../components/Abbr.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
 import VerificationBadge from "../components/VerificationBadge.jsx";
+import CmsEvidenceCard from "../components/CmsEvidenceCard.jsx";
 import CompetitorGrid from "./CompetitorGrid.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
@@ -39,6 +40,23 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty }) {
   const { dark } = useDarkMode();
   const [service, setService] = useState("Home Healthcare");
   const [activeTab, setActiveTab] = useState("providers");
+  const [cmsCompetitors, setCmsCompetitors] = useState([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const tr = await fetch("/api/ai/token");
+        const { token } = tr.ok ? await tr.json() : { token: "" };
+        const r = await fetch("/api/cms/competitors", { headers: { "x-ai-token": token } });
+        if (r.ok) { const d = await r.json(); setCmsCompetitors(d.competitors || []); }
+      } catch (_) {}
+    })();
+  }, []);
+
+  const getCmsData = (providerName) =>
+    cmsCompetitors.find((c) => c.name?.toLowerCase().includes(providerName.toLowerCase().slice(0, 10)) ||
+      providerName.toLowerCase().includes((c.name || "").toLowerCase().slice(0, 10)));
+
   const summary = getProviderSummary(service);
   const providers = namedProviderRows.filter((row) => row.service === service).sort((a, b) => b.beneficiaries - a.beneficiaries);
   const countyProviders = providers.filter((row) => row.locationCounty === selectedCounty);
@@ -151,6 +169,10 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty }) {
                     <div><p className={dark ? "text-slate-400" : "text-slate-500"}>Episodes</p><p className="font-black">{number(provider.episodes)}</p></div>
                     <div><p className={dark ? "text-slate-400" : "text-slate-500"}>Payment</p><p className="font-black">{currency(provider.payment)}</p></div>
                   </div>
+                  {!provider.isAndwellCmsRecord && (() => {
+                    const cmsData = getCmsData(provider.providerName);
+                    return cmsData ? <div className="mt-3"><CmsEvidenceCard competitor={cmsData} compact /></div> : null;
+                  })()}
                 </div>
               )) : (
                 <div className={`rounded-2xl border p-5 ${dark ? "border-amber-800 bg-amber-950/50 text-amber-300" : "border-amber-200 bg-amber-50 text-amber-900"}`}>

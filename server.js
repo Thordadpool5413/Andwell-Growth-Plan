@@ -385,7 +385,7 @@ function cmsReadyCheck(req, res, next) {
   next();
 }
 
-app.get("/api/cms/stats", async (req, res) => {
+app.get("/api/cms/stats", strictOriginCheck, tokenCheck, async (req, res) => {
   try {
     const mod = await loadCms();
     if (!mod) { res.json({ datasetsDiscovered: 0, maineHospiceProviders: 0, maineHHAgencies: 0, competitorMatches: 0, needsReview: 0 }); return; }
@@ -396,7 +396,7 @@ app.get("/api/cms/stats", async (req, res) => {
   }
 });
 
-app.get("/api/cms/competitors", async (req, res) => {
+app.get("/api/cms/competitors", strictOriginCheck, tokenCheck, async (req, res) => {
   try {
     const mod = await loadCms();
     if (!mod) { res.json({ competitors: [] }); return; }
@@ -498,7 +498,7 @@ app.post("/api/cms/tool", strictOriginCheck, tokenCheck, async (req, res) => {
   }
 });
 
-app.get("/api/cms/tools", async (req, res) => {
+app.get("/api/cms/tools", strictOriginCheck, tokenCheck, async (req, res) => {
   try {
     const mod = await loadCms();
     if (!mod) { res.json({ tools: [] }); return; }
