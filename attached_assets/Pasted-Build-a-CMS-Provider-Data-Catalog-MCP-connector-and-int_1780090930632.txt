@@ -1,0 +1,632 @@
+Build a CMS Provider Data Catalog MCP connector and integrate it into the Andwell competitive intelligence application.
+
+Purpose
+
+The application must use the CMS Provider Data Catalog API as the official public data source for Medicare certified hospice and Medicare certified home health provider verification.
+
+The CMS API is the data source.
+
+The MCP server is the tool layer that allows the app AI to safely access, query, normalize, cache, compare, and cite CMS provider data.
+
+The MCP connector must be built as a real working integration, not a visual placeholder.
+
+Core objective
+
+Create an MCP server that exposes CMS Provider Data Catalog data to the Andwell app through structured tools.
+
+The MCP tools must allow the app to:
+
+1. Discover CMS hospice and home health datasets
+2. Retrieve CMS dataset metadata
+3. Query provider records
+4. Filter providers by Maine
+5. Filter providers by hospice
+6. Filter providers by home health
+7. Match CMS provider records to Andwell competitors
+8. Normalize provider names and aliases
+9. Verify Medicare provider status
+10. Pull quality and experience data when available
+11. Pull location data when available
+12. Pull service area or zip level data when available
+13. Store CMS evidence in the app database
+14. Attach CMS evidence to competitor profiles
+15. Refresh CMS data on a schedule
+16. Flag stale or missing data
+17. Return clean structured results to the app front end
+
+Important distinction
+
+Do not treat competitor websites as the primary verification source for Medicare status.
+
+Competitor websites may describe services.
+
+CMS data verifies whether the provider exists in the Medicare provider universe.
+
+For Medicare Part A hospice competitor verification, CMS data must be treated as a higher trust source than competitor websites.
+
+For Medicare certified home health verification, CMS data must be treated as a higher trust source than competitor websites.
+
+Required CMS data scope
+
+The MCP connector must support the following CMS Provider Data Catalog topic areas.
+
+1. Hospice care
+
+Use this topic to identify and verify Medicare certified hospice providers, hospice provider identity, hospice location data, hospice quality data, hospice CAHPS data when available, hospice state data, hospice national data, and hospice service area or zip data when available.
+
+2. Home health services
+
+Use this topic to identify and verify Medicare certified home health agencies, home health provider identity, provider location data, home health quality data, HHCAHPS data when available, state data, national data, and service related measures when available.
+
+3. Medicare post acute care and hospice public use data when available
+
+Use this area for deeper utilization and payment intelligence when the app needs Medicare post acute or hospice level utilization, payment, charge, provider, state, or national level analysis.
+
+Dataset discovery requirements
+
+The MCP server must not rely only on permanently hard coded dataset identifiers.
+
+The connector must include a dataset discovery function that searches the CMS Provider Data Catalog for the required datasets by topic and keyword.
+
+The connector must search for datasets using terms such as:
+
+1. Hospice provider data
+2. Hospice care provider data
+3. Hospice CAHPS provider data
+4. Hospice state data
+5. Hospice zip data
+6. Home health care agencies
+7. Home health provider data
+8. Home health quality data
+9. HHCAHPS provider data
+10. Home health state data
+
+The connector must store discovered dataset identifiers in the app database.
+
+Each stored dataset reference must include:
+
+1. CMS dataset title
+2. CMS dataset identifier
+3. CMS topic
+4. CMS source page
+5. Last modified date when available
+6. Released date when available
+7. Planned update date when available
+8. Data dictionary reference when available
+9. API access path
+10. Last successful sync date
+11. Last failed sync date
+12. Current active status
+13. Replacement dataset reference when available
+
+MCP tool requirements
+
+Create the following MCP tools.
+
+1. search_cms_provider_datasets
+
+Purpose:
+Search the CMS Provider Data Catalog for hospice and home health datasets.
+
+Input:
+Topic, keyword, provider type, and optional state.
+
+Output:
+Dataset title, dataset identifier, description, topic, modified date, release date, planned update date, data dictionary reference, API reference, and confidence score.
+
+2. get_cms_dataset_metadata
+
+Purpose:
+Retrieve metadata and column definitions for a selected CMS dataset.
+
+Input:
+Dataset identifier.
+
+Output:
+Dataset title, description, available columns, data types, update dates, source information, and usable query fields.
+
+3. query_cms_dataset
+
+Purpose:
+Query a CMS dataset with filters, pagination, and selected columns.
+
+Input:
+Dataset identifier, filters, selected columns, limit, offset, sort field, and sort direction.
+
+Output:
+Rows, total count when available, pagination information, query metadata, and source reference.
+
+4. fetch_maine_hospice_providers
+
+Purpose:
+Return hospice provider records for Maine.
+
+Input:
+Optional provider name, city, county when available, zip code, parent company, and active status.
+
+Output:
+Hospice provider records including provider name, CMS certification number when available, address, city, state, zip code, phone when available, quality fields when available, CAHPS fields when available, and source evidence.
+
+5. fetch_maine_home_health_agencies
+
+Purpose:
+Return Medicare certified home health agency records for Maine.
+
+Input:
+Optional provider name, city, county when available, zip code, parent company, and active status.
+
+Output:
+Home health provider records including provider name, CMS certification number when available, address, city, state, zip code, phone when available, quality fields when available, HHCAHPS fields when available, and source evidence.
+
+6. match_competitor_to_cms_provider
+
+Purpose:
+Match a competitor from the Andwell app to CMS hospice or home health provider records.
+
+Input:
+Competitor name, aliases, parent company, city, state, zip code, provider type, and known website.
+
+Output:
+Best match, possible matches, match confidence, name similarity, location similarity, provider type match, CMS evidence, and recommended verification status.
+
+7. normalize_provider_identity
+
+Purpose:
+Normalize provider names, parent company names, aliases, legacy names, and brand variants.
+
+Input:
+Raw provider name, aliases, parent organization, and source text.
+
+Output:
+Normalized provider name, display name, known aliases, likely parent company, legacy names, and duplicate risk.
+
+8. sync_cms_provider_data
+
+Purpose:
+Refresh CMS hospice and home health datasets into the local app database.
+
+Input:
+Dataset identifiers, provider type, state, sync mode, and date range when available.
+
+Output:
+Records created, records updated, records unchanged, records archived, failed records, sync timestamp, and error details.
+
+9. get_provider_quality_snapshot
+
+Purpose:
+Retrieve quality and patient experience data for a matched provider when available.
+
+Input:
+Provider identifier, provider type, CMS certification number when available, and dataset references.
+
+Output:
+Quality measures, patient experience measures, state benchmarks when available, national benchmarks when available, reporting period, and source evidence.
+
+10. get_provider_service_area_snapshot
+
+Purpose:
+Retrieve service area or zip level information for hospice or home health providers when available.
+
+Input:
+Provider identifier, provider type, CMS certification number when available, state, and zip code.
+
+Output:
+Provider service area data, zip level data when available, state, city, county when derivable, and confidence score.
+
+Data model requirements
+
+Add database tables or collections for CMS integration.
+
+Create a cms_datasets table with:
+
+1. id
+2. cms_dataset_identifier
+3. title
+4. topic
+5. description
+6. source_page
+7. api_reference
+8. data_dictionary_reference
+9. last_modified_date
+10. release_date
+11. planned_update_date
+12. active_status
+13. last_discovered_at
+14. last_synced_at
+15. created_at
+16. updated_at
+
+Create a cms_provider_records table with:
+
+1. id
+2. cms_dataset_identifier
+3. provider_type
+4. provider_name_raw
+5. provider_name_normalized
+6. cms_certification_number
+7. npi when available
+8. address
+9. city
+10. state
+11. zip_code
+12. phone
+13. county when available or derived
+14. latitude when available or geocoded
+15. longitude when available or geocoded
+16. source_row_json
+17. source_evidence_text
+18. last_synced_at
+19. created_at
+20. updated_at
+
+Create a competitor_cms_matches table with:
+
+1. id
+2. competitor_id
+3. cms_provider_record_id
+4. provider_type
+5. match_status
+6. match_confidence
+7. name_match_score
+8. location_match_score
+9. alias_match_score
+10. parent_company_match_score
+11. verified_by_ai
+12. approved_by_user
+13. rejected_by_user
+14. evidence_summary
+15. created_at
+16. updated_at
+
+Create a cms_quality_snapshots table with:
+
+1. id
+2. cms_provider_record_id
+3. provider_type
+4. measure_name
+5. measure_value
+6. benchmark_state_value
+7. benchmark_national_value
+8. reporting_period
+9. source_dataset_identifier
+10. source_row_json
+11. created_at
+12. updated_at
+
+Create a cms_sync_logs table with:
+
+1. id
+2. sync_type
+3. dataset_identifier
+4. provider_type
+5. state
+6. started_at
+7. completed_at
+8. status
+9. records_created
+10. records_updated
+11. records_archived
+12. records_failed
+13. error_message
+14. raw_response_sample
+
+MCP behavior requirements
+
+The MCP server must be read only for CMS data.
+
+The MCP server must never modify CMS data.
+
+The MCP server may cache CMS data in the local app database for performance and auditability.
+
+The MCP server must support pagination because CMS datasets may return records in limited batches.
+
+The MCP server must handle empty responses gracefully.
+
+The MCP server must handle renamed datasets gracefully.
+
+The MCP server must handle missing columns gracefully.
+
+The MCP server must map columns dynamically from metadata instead of assuming every CMS dataset has the same schema.
+
+The MCP server must log every CMS query used to support a material claim.
+
+The MCP server must return evidence in a format the app can attach to approved claims and competitor profiles.
+
+API access logic
+
+Implement a CMS API client in the app back end.
+
+The client must support:
+
+1. Catalog search
+2. Dataset metadata retrieval
+3. Dataset row queries
+4. Pagination
+5. Retry logic
+6. Timeout handling
+7. Error handling
+8. Response validation
+9. Column normalization
+10. Local caching
+11. Sync logging
+12. Source evidence packaging
+
+The API client must not require an API key unless CMS changes its access rules in the future.
+
+The API client must be designed so an API key or token can be added later through environment variables if required.
+
+Use environment variables for configurable CMS settings.
+
+Recommended environment variables:
+
+1. CMS_PROVIDER_DATA_BASE_URL
+2. CMS_DATA_API_BASE_URL
+3. CMS_REQUEST_TIMEOUT_MS
+4. CMS_MAX_PAGE_SIZE
+5. CMS_DEFAULT_STATE
+6. CMS_CACHE_TTL_HOURS
+7. CMS_SYNC_ENABLED
+8. CMS_SYNC_CRON
+9. CMS_LOG_RAW_RESPONSES
+10. CMS_ENABLE_SQL_QUERY
+
+Recommended default values:
+
+1. Default state must be Maine
+2. Default state abbreviation must be ME
+3. Default provider types must include hospice and home health
+4. Default sync should run weekly unless the app owner changes it
+5. Manual refresh must also be available from the admin interface
+
+Andwell app integration requirements
+
+The CMS MCP connector must feed the following app sections.
+
+1. Competitor Intelligence
+
+Use CMS data to verify whether seeded competitors appear as Medicare certified hospice providers or Medicare certified home health agencies in Maine.
+
+2. Medicare Part A Hospice Competitors
+
+Use CMS hospice data as the primary verification source for Maine hospice competitors.
+
+3. Medicare Certified Home Health Competitors
+
+Use CMS home health data as the primary verification source for Maine home health competitors.
+
+4. Andwell Comparison Grid
+
+Use CMS data to support provider identity, certification status, provider type, and location fields.
+
+5. Geographic Opportunity Map
+
+Use CMS provider address and service area data to plot competitor presence and analyze density.
+
+6. Approved Claims
+
+Use CMS records as evidence for claims about Medicare provider status, location, quality, and service type.
+
+7. Reference Library
+
+Store CMS datasets, metadata, sync logs, and data dictionary references.
+
+8. Executive Reports
+
+Use CMS verified facts in executive summaries and competitor profiles.
+
+Seeded competitor verification
+
+Use the CMS MCP connector to verify the seeded Maine hospice competitors.
+
+Seeded competitors include:
+
+1. Beacon Hospice, An Amedisys Company
+2. Gentiva
+3. Kindred Hospice
+4. Northern Light Home Care and Hospice
+5. MaineHealth Care at Home
+6. CHANS Home Health and Hospice
+7. MaineGeneral Community Care
+8. Community Health and Counseling Services
+9. St. Joseph Hospice
+10. Bristol Hospice
+11. Compassus Hospice
+12. Constellation Hospice
+13. Affinity Care of Maine
+14. York Hospital Hospice and Palliative Care
+15. Miles and St. Andrews Home Health and Hospice
+16. VNA Home Health and Hospice
+17. Hospice of Aroostook
+
+For each seeded competitor, call match_competitor_to_cms_provider.
+
+If a confident CMS match exists, mark the competitor as CMS Verified.
+
+If multiple possible matches exist, mark the competitor as Needs Review.
+
+If no CMS match exists, mark the competitor as Not Verified by CMS and keep the competitor in the seeded reference set.
+
+Do not delete seeded competitors automatically.
+
+Do not assume that no match means the organization does not exist.
+
+No match means no CMS match was found using the current dataset, query logic, and available aliases.
+
+Verification statuses
+
+Use these verification statuses:
+
+1. CMS Verified
+2. Website Verified
+3. CMS and Website Verified
+4. Needs Review
+5. Not Verified by CMS
+6. Duplicate or Alias
+7. Archived by User
+8. Not a Direct Competitor
+
+Evidence hierarchy
+
+When classifying Medicare hospice or home health competitors, use this evidence hierarchy.
+
+1. CMS Provider Data Catalog records
+2. Maine state licensing or certification sources
+3. Medicare Care Compare related public data
+4. Competitor website
+5. User uploaded documents
+6. AI inference
+
+AI inference alone cannot verify Medicare status.
+
+Competitor website claims alone can support service description, but CMS or state data should verify Medicare provider status when possible.
+
+Front end requirements
+
+Add a CMS Data Connection panel in the Reference Library or Settings area.
+
+The panel must show:
+
+1. CMS connection status
+2. Last dataset discovery date
+3. Last hospice sync date
+4. Last home health sync date
+5. Number of Maine hospice providers found
+6. Number of Maine home health agencies found
+7. Number of competitor CMS matches
+8. Number of competitors needing review
+9. Failed sync messages
+10. Manual refresh button
+11. Dataset list
+12. Data dictionary links or references
+
+Add CMS evidence cards throughout the app.
+
+A CMS evidence card must show:
+
+1. Provider name
+2. Provider type
+3. CMS dataset title
+4. CMS certification number when available
+5. Address
+6. City
+7. State
+8. Zip code
+9. Reporting period when available
+10. Last synced date
+11. Confidence score
+12. Verification status
+13. Source summary
+
+Map requirements
+
+The map must use CMS provider location data when available.
+
+The map must show CMS verified competitors differently from website only competitors.
+
+The map must allow filters for:
+
+1. Hospice
+2. Home health
+3. CMS verified
+4. Needs review
+5. Seeded competitor
+6. County
+7. Parent company
+8. Health system affiliation
+9. National chain affiliation
+10. Andwell overlap
+
+The map must support strategic notes such as:
+
+1. High hospice competitor density
+2. Low hospice competitor density
+3. High home health competitor density
+4. Potential white space
+5. Strong system affiliated competitor presence
+6. National chain presence
+7. Andwell broader continuum advantage
+8. Needs more evidence
+
+Security and reliability requirements
+
+The CMS MCP connector must be server side only.
+
+Do not expose raw internal API credentials if future credentials are added.
+
+Do not expose unnecessary CMS query internals to the public front end.
+
+Validate all user inputs before passing them to CMS query functions.
+
+Prevent query injection in SQL style CMS queries.
+
+Use safe query builders or parameterized query construction where possible.
+
+Set request timeouts.
+
+Use retry logic for temporary CMS errors.
+
+Cache successful responses.
+
+Log failures without crashing the app.
+
+Show the user a clear error if CMS data cannot be reached.
+
+Never fake CMS results.
+
+Testing requirements
+
+Build tests for:
+
+1. CMS dataset discovery
+2. Hospice dataset retrieval
+3. Home health dataset retrieval
+4. Maine filtering
+5. Pagination
+6. Empty result handling
+7. Invalid dataset handling
+8. Provider name normalization
+9. Competitor alias matching
+10. Duplicate detection
+11. CMS sync logging
+12. Quality snapshot extraction
+13. Map data creation
+14. Approved claim evidence creation
+15. Manual refresh
+16. Failed CMS request handling
+17. Seeded competitor matching
+
+Acceptance criteria
+
+The app is complete only when the following are true.
+
+1. The MCP server exposes working CMS tools.
+2. The app can discover CMS hospice and home health datasets.
+3. The app can retrieve Maine hospice providers.
+4. The app can retrieve Maine home health agencies.
+5. The app can match seeded competitors against CMS records.
+6. The app can show CMS verified status in competitor profiles.
+7. The app can attach CMS evidence to claims.
+8. The app can populate the Medicare Part A hospice competitor view.
+9. The app can populate the Medicare certified home health competitor view.
+10. The app can feed CMS locations into the geographic opportunity map.
+11. The app can refresh CMS data manually.
+12. The app can refresh CMS data on a schedule.
+13. The app can handle failed CMS requests cleanly.
+14. The app never presents unsupported CMS claims as fact.
+15. The app clearly separates CMS verified, website verified, and AI inferred findings.
+
+Final instruction
+
+Build the CMS Provider Data Catalog API integration as a true MCP backed data connector.
+
+CMS is the authoritative public data source.
+
+The MCP server is the controlled access layer.
+
+The app database is the evidence and caching layer.
+
+The Andwell AI is the analysis layer.
+
+The front end is the executive intelligence layer.
+
+The user should be able to open the app, refresh CMS data, verify Maine hospice and home health competitors, compare them against Andwell, view geographic market intelligence, and export evidence backed findings without manually searching CMS themselves.
