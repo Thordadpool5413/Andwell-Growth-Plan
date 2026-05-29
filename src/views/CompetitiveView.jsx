@@ -9,6 +9,7 @@ import Metric from "../components/Metric.jsx";
 import Badge from "../components/Badge.jsx";
 import Abbr from "../components/Abbr.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
+import Abbr from "../components/Abbr.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
 import cmsCountyMarket from "../data/cmsCountyMarket.js";
@@ -29,7 +30,7 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty }) {
   return (
     <div className="space-y-6">
       <SectionHeader eyebrow="Competitive view" title="Named provider competitor layer">
-        This section is built from the named Home Healthcare and Hospice provider rows in the uploaded code. It shows Andwell's provider file rank, provider file share, named competitors, and the limits of what can and cannot be called true county market share without county attributed volume.
+        This section is built from the named Home Healthcare and Hospice provider rows in the uploaded code. It shows Andwell's provider file rank, <Abbr term="Provider File Share">provider file share</Abbr>, named competitors, and the limits of what can and cannot be called true county market share without county attributed volume.
       </SectionHeader>
       <div className="grid gap-4 md:grid-cols-4">
         <Metric label={`${service} providers`} value={summary.providers} detail="Named Maine provider rows loaded." />
