@@ -6,7 +6,6 @@ import ServiceBadge from "../components/ServiceBadge.jsx";
 import SourceBadge from "../components/SourceBadge.jsx";
 import Abbr from "../components/Abbr.jsx";
 import MaineMap from "../components/MaineMap.jsx";
-import Abbr from "../components/Abbr.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { getCountyIntelligence } from "../utils/calculations.js";
 import { currency, number, percent } from "../utils/formatters.js";
