@@ -1,6 +1,6 @@
 import {
   searchCmsDatasets, getDatasetMetadata, queryCmsDataset,
-  fetchMaineProviders, normalizeProviderName, syncToDatabase, logSync,
+  fetchMaineProviders, normalizeProviderName, syncToDatabase, logSync, geocodeAddress,
 } from "./cmsApiClient.js";
 import { crawlCompetitorWebsite, crawlAllCompetitors } from "./competitorCrawler.js";
 import { query } from "./db.js";
@@ -446,6 +446,17 @@ async function matchCompetitor(competitorName, providerType, args) {
         best.source_evidence_text?.slice(0, 500),
       ]
     );
+    geocodeAddress({ address: best.address, city: best.city, state: best.state || "ME", zip: best.zip_code })
+      .then((coords) => {
+        if (coords) {
+          query(
+            `UPDATE competitor_cms_matches SET geocoded_lat=$1, geocoded_lng=$2, geocode_source='cms_address'
+             WHERE competitor_seed_id=$3`,
+            [coords.lat, coords.lng, seedRow.id]
+          ).catch(() => {});
+        }
+      })
+      .catch(() => {});
   }
 
   return {
@@ -504,6 +515,7 @@ export async function getCompetitorSummary() {
     const seeds = await query(`
       SELECT cs.id, cs.name, cs.provider_type, cs.known_counties, cs.parent_company,
              ccm.match_status, ccm.match_confidence, ccm.evidence_summary,
+             ccm.geocoded_lat, ccm.geocoded_lng, ccm.geocode_source,
              cpr.provider_name_raw, cpr.cms_certification_number, cpr.address, cpr.city,
              cpr.zip_code, cpr.county, cpr.last_synced_at,
              cwp.services_raw, cwp.counties_raw, cwp.quality_claims, cwp.crawl_status
