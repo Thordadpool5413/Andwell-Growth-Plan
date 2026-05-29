@@ -164,6 +164,7 @@ export function getMarketPenetration(county, rows) {
 export function getCountyIntelligence(county, rows) {
   const threat = getCompetitiveThreatScore(county);
   const penetration = getMarketPenetration(county, rows);
+  const opportunityScore = getOpportunityScore(county, rows);
   const market = cmsCountyMarket[county];
 
   if (!market) return null;
@@ -180,6 +181,7 @@ export function getCountyIntelligence(county, rows) {
     county,
     threat,
     penetration,
+    opportunityScore,
     providerDensityHH,
     providerDensityHos,
     hhUtilization,
