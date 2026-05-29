@@ -18,8 +18,13 @@ function isNationalChain(comp) {
 const SORT_KEYS = [
   { key: "name", label: "Name" },
   { key: "match_status", label: "CMS Status" },
-  { key: "match_confidence", label: "Match confidence" },
+  { key: "match_confidence", label: "Match conf." },
   { key: "national", label: "National chain" },
+  { key: "hospice_cert", label: "Hospice cert" },
+  { key: "hh_cert", label: "HH cert" },
+  { key: "health_system", label: "Health system" },
+  { key: "est_beneficiaries", label: "Est. beneficiaries" },
+  { key: "quality_star", label: "Quality star" },
   { key: "counties", label: "Counties" },
   { key: "services", label: "Service lines" },
 ];
@@ -27,11 +32,15 @@ const SORT_KEYS = [
 const DIMENSIONS = [
   { key: "ccn", label: "CMS CCN", andwellValue: "CMS Certified", tooltip: "Medicare certification number" },
   { key: "certification_date", label: "Cert. date", andwellValue: "Active", tooltip: "CMS certification date" },
+  { key: "hospice_cert", label: "Hospice certified", andwellValue: "Yes", tooltip: "Has an active hospice Medicare certification" },
+  { key: "hh_cert", label: "Home health cert", andwellValue: "Yes", tooltip: "Has an active home health Medicare certification" },
   { key: "national_chain", label: "National chain", andwellValue: "No", tooltip: "Lower = better for local focus" },
   { key: "maine_focus", label: "Maine-only focus", andwellValue: "Yes", tooltip: "Local market alignment" },
+  { key: "health_system", label: "Health system affil.", andwellValue: "None", tooltip: "Hospital or health-system ownership" },
   { key: "cms_status", label: "CMS verified", andwellValue: "Verified", tooltip: "CMS Provider Data Catalog match" },
   { key: "match_conf", label: "Match confidence", andwellValue: "N/A", tooltip: "CMS name-match confidence" },
-  { key: "quality", label: "Quality score", andwellValue: "High", tooltip: "CMS quality benchmark" },
+  { key: "est_beneficiaries", label: "Est. beneficiaries", andwellValue: "—", tooltip: "Estimated annual Medicare beneficiaries served" },
+  { key: "quality_star", label: "Quality star", andwellValue: "5★", tooltip: "CMS quality star rating (1–5)" },
   { key: "counties", label: "Counties served", andwellValue: "Multi-county", tooltip: "Known service counties" },
   { key: "services", label: "Service lines", andwellValue: "3+", tooltip: "Service breadth" },
   { key: "affiliations", label: "Parent affiliation", andwellValue: "None", tooltip: "National chain affiliation" },
@@ -53,6 +62,14 @@ function SortableMatrix({ competitors, dark, providerType }) {
   const [sortAsc, setSortAsc] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
 
+  const hasHospiceCert = (c) => c.provider_type === "hospice" || c.provider_type === "both" || (c.cms_certification_number && (c.match_status === "CMS Verified" || c.match_status === "CMS and Website Verified") && (c.provider_type !== "homehealth"));
+  const hasHHCert = (c) => c.provider_type === "homehealth" || c.provider_type === "both";
+  const getHealthSystem = (c) => {
+    const HEALTH_SYSTEMS = ["northern light", "mainhealth", "mainehealth", "emhs", "eastern maine", "mercy", "st. mary", "central maine", "mount desert"];
+    const hay = `${c.name || ""} ${c.parent_company || ""}`.toLowerCase();
+    return HEALTH_SYSTEMS.find((h) => hay.includes(h)) || null;
+  };
+
   const sorted = useMemo(() => {
     return [...competitors].sort((a, b) => {
       let va, vb;
@@ -60,6 +77,11 @@ function SortableMatrix({ competitors, dark, providerType }) {
       else if (sortKey === "counties") { va = a.known_counties?.length || 0; vb = b.known_counties?.length || 0; }
       else if (sortKey === "services") { va = a.services_raw?.length || 0; vb = b.services_raw?.length || 0; }
       else if (sortKey === "match_confidence") { va = a.match_confidence || 0; vb = b.match_confidence || 0; }
+      else if (sortKey === "hospice_cert") { va = hasHospiceCert(a) ? 1 : 0; vb = hasHospiceCert(b) ? 1 : 0; }
+      else if (sortKey === "hh_cert") { va = hasHHCert(a) ? 1 : 0; vb = hasHHCert(b) ? 1 : 0; }
+      else if (sortKey === "health_system") { va = getHealthSystem(a) ? 1 : 0; vb = getHealthSystem(b) ? 1 : 0; }
+      else if (sortKey === "est_beneficiaries") { va = a.estimated_beneficiaries || 0; vb = b.estimated_beneficiaries || 0; }
+      else if (sortKey === "quality_star") { va = a.quality_star_rating || 0; vb = b.quality_star_rating || 0; }
       else { va = (a[sortKey] || "").toString().toLowerCase(); vb = (b[sortKey] || "").toString().toLowerCase(); }
       const cmp = typeof va === "number" ? va - vb : va < vb ? -1 : va > vb ? 1 : 0;
       return sortAsc ? cmp : -cmp;
@@ -119,6 +141,25 @@ function SortableMatrix({ competitors, dark, providerType }) {
                       : <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${dark ? "bg-emerald-900/30 text-emerald-400" : "bg-emerald-50 text-emerald-700"}`}>Regional</span>
                     }
                   </td>
+                  <td className="px-4 py-3">
+                    {hasHospiceCert(comp)
+                      ? <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${dark ? "bg-emerald-900/30 text-emerald-400" : "bg-emerald-50 text-emerald-700"}`}>Yes</span>
+                      : <span className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>—</span>}
+                  </td>
+                  <td className="px-4 py-3">
+                    {hasHHCert(comp)
+                      ? <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${dark ? "bg-emerald-900/30 text-emerald-400" : "bg-emerald-50 text-emerald-700"}`}>Yes</span>
+                      : <span className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>—</span>}
+                  </td>
+                  <td className={`px-4 py-3 text-[11px] ${dark ? "text-slate-300" : "text-slate-600"}`}>
+                    {getHealthSystem(comp) ? <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${dark ? "bg-amber-900/30 text-amber-300" : "bg-amber-50 text-amber-700"}`}>{getHealthSystem(comp)}</span> : <span className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>None</span>}
+                  </td>
+                  <td className={`px-4 py-3 text-[11px] ${dark ? "text-slate-400" : "text-slate-500"}`}>
+                    {comp.estimated_beneficiaries ? comp.estimated_beneficiaries.toLocaleString() : "—"}
+                  </td>
+                  <td className={`px-4 py-3 text-[11px] ${dark ? "text-slate-300" : "text-slate-700"}`}>
+                    {comp.quality_star_rating ? `${comp.quality_star_rating}★` : "—"}
+                  </td>
                   <td className={`px-4 py-3 ${dark ? "text-slate-300" : "text-slate-600"}`}>
                     {comp.known_counties?.length ? comp.known_counties.slice(0, 3).join(", ") + (comp.known_counties.length > 3 ? ` +${comp.known_counties.length - 3}` : "") : "—"}
                   </td>
@@ -136,7 +177,7 @@ function SortableMatrix({ competitors, dark, providerType }) {
                 </tr>
                 {expanded && (
                   <tr className={dark ? "bg-slate-800/30" : "bg-slate-50/80"}>
-                    <td colSpan={7} className="px-4 py-3">
+                    <td colSpan={12} className="px-4 py-3">
                       <CmsEvidenceCard competitor={comp} />
                     </td>
                   </tr>
@@ -154,6 +195,14 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE })
   const [expandedId, setExpandedId] = useState(null);
   const paged = competitors.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
+  const hasHospiceCertC = (c) => c.provider_type === "hospice" || c.provider_type === "both" || (c.cms_certification_number && (c.match_status === "CMS Verified" || c.match_status === "CMS and Website Verified") && c.provider_type !== "homehealth");
+  const hasHHCertC = (c) => c.provider_type === "homehealth" || c.provider_type === "both";
+  const getHealthSystemC = (c) => {
+    const HEALTH_SYSTEMS = ["northern light", "mainhealth", "mainehealth", "emhs", "eastern maine", "mercy", "st. mary", "central maine", "mount desert"];
+    const hay = `${c.name || ""} ${c.parent_company || ""}`.toLowerCase();
+    return HEALTH_SYSTEMS.find((h) => hay.includes(h)) || null;
+  };
+
   const getCompValue = (comp, dim) => {
     const national = isNationalChain(comp);
     const status = comp.match_status || "Needs Review";
@@ -162,11 +211,15 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE })
     switch (dim.key) {
       case "ccn": return comp.cms_certification_number || "—";
       case "certification_date": return "—";
+      case "hospice_cert": return hasHospiceCertC(comp) ? "Yes" : "—";
+      case "hh_cert": return hasHHCertC(comp) ? "Yes" : "—";
       case "national_chain": return national ? "Yes" : "No";
       case "maine_focus": return national ? "No" : "Likely";
+      case "health_system": return getHealthSystemC(comp) || "None";
       case "cms_status": return status === "CMS Verified" || status === "CMS and Website Verified" ? "Verified" : "Unconfirmed";
       case "match_conf": return comp.match_confidence != null ? `${Math.round(comp.match_confidence * 100)}%` : "—";
-      case "quality": return comp.quality_claims?.length ? `${comp.quality_claims.length} claims` : "—";
+      case "est_beneficiaries": return comp.estimated_beneficiaries ? comp.estimated_beneficiaries.toLocaleString() : "—";
+      case "quality_star": return comp.quality_star_rating ? `${comp.quality_star_rating}★` : "—";
       case "counties": return counties > 0 ? `${counties} counties` : "Unknown";
       case "services": return services > 0 ? `${services} lines` : "Unknown";
       case "affiliations": return comp.parent_company || (national ? "National chain" : "None");

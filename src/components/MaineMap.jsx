@@ -476,6 +476,7 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty }) {
   const [showRings, setShowRings] = useState(false);
   const [showCompetitors, setShowCompetitors] = useState(false);
   const [competitors, setCompetitors] = useState([]);
+  const [compFilter, setCompFilter] = useState({ providerType: "all", cmsStatus: "all", nationalOnly: false });
 
   React.useEffect(() => {
     if (showCompetitors && competitors.length === 0) {
@@ -485,6 +486,19 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty }) {
         .catch(() => {});
     }
   }, [showCompetitors]);
+
+  const filteredCompetitors = React.useMemo(() => {
+    const CHAINS = ["amedisys", "gentiva", "kindred", "compassus", "constellation", "lhc group", "centerwell", "enhabit"];
+    return competitors.filter((c) => {
+      if (compFilter.providerType !== "all" && c.provider_type !== compFilter.providerType) return false;
+      if (compFilter.cmsStatus !== "all" && c.match_status !== compFilter.cmsStatus) return false;
+      if (compFilter.nationalOnly) {
+        const isNat = CHAINS.some((ch) => (c.name || "").toLowerCase().includes(ch) || (c.parent_company || "").toLowerCase().includes(ch));
+        if (!isNat) return false;
+      }
+      return true;
+    });
+  }, [competitors, compFilter]);
 
   const rowMap = {};
   if (rows) rows.forEach((row) => { rowMap[row.county] = row; });
@@ -579,7 +593,7 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty }) {
               showRings={showRings}
               showOffices={showRings}
               showCompetitors={showCompetitors}
-              competitors={competitors}
+              competitors={filteredCompetitors}
             />
           </Map>
         </div>
@@ -597,16 +611,53 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty }) {
         showRings={showRings}
       />
       {showCompetitors && (
-        <div className="flex flex-wrap justify-center gap-3">
-          <div className={`flex items-center gap-1.5 text-[10px] font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>
-            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#7c3aed" }} />
-            Regional competitor
+        <div className="space-y-2">
+          <div className={`flex flex-wrap items-center gap-2 rounded-xl border px-3 py-2 ${dark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
+            <span className={`text-[10px] font-black uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>Filter:</span>
+            <select
+              value={compFilter.providerType}
+              onChange={(e) => setCompFilter((f) => ({ ...f, providerType: e.target.value }))}
+              className={`rounded-lg border px-2 py-1 text-xs font-semibold ${dark ? "border-slate-600 bg-slate-700 text-slate-200" : "border-slate-200 bg-white text-slate-700"}`}
+            >
+              <option value="all">All types</option>
+              <option value="hospice">Hospice</option>
+              <option value="homehealth">Home health</option>
+              <option value="both">Both</option>
+            </select>
+            <select
+              value={compFilter.cmsStatus}
+              onChange={(e) => setCompFilter((f) => ({ ...f, cmsStatus: e.target.value }))}
+              className={`rounded-lg border px-2 py-1 text-xs font-semibold ${dark ? "border-slate-600 bg-slate-700 text-slate-200" : "border-slate-200 bg-white text-slate-700"}`}
+            >
+              <option value="all">All CMS status</option>
+              <option value="CMS Verified">CMS Verified</option>
+              <option value="Needs Review">Needs Review</option>
+              <option value="Not Verified by CMS">Not CMS Verified</option>
+            </select>
+            <label className={`flex items-center gap-1.5 text-xs font-semibold cursor-pointer ${dark ? "text-slate-300" : "text-slate-700"}`}>
+              <input
+                type="checkbox"
+                checked={compFilter.nationalOnly}
+                onChange={(e) => setCompFilter((f) => ({ ...f, nationalOnly: e.target.checked }))}
+                className="rounded"
+              />
+              National chains only
+            </label>
+            <span className={`ml-auto text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>
+              {filteredCompetitors.length} of {competitors.length} shown
+            </span>
           </div>
-          <div className={`flex items-center gap-1.5 text-[10px] font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>
-            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#f59e0b" }} />
-            National chain
+          <div className="flex flex-wrap justify-center gap-3">
+            <div className={`flex items-center gap-1.5 text-[10px] font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#7c3aed" }} />
+              Regional competitor
+            </div>
+            <div className={`flex items-center gap-1.5 text-[10px] font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#f59e0b" }} />
+              National chain
+            </div>
+            <span className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>— click pin for details · Run CMS Sync to populate</span>
           </div>
-          <span className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>— click pin for details · Run CMS Sync to populate</span>
         </div>
       )}
     </div>
