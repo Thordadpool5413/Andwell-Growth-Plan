@@ -24,6 +24,8 @@ export default function ReferralPlan({ rows }) {
           Export CSV
         </button>
       </div>
+      <div className="relative">
+        <div className={`pointer-events-none absolute inset-y-0 right-0 z-10 w-12 rounded-r-2xl bg-gradient-to-l ${dark ? "from-slate-800/90" : "from-white/90"}`} />
       <div className={`relative overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
         <table className={`w-full min-w-[1050px] text-left text-sm ${dark ? "border-slate-700" : ""}`}>
           <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
@@ -62,6 +64,7 @@ export default function ReferralPlan({ rows }) {
             })}
           </tbody>
         </table>
+      </div>
       </div>
     </Card>
     </div>

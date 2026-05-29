@@ -87,7 +87,7 @@ export default function ExecutiveView({ rows, totals }) {
         </div>
       </div>
 
-      <Card title="Strategy thesis" eyebrow="Executive summary">
+      <Card title="Strategic rationale" eyebrow="Executive summary">
         <p className={`text-lg leading-8 ${dark ? "text-slate-300" : "text-slate-700"}`}>
           This dashboard connects Andwell service gaps, CMS market volume, referral math, financial upside, and named provider competition across 12 target Maine counties. The competitive layer reflects actual named Home Healthcare and Hospice providers from the CMS provider file — including Andwell's provider file rank and share. Note: <strong>provider file share is not county market share</strong>; county-attributed claims data would be required to calculate true market share.
         </p>
