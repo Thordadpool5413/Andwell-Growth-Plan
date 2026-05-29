@@ -6,6 +6,7 @@ import {
 import Card from "../components/Card.jsx";
 import Metric from "../components/Metric.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
+import Abbr from "../components/Abbr.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
 import cmsCountyMarket from "../data/cmsCountyMarket.js";
@@ -76,12 +77,12 @@ export default function CmsData() {
             <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
               <tr>
                 <th className="px-5 py-4">County</th>
-                <th className="px-5 py-4 text-right">FFS beneficiaries</th>
-                <th className="px-5 py-4 text-right">HH providers</th>
+                <th className="px-5 py-4 text-right"><Abbr term="FFS">FFS</Abbr> beneficiaries</th>
+                <th className="px-5 py-4 text-right"><Abbr term="HH">HH</Abbr> providers</th>
                 <th className="px-5 py-4 text-right">Provider density</th>
-                <th className="px-5 py-4 text-right">HH utilization</th>
+                <th className="px-5 py-4 text-right"><Abbr term="HH">HH</Abbr> utilization</th>
                 <th className="px-5 py-4 text-right">Revenue per user</th>
-                <th className="px-5 py-4 text-right">Total HH payment</th>
+                <th className="px-5 py-4 text-right">Total <Abbr term="HH">HH</Abbr> payment</th>
               </tr>
             </thead>
             <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-slate-100"}`}>

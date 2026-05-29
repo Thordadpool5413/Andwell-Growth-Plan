@@ -1,6 +1,7 @@
 import React from "react";
 import Card from "../components/Card.jsx";
 import ServiceBadge from "../components/ServiceBadge.jsx";
+import SourceBadge from "../components/SourceBadge.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { number } from "../utils/formatters.js";
@@ -28,6 +29,7 @@ export default function ReferralPlan({ rows }) {
           <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
             <tr>
               <th className="px-5 py-4">County</th>
+              <th className="px-5 py-4">Source</th>
               <th className="px-5 py-4">Service</th>
               <th className="px-5 py-4 text-right">Year 1 goal</th>
               <th className="px-5 py-4 text-right">Year 1 referrals</th>
@@ -44,6 +46,7 @@ export default function ReferralPlan({ rows }) {
               return (
                 <tr key={row.county} className={dark ? "hover:bg-slate-700/50" : "hover:bg-slate-50"}>
                   <td className={`px-5 py-4 font-black ${dark ? "text-white" : ""}`}>{row.county}</td>
+                  <td className="px-5 py-4"><SourceBadge basis={row.basis} /></td>
                   <td className="px-5 py-4"><ServiceBadge service={row.service} /></td>
                   <td className={`px-5 py-4 text-right ${dark ? "text-slate-300" : ""}`}>{number(row.starts[0])}</td>
                   <td className={`px-5 py-4 text-right font-black ${dark ? "text-blue-400" : "text-blue-700"}`}>{number(row.referrals[0])}</td>
