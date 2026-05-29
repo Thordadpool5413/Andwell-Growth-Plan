@@ -530,24 +530,36 @@ app.listen(PORT, "0.0.0.0", () => {
 });
 
 // ──────────────────────────────────────────────
-// Daily CMS sync cron (3:00 AM)
+// CMS sync cron — env-driven schedule and enable flag
+// CMS_SYNC_ENABLED=false  → disables cron entirely
+// CMS_SYNC_CRON           → cron expression (default: weekly Sun 3AM ET)
 // ──────────────────────────────────────────────
 async function setupCron() {
+  const syncEnabled = process.env.CMS_SYNC_ENABLED !== "false";
+  if (!syncEnabled) {
+    console.log("[CMS Cron] Disabled via CMS_SYNC_ENABLED=false");
+    return;
+  }
+  const cronExpr = process.env.CMS_SYNC_CRON || "0 3 * * 0";
   try {
     const cron = (await import("node-cron")).default;
-    cron.schedule("0 3 * * *", async () => {
-      console.log("[CMS Cron] Starting daily sync...");
+    if (!cron.validate(cronExpr)) {
+      console.error(`[CMS Cron] Invalid CMS_SYNC_CRON expression: "${cronExpr}" — using default`);
+    }
+    const expr = cron.validate(cronExpr) ? cronExpr : "0 3 * * 0";
+    cron.schedule(expr, async () => {
+      console.log("[CMS Cron] Starting scheduled sync...");
       try {
         const mod = await loadCms();
         if (mod) {
           await mod.callTool("sync_cms_provider_data", { provider_type: "both" });
-          console.log("[CMS Cron] Daily sync complete");
+          console.log("[CMS Cron] Scheduled sync complete");
         }
       } catch (err) {
         console.error("[CMS Cron] Sync error:", err.message);
       }
     }, { timezone: "America/New_York" });
-    console.log("[CMS Cron] Scheduled daily sync at 3:00 AM ET");
+    console.log(`[CMS Cron] Scheduled sync with expression "${expr}" (America/New_York)`);
   } catch (err) {
     console.error("[CMS Cron] Setup failed:", err.message);
   }

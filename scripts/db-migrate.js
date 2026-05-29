@@ -127,6 +127,9 @@ async function migrate() {
     await col(client, "competitor_cms_matches", "location_match_score", "FLOAT");
     await col(client, "competitor_cms_matches", "verified_by_ai", "BOOLEAN DEFAULT FALSE");
     await col(client, "competitor_cms_matches", "updated_at", "TIMESTAMPTZ DEFAULT NOW()");
+    await col(client, "competitor_cms_matches", "geocoded_lat", "NUMERIC(10,6)");
+    await col(client, "competitor_cms_matches", "geocoded_lng", "NUMERIC(10,6)");
+    await col(client, "competitor_cms_matches", "geocode_source", "TEXT");
     await client.query(`
       CREATE UNIQUE INDEX IF NOT EXISTS competitor_cms_matches_seed_idx
       ON competitor_cms_matches (competitor_seed_id);

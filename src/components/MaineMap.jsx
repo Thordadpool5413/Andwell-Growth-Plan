@@ -350,69 +350,103 @@ function MapLegend({ isGradientMode, gradientLow, gradientHigh, heatmapMode, hea
   );
 }
 
+const COUNTY_COORDS = {
+  Cumberland: { lat: 43.82, lng: -70.38 },
+  York: { lat: 43.45, lng: -70.72 },
+  Penobscot: { lat: 44.93, lng: -68.67 },
+  Kennebec: { lat: 44.41, lng: -69.77 },
+  Knox: { lat: 44.07, lng: -69.18 },
+  Lincoln: { lat: 43.98, lng: -69.57 },
+  Androscoggin: { lat: 44.18, lng: -70.23 },
+  Sagadahoc: { lat: 43.93, lng: -69.87 },
+  Aroostook: { lat: 46.72, lng: -68.01 },
+  Somerset: { lat: 45.52, lng: -69.96 },
+  Franklin: { lat: 44.97, lng: -70.44 },
+  Oxford: { lat: 44.22, lng: -70.74 },
+  Washington: { lat: 44.99, lng: -67.64 },
+  Hancock: { lat: 44.56, lng: -68.39 },
+  Waldo: { lat: 44.44, lng: -69.13 },
+  Piscataquis: { lat: 45.81, lng: -69.28 },
+};
+
+const ANDWELL_COUNTIES = new Set(["Cumberland", "York", "Penobscot", "Kennebec", "Knox", "Lincoln", "Sagadahoc", "Washington", "Aroostook", "Oxford", "Somerset", "Franklin"]);
+const NATIONAL_CHAIN_NAMES = ["amedisys", "gentiva", "kindred", "compassus", "constellation", "lhc group", "centerwell", "enhabit", "bayada", "elara caring"];
+function isNationalChainComp(c) {
+  const hay = `${c.name || ""} ${c.parent_company || ""}`.toLowerCase();
+  return NATIONAL_CHAIN_NAMES.some((ch) => hay.includes(ch));
+}
+function competitorOverlapsAndwell(c) {
+  const counties = c.known_counties?.length ? c.known_counties : c.county ? [c.county] : [];
+  return counties.some((cn) => ANDWELL_COUNTIES.has(cn));
+}
+
+function pinColor(c, dark) {
+  if (isNationalChainComp(c)) return dark ? "#f87171" : "#ef4444";
+  const st = c.match_status || "";
+  if (st === "CMS Verified" || st === "CMS and Website Verified") return dark ? "#34d399" : "#059669";
+  if (st === "Needs Review") return dark ? "#fbbf24" : "#d97706";
+  return dark ? "#a78bfa" : "#7c3aed";
+}
+
+function placedPin(c, idx, ci) {
+  if (c.geocoded_lat && c.geocoded_lng) {
+    const lat = parseFloat(c.geocoded_lat);
+    const lng = parseFloat(c.geocoded_lng);
+    if (!isNaN(lat) && !isNaN(lng)) return { lat, lng, geocoded: true };
+  }
+  const counties = c.known_counties?.length ? c.known_counties : c.county ? [c.county] : [];
+  const county = counties[ci] || counties[0];
+  const base = COUNTY_COORDS[county];
+  if (!base) return null;
+  const jitter = (idx * 0.03 + ci * 0.015);
+  return { lat: base.lat + jitter, lng: base.lng + jitter, geocoded: false, county };
+}
+
 function CompetitorMarkers({ visible, dark, competitors }) {
   const [selected, setSelected] = useState(null);
   if (!visible || !competitors?.length) return null;
 
-  const COUNTY_COORDS = {
-    Cumberland: { lat: 43.82, lng: -70.38 },
-    York: { lat: 43.45, lng: -70.72 },
-    Penobscot: { lat: 44.93, lng: -68.67 },
-    Kennebec: { lat: 44.41, lng: -69.77 },
-    Knox: { lat: 44.07, lng: -69.18 },
-    Lincoln: { lat: 43.98, lng: -69.57 },
-    Androscoggin: { lat: 44.18, lng: -70.23 },
-    Sagadahoc: { lat: 43.93, lng: -69.87 },
-    Aroostook: { lat: 46.72, lng: -68.01 },
-    Somerset: { lat: 45.52, lng: -69.96 },
-    Franklin: { lat: 44.97, lng: -70.44 },
-    Oxford: { lat: 44.22, lng: -70.74 },
-    Washington: { lat: 44.99, lng: -67.64 },
-    Hancock: { lat: 44.56, lng: -68.39 },
-    Waldo: { lat: 44.44, lng: -69.13 },
-    Piscataquis: { lat: 45.81, lng: -69.28 },
-  };
-
   const placed = competitors
-    .filter((c) => c.known_counties?.length || c.county)
     .flatMap((c, idx) => {
+      if (c.geocoded_lat && c.geocoded_lng) {
+        const coords = placedPin(c, idx, 0);
+        if (coords) return [{ ...c, ...coords }];
+      }
       const counties = c.known_counties?.length ? c.known_counties : c.county ? [c.county] : [];
       return counties.slice(0, 2).map((county, ci) => {
-        const base = COUNTY_COORDS[county];
-        if (!base) return null;
-        const jitter = (idx * 0.03 + ci * 0.015);
-        return { ...c, lat: base.lat + jitter, lng: base.lng + jitter, county };
+        const coords = placedPin({ ...c, county }, idx, ci);
+        if (!coords) return null;
+        return { ...c, county, ...coords };
       }).filter(Boolean);
     })
-    .slice(0, 40);
-
-  const isNational = (c) => {
-    const CHAINS = ["amedisys", "gentiva", "kindred", "compassus", "constellation", "lhc group"];
-    return CHAINS.some((ch) => (c.name || "").toLowerCase().includes(ch) || (c.parent_company || "").toLowerCase().includes(ch));
-  };
+    .slice(0, 60);
 
   return (
     <>
       {placed.map((comp, i) => {
-        const sel = selected?.name === comp.name && selected?.county === comp.county;
-        const national = isNational(comp);
+        const sel = selected?.name === comp.name && selected?.county === comp.county && selected?.id === comp.id;
+        const national = isNationalChainComp(comp);
+        const color = pinColor(comp, dark);
+        const overlaps = competitorOverlapsAndwell(comp);
         return (
-          <React.Fragment key={`${comp.name}-${comp.county}-${i}`}>
+          <React.Fragment key={`${comp.id || comp.name}-${comp.county || ""}-${i}`}>
             <AdvancedMarker
               position={{ lat: comp.lat, lng: comp.lng }}
-              onClick={() => setSelected(sel ? null : comp)}
+              onClick={() => setSelected(sel ? null : { ...comp, _selKey: i })}
             >
               <div
                 title={comp.name}
                 style={{
-                  width: sel ? 14 : 10,
-                  height: sel ? 14 : 10,
+                  width: sel ? 15 : national ? 12 : 10,
+                  height: sel ? 15 : national ? 12 : 10,
                   borderRadius: "50%",
-                  background: national ? (dark ? "#fbbf24" : "#f59e0b") : (dark ? "#a78bfa" : "#7c3aed"),
-                  border: `2px solid ${sel ? "#fff" : dark ? "#1e293b" : "#fff"}`,
-                  boxShadow: sel ? "0 0 0 2px #7c3aed, 0 2px 6px rgba(0,0,0,0.4)" : "0 1px 4px rgba(0,0,0,0.3)",
+                  background: color,
+                  border: `2px solid ${sel ? "#fff" : overlaps ? "#f59e0b" : dark ? "#1e293b" : "#fff"}`,
+                  boxShadow: sel ? `0 0 0 2px ${color}, 0 2px 8px rgba(0,0,0,0.5)` : "0 1px 4px rgba(0,0,0,0.3)",
                   transition: "all 0.15s",
                   cursor: "pointer",
+                  outline: overlaps && !sel ? "1.5px dashed #f59e0b" : "none",
+                  outlineOffset: "2px",
                 }}
               />
             </AdvancedMarker>
@@ -422,13 +456,21 @@ function CompetitorMarkers({ visible, dark, competitors }) {
                 onCloseClick={() => setSelected(null)}
                 pixelOffset={[0, -10]}
               >
-                <div style={{ fontFamily: "system-ui, sans-serif", minWidth: 180, maxWidth: 240, padding: "2px 0" }}>
+                <div style={{ fontFamily: "system-ui, sans-serif", minWidth: 190, maxWidth: 250, padding: "2px 0" }}>
                   <p style={{ margin: 0, fontWeight: 800, fontSize: 13, color: "#0f172a", lineHeight: 1.3 }}>{comp.name}</p>
                   {comp.parent_company && <p style={{ margin: "2px 0 0", fontSize: 11, color: "#475569" }}>{comp.parent_company}</p>}
-                  <p style={{ margin: "4px 0 0", fontSize: 11, color: "#475569" }}><span style={{ fontWeight: 700 }}>County:</span> {comp.county}</p>
+                  {comp.county && <p style={{ margin: "4px 0 0", fontSize: 11, color: "#475569" }}><span style={{ fontWeight: 700 }}>County:</span> {comp.county}</p>}
                   {comp.provider_type && <p style={{ margin: "2px 0 0", fontSize: 11, color: "#475569" }}><span style={{ fontWeight: 700 }}>Type:</span> {comp.provider_type}</p>}
-                  {comp.match_status && <p style={{ margin: "4px 0 0", fontSize: 11, fontWeight: 700, color: comp.match_status === "CMS Verified" ? "#059669" : "#6b7280" }}>{comp.match_status}</p>}
-                  {national && <p style={{ margin: "4px 0 0", fontSize: 10, color: "#d97706", fontWeight: 700 }}>⚠ National chain</p>}
+                  {comp.address && <p style={{ margin: "2px 0 0", fontSize: 10, color: "#64748b" }}>{comp.address}{comp.city ? `, ${comp.city}` : ""}</p>}
+                  {comp.match_status && (
+                    <p style={{ margin: "4px 0 0", fontSize: 11, fontWeight: 700, color: comp.match_status === "CMS Verified" || comp.match_status === "CMS and Website Verified" ? "#059669" : comp.match_status === "Needs Review" ? "#d97706" : "#6b7280" }}>
+                      {comp.match_status}
+                      {comp.match_confidence != null ? ` (${Math.round(comp.match_confidence * 100)}%)` : ""}
+                    </p>
+                  )}
+                  {comp.geocode_source === "cms_address" && <p style={{ margin: "3px 0 0", fontSize: 9, color: "#94a3b8" }}>📍 CMS address geocoded</p>}
+                  {national && <p style={{ margin: "4px 0 0", fontSize: 10, color: "#dc2626", fontWeight: 700 }}>⚠ National chain</p>}
+                  {overlaps && <p style={{ margin: "2px 0 0", fontSize: 10, color: "#d97706", fontWeight: 700 }}>⚡ Andwell overlap county</p>}
                 </div>
               </InfoWindow>
             )}
@@ -476,7 +518,7 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty }) {
   const [showRings, setShowRings] = useState(false);
   const [showCompetitors, setShowCompetitors] = useState(false);
   const [competitors, setCompetitors] = useState([]);
-  const [compFilter, setCompFilter] = useState({ providerType: "all", cmsStatus: "all", nationalOnly: false });
+  const [compFilter, setCompFilter] = useState({ providerType: "all", cmsStatus: "all", nationalOnly: false, overlapOnly: false, parentSearch: "" });
 
   React.useEffect(() => {
     if (showCompetitors && competitors.length === 0) {
@@ -488,13 +530,15 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty }) {
   }, [showCompetitors]);
 
   const filteredCompetitors = React.useMemo(() => {
-    const CHAINS = ["amedisys", "gentiva", "kindred", "compassus", "constellation", "lhc group", "centerwell", "enhabit"];
     return competitors.filter((c) => {
       if (compFilter.providerType !== "all" && c.provider_type !== compFilter.providerType) return false;
       if (compFilter.cmsStatus !== "all" && c.match_status !== compFilter.cmsStatus) return false;
-      if (compFilter.nationalOnly) {
-        const isNat = CHAINS.some((ch) => (c.name || "").toLowerCase().includes(ch) || (c.parent_company || "").toLowerCase().includes(ch));
-        if (!isNat) return false;
+      if (compFilter.nationalOnly && !isNationalChainComp(c)) return false;
+      if (compFilter.overlapOnly && !competitorOverlapsAndwell(c)) return false;
+      if (compFilter.parentSearch) {
+        const q = compFilter.parentSearch.toLowerCase();
+        const match = (c.name || "").toLowerCase().includes(q) || (c.parent_company || "").toLowerCase().includes(q);
+        if (!match) return false;
       }
       return true;
     });
@@ -634,6 +678,13 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty }) {
               <option value="Needs Review">Needs Review</option>
               <option value="Not Verified by CMS">Not CMS Verified</option>
             </select>
+            <input
+              type="text"
+              value={compFilter.parentSearch}
+              onChange={(e) => setCompFilter((f) => ({ ...f, parentSearch: e.target.value }))}
+              placeholder="Name / parent company…"
+              className={`rounded-lg border px-2 py-1 text-xs w-40 ${dark ? "border-slate-600 bg-slate-700 text-slate-200 placeholder-slate-500" : "border-slate-200 bg-white text-slate-700 placeholder-slate-400"}`}
+            />
             <label className={`flex items-center gap-1.5 text-xs font-semibold cursor-pointer ${dark ? "text-slate-300" : "text-slate-700"}`}>
               <input
                 type="checkbox"
@@ -641,22 +692,36 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty }) {
                 onChange={(e) => setCompFilter((f) => ({ ...f, nationalOnly: e.target.checked }))}
                 className="rounded"
               />
-              National chains only
+              National chains
+            </label>
+            <label className={`flex items-center gap-1.5 text-xs font-semibold cursor-pointer ${dark ? "text-slate-300" : "text-slate-700"}`}>
+              <input
+                type="checkbox"
+                checked={compFilter.overlapOnly}
+                onChange={(e) => setCompFilter((f) => ({ ...f, overlapOnly: e.target.checked }))}
+                className="rounded"
+              />
+              Andwell overlap
             </label>
             <span className={`ml-auto text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>
               {filteredCompetitors.length} of {competitors.length} shown
             </span>
           </div>
-          <div className="flex flex-wrap justify-center gap-3">
-            <div className={`flex items-center gap-1.5 text-[10px] font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>
-              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#7c3aed" }} />
-              Regional competitor
-            </div>
-            <div className={`flex items-center gap-1.5 text-[10px] font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>
-              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#f59e0b" }} />
-              National chain
-            </div>
-            <span className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>— click pin for details · Run CMS Sync to populate</span>
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5">
+            {[
+              { color: "#ef4444", label: "National chain" },
+              { color: "#059669", label: "CMS Verified" },
+              { color: "#d97706", label: "Needs Review" },
+              { color: "#7c3aed", label: "Not verified / unknown" },
+            ].map(({ color, label }) => (
+              <div key={label} className={`flex items-center gap-1.5 text-[10px] font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>
+                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+                {label}
+              </div>
+            ))}
+            <span className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>
+              · dashed border = Andwell overlap county · 📍 = CMS address geocoded · click pin for details
+            </span>
           </div>
         </div>
       )}
