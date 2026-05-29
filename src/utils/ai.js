@@ -1,11 +1,17 @@
-const AI_BASE = import.meta.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
-const AI_KEY = import.meta.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+const AI_INTEGRATIONS_BASE = import.meta.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
+const AI_INTEGRATIONS_KEY = import.meta.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+
+const OPENAI_KEY = import.meta.env.OPENAI_API_KEY;
+const OPENAI_BASE = "https://api.openai.com/v1";
+
+const AI_BASE = AI_INTEGRATIONS_BASE || (OPENAI_KEY ? OPENAI_BASE : null);
+const AI_KEY = AI_INTEGRATIONS_KEY || OPENAI_KEY || null;
 
 export const AI_AVAILABLE = Boolean(AI_BASE && AI_KEY);
 
 export async function streamChat({ messages, onChunk, onDone, onError, signal }) {
   if (!AI_AVAILABLE) {
-    onError?.(new Error("AI integration not configured. Ask your administrator to enable the OpenAI integration."));
+    onError?.(new Error("AI not configured. Add an OpenAI API key to enable AI features."));
     return;
   }
 
@@ -17,10 +23,10 @@ export async function streamChat({ messages, onChunk, onDone, onError, signal })
         Authorization: `Bearer ${AI_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-5-mini",
+        model: "gpt-4o-mini",
         messages,
         stream: true,
-        max_completion_tokens: 700,
+        max_tokens: 700,
       }),
       signal,
     });
