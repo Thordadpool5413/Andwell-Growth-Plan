@@ -7,6 +7,7 @@ import Card from "../components/Card.jsx";
 import Metric from "../components/Metric.jsx";
 import Badge from "../components/Badge.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
+import Abbr from "../components/Abbr.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
 import { namedProviderRows } from "../data/providers.js";
@@ -80,9 +81,9 @@ export default function ExecutiveView({ rows, totals }) {
           <p className={`mt-2 text-sm leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>Composite weighted score across all 12 target counties.</p>
         </div>
         <div className={`rounded-3xl border p-5 shadow-sm transition-colors duration-300 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
-          <p className={`text-sm font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>Revenue per FFS beneficiary</p>
+          <p className={`text-sm font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>Revenue per <Abbr term="FFS">FFS</Abbr> beneficiary</p>
           <p className={`mt-2 text-3xl font-black ${dark ? "text-white" : "text-slate-950"}`}>{currency(revPerBeneficiary)}</p>
-          <p className={`mt-2 text-sm leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>Y1 revenue efficiency across {number(totalFFS)} Fee-For-Service beneficiaries.</p>
+          <p className={`mt-2 text-sm leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>Y1 revenue efficiency across {number(totalFFS)} <Abbr term="FFS">Fee-For-Service</Abbr> beneficiaries.</p>
         </div>
       </div>
 
