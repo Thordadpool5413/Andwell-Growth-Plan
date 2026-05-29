@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import {
   Bar, BarChart, CartesianGrid, Cell,
-  ResponsiveContainer, Tooltip, XAxis, YAxis,
+  Tooltip, XAxis, YAxis,
 } from "recharts";
 import Card from "../components/Card.jsx";
+import ChartContainer from "../components/ChartContainer.jsx";
 import Metric from "../components/Metric.jsx";
 import Badge from "../components/Badge.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
@@ -78,8 +79,7 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty }) {
       </div>
       <section className="grid gap-6 lg:grid-cols-[1fr_1fr]">
         <Card title={`Top ${service} providers`} eyebrow="Provider file share">
-          <div className="h-96">
-            <ResponsiveContainer width="100%" height="100%">
+          <ChartContainer height="h-96">
               <BarChart data={chartRows} layout="vertical" margin={{ left: 10, right: 20, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
                 <XAxis
@@ -94,8 +94,7 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty }) {
                   {chartRows.map((row) => <Cell key={row.providerName} fill={row.isAndwellCmsRecord ? COLORS.blue : COLORS.slate} />)}
                 </Bar>
               </BarChart>
-            </ResponsiveContainer>
-          </div>
+          </ChartContainer>
         </Card>
         <Card title={`${selectedCounty} named providers`} eyebrow="County located providers">
           <div className="space-y-3">

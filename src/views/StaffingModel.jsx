@@ -1,9 +1,10 @@
 import React, { useMemo } from "react";
 import {
   Bar, BarChart, CartesianGrid, Legend,
-  ResponsiveContainer, Tooltip, XAxis, YAxis,
+  Tooltip, XAxis, YAxis,
 } from "recharts";
 import Card from "../components/Card.jsx";
+import ChartContainer from "../components/ChartContainer.jsx";
 import Metric from "../components/Metric.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
 import Abbr from "../components/Abbr.jsx";
@@ -91,8 +92,7 @@ export default function StaffingModel({ rows }) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card title="FTE ramp by service" eyebrow="Hiring trajectory">
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
+          <ChartContainer height="h-80">
               <BarChart data={serviceChartData} margin={{ left: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
                 <XAxis dataKey="service" tick={{ fontSize: 11, fill: dark ? "#94a3b8" : "#475569" }} />
@@ -106,12 +106,10 @@ export default function StaffingModel({ rows }) {
                 <Bar dataKey="Y2 FTE" fill={COLORS.amber} radius={[8, 8, 0, 0]} />
                 <Bar dataKey="Y3 FTE" fill={COLORS.green} radius={[8, 8, 0, 0]} />
               </BarChart>
-            </ResponsiveContainer>
-          </div>
+          </ChartContainer>
         </Card>
         <Card title="FTE distribution by county" eyebrow="Geographic staffing">
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
+          <ChartContainer height="h-80">
               <BarChart data={countyChartData} layout="vertical" margin={{ left: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
                 <XAxis type="number" tick={{ fill: dark ? "#94a3b8" : "#475569" }} />
@@ -122,8 +120,7 @@ export default function StaffingModel({ rows }) {
                 <Bar dataKey="Y2 FTE" fill={COLORS.amber} radius={[0, 8, 8, 0]} stackId="a" />
                 <Bar dataKey="Y3 FTE" fill={COLORS.green} radius={[0, 8, 8, 0]} stackId="a" />
               </BarChart>
-            </ResponsiveContainer>
-          </div>
+          </ChartContainer>
         </Card>
       </div>
 
