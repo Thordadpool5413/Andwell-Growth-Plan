@@ -1,39 +1,17 @@
-const AI_INTEGRATIONS_BASE = import.meta.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
-const AI_INTEGRATIONS_KEY = import.meta.env.AI_INTEGRATIONS_OPENAI_API_KEY;
-
-const OPENAI_KEY = import.meta.env.OPENAI_API_KEY;
-const OPENAI_BASE = "https://api.openai.com/v1";
-
-const AI_BASE = AI_INTEGRATIONS_BASE || (OPENAI_KEY ? OPENAI_BASE : null);
-const AI_KEY = AI_INTEGRATIONS_KEY || OPENAI_KEY || null;
-
-export const AI_AVAILABLE = Boolean(AI_BASE && AI_KEY);
+export const AI_AVAILABLE = true;
 
 export async function streamChat({ messages, onChunk, onDone, onError, signal }) {
-  if (!AI_AVAILABLE) {
-    onError?.(new Error("AI not configured. Add an OpenAI API key to enable AI features."));
-    return;
-  }
-
   try {
-    const res = await fetch(`${AI_BASE}/chat/completions`, {
+    const res = await fetch("/api/ai/chat", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${AI_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages,
-        stream: true,
-        max_tokens: 700,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages, max_tokens: 700 }),
       signal,
     });
 
     if (!res.ok) {
-      const errText = await res.text().catch(() => "");
-      throw new Error(`AI API error ${res.status}: ${errText.slice(0, 200)}`);
+      const errJson = await res.json().catch(() => ({}));
+      throw new Error(errJson.error || `AI error ${res.status}`);
     }
 
     const reader = res.body.getReader();
@@ -74,10 +52,21 @@ export async function streamChat({ messages, onChunk, onDone, onError, signal })
   }
 }
 
-export function buildCountyPrompt(selected, intel, _rows) {
+export function buildCountyPrompt(selected, intel, rows) {
   const { county, revenue, starts, referrals, reason, missing, launchGroup, service } = selected;
   const threat = intel?.threat;
   const pen = intel?.penetration;
+  const opp = intel?.opportunityScore;
+
+  const countyRows = rows.filter((r) => r.county === county);
+  const y1FTE = countyRows.reduce((s, r) => {
+    const perStart = r.service === "Home Healthcare" ? 1 / 35 : r.service === "Hospice" ? 1 / 12 : 1 / 40;
+    return s + Math.ceil(r.starts[0] * perStart);
+  }, 0);
+  const y3FTE = countyRows.reduce((s, r) => {
+    const perStart = r.service === "Home Healthcare" ? 1 / 35 : r.service === "Hospice" ? 1 / 12 : 1 / 40;
+    return s + Math.ceil(r.starts[2] * perStart);
+  }, 0);
 
   return [
     {
@@ -92,10 +81,12 @@ export function buildCountyPrompt(selected, intel, _rows) {
 Key metrics:
 - Service focus: ${service}
 - Launch priority: ${launchGroup}
+- Opportunity score: ${opp?.score ?? "N/A"}/100 (${opp?.tier ?? "N/A"}) — composite of market size, competition, Andwell presence, revenue efficiency, and growth potential
 - Year 1 revenue projection: $${Math.round(revenue[0]).toLocaleString()}
 - Year 1 patient starts: ${starts[0]}
 - Year 1 referrals needed: ${referrals[0]}
 - Year 3 revenue projection: $${Math.round(revenue[2]).toLocaleString()}
+- Staffing requirement: ${y1FTE} FTEs (Year 1) → ${y3FTE} FTEs (Year 3)
 - Competitive threat: ${threat?.score ?? "N/A"}/100 (${threat?.level ?? "unknown"})${threat?.hasNationalChain ? " — national chain present" : ""}
 - Year 1 market penetration: ${pen ? (pen.y1Penetration * 100).toFixed(1) + "%" : "N/A"}
 - Year 3 penetration target: ${pen ? (pen.y3Penetration * 100).toFixed(1) + "%" : "N/A"}
@@ -104,7 +95,7 @@ Key metrics:
 - Why this county: ${reason}
 - Missing service lines to add: ${missing}
 
-Summarize the opportunity, key risks, and recommended next action in plain English suitable for a board briefing.`,
+Summarize the opportunity score rationale, staffing readiness, key competitive risks, and recommended next action in plain English suitable for a board briefing.`,
     },
   ];
 }
