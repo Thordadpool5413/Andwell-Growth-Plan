@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  envPrefix: ["VITE_", "AI_INTEGRATIONS_", "OPENAI_"],
+  envPrefix: ["VITE_"],
   server: {
     host: "0.0.0.0",
     port: 5000,
