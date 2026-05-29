@@ -538,7 +538,8 @@ async function matchAllSeededCompetitors() {
     try {
       await matchCompetitor(seed.name, seed.provider_type, { city: null, zip_code: null });
 
-      // Populate estimated_beneficiaries from CMS 2022 PUF if not already set
+      // Populate estimated_beneficiaries from CMS 2022 PUF (public Medicare claims file)
+      // Source: CMS Home Health & Hospice Public Use File, fiscal year 2022
       if (!seed.estimated_beneficiaries) {
         const benes = lookupPufBeneficiaries(seed.name);
         if (benes) {
@@ -548,22 +549,8 @@ async function matchAllSeededCompetitors() {
           ).catch(() => {});
         }
       }
-
-      // Derive quality_star_rating from match confidence (1–5 scale, CMS-derived proxy)
-      if (!seed.quality_star_rating) {
-        const matchRec = await query(
-          `SELECT match_confidence FROM competitor_cms_matches WHERE competitor_seed_id=$1 LIMIT 1`,
-          [seed.id]
-        );
-        const conf = matchRec.rows[0]?.match_confidence;
-        if (conf != null) {
-          const stars = Math.round(1 + conf * 4); // 0→1★, 1→5★
-          await query(
-            `UPDATE competitor_seeds SET quality_star_rating=$1 WHERE id=$2`,
-            [Math.min(5, Math.max(1, stars)), seed.id]
-          ).catch(() => {});
-        }
-      }
+      // quality_star_rating intentionally left NULL — populated only when
+      // actual CMS quality dataset records are synced (not derived from match confidence)
 
       await new Promise((r) => setTimeout(r, 200));
     } catch (err) {

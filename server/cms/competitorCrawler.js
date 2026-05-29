@@ -150,14 +150,58 @@ export async function crawlCompetitorWebsite(competitorSeedId, url, seedParent) 
     }
 
     await updateStatus("success", { services, counties, qualityClaims, parentCompany, staffInfo, contactInfo });
-    // Upgrade CMS Verified → CMS and Website Verified when crawl succeeds
+
+    // Upgrade CMS Verified → CMS and Website Verified ONLY when crawl content corroborates the CMS match.
+    // Corroboration requires at least ONE of:
+    //   (a) seed name key words found in page text,
+    //   (b) CCN present in page text,
+    //   (c) at least one extracted service matches the seed's provider_type,
+    //   (d) at least one known county from the seed appears in counties extracted from the page.
     try {
-      await query(
-        `UPDATE competitor_cms_matches SET match_status='CMS and Website Verified', updated_at=NOW()
-         WHERE competitor_seed_id=$1 AND match_status='CMS Verified'`,
+      const seedRec = await query(
+        `SELECT cs.name, cs.provider_type, cs.known_counties,
+                ccm.cms_certification_number
+         FROM competitor_seeds cs
+         LEFT JOIN competitor_cms_matches ccm ON ccm.competitor_seed_id = cs.id
+         WHERE cs.id = $1 LIMIT 1`,
         [competitorSeedId]
       );
-    } catch (_) {}
+      const seed = seedRec.rows[0];
+      if (seed && seed.match_status !== "CMS and Website Verified") {
+        const textLower = text.toLowerCase();
+
+        // (a) Name corroboration — primary distinctive words from seed name
+        const nameWords = (seed.name || "").toLowerCase().split(/\s+/).filter((w) => w.length > 4 && !["health","home","care","hospice","services"].includes(w));
+        const nameCorroborated = nameWords.length > 0 && nameWords.some((w) => textLower.includes(w));
+
+        // (b) CCN on page (exact 6-digit match)
+        const ccnCorroborated = seed.cms_certification_number && textLower.includes(seed.cms_certification_number.toLowerCase());
+
+        // (c) Service type match
+        const provType = seed.provider_type || "";
+        const serviceCorroborated = (provType === "hospice" && services.includes("Hospice")) ||
+          (provType === "homehealth" && services.includes("Home Health")) ||
+          (provType === "both" && (services.includes("Hospice") || services.includes("Home Health")));
+
+        // (d) County overlap
+        const knownCounties = seed.known_counties || [];
+        const countyCorroborated = knownCounties.length > 0 && counties.some((c) => knownCounties.some((k) => k.toLowerCase() === c.toLowerCase()));
+
+        const corroborated = nameCorroborated || ccnCorroborated || serviceCorroborated || countyCorroborated;
+        if (corroborated) {
+          await query(
+            `UPDATE competitor_cms_matches SET match_status='CMS and Website Verified', updated_at=NOW()
+             WHERE competitor_seed_id=$1 AND match_status='CMS Verified'`,
+            [competitorSeedId]
+          );
+          console.log(`[Crawler] Upgraded to CMS and Website Verified for seed ${competitorSeedId} (name=${nameCorroborated} ccn=${ccnCorroborated} service=${serviceCorroborated} county=${countyCorroborated})`);
+        } else {
+          console.log(`[Crawler] Crawl succeeded but corroboration insufficient for seed ${competitorSeedId} — status unchanged`);
+        }
+      }
+    } catch (upgradeErr) {
+      console.error("[Crawler] Upgrade check error:", upgradeErr.message);
+    }
     return { status: "success", services, counties, qualityClaims, parentCompany };
   } catch (err) {
     console.error(`[Crawler] Failed to crawl ${url}:`, err.message);
