@@ -21,6 +21,12 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty }) 
           <MaineMap rows={rows} selectedCounty={selectedCounty} onSelectCounty={setSelectedCounty} />
         </Card>
         <Card title="County launch queue" eyebrow="Prioritization">
+          <div className={`mb-3 rounded-xl border px-3 py-2 text-xs ${dark ? "border-slate-700 bg-slate-800/60 text-slate-400" : "border-slate-100 bg-slate-50 text-slate-500"}`}>
+            <span className="font-black">Priority groups: </span>
+            <span className="font-semibold text-emerald-600 dark:text-emerald-400">Priority 1</span> = immediate launch (months 1–12) ·{" "}
+            <span className="font-semibold text-blue-600 dark:text-blue-400">Priority 2</span> = staged expansion (months 7–18) ·{" "}
+            <span className="font-semibold text-amber-600 dark:text-amber-400">Priority 3</span> = targeted growth (months 13–24)
+          </div>
           <div className="space-y-3">
             {rows.map((row) => {
               const rowIntel = getCountyIntelligence(row.county, rows);
