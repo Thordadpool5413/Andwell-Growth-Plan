@@ -564,6 +564,7 @@ async function syncQualitySnapshots(providerType) {
     [providerType]
   );
   let inserted = 0;
+  const failures = [];
   const nationalAvgConf = 0.72;
   const stateAvgConf = 0.78;
   for (const pr of records.rows) {
@@ -591,10 +592,16 @@ async function syncQualitySnapshots(providerType) {
            pr.cms_dataset_identifier || "CMS Provider Data Catalog"]
         );
         inserted++;
-      } catch (_) {}
+      } catch (err) {
+        failures.push(`provider_id=${pr.id} measure=${m.name}: ${err.message}`);
+      }
     }
   }
-  return inserted;
+  if (failures.length > 0) {
+    console.error(`[MCP] syncQualitySnapshots(${providerType}) — ${failures.length} insert failures:`, failures.slice(0, 5));
+  }
+  console.log(`[MCP] syncQualitySnapshots(${providerType}) — inserted ${inserted}, failed ${failures.length}`);
+  return { inserted, failed: failures.length, errors: failures.slice(0, 5) };
 }
 
 export async function getCmsStats() {

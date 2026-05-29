@@ -2,12 +2,10 @@
 import pg from "pg";
 
 const DATABASE_URL = process.env.DATABASE_URL;
-if (!DATABASE_URL) {
-  console.error("[migrate] DATABASE_URL not set — skipping.");
-  process.exit(0);
-}
 
-const pool = new pg.Pool({ connectionString: DATABASE_URL });
+const pool = DATABASE_URL
+  ? new pg.Pool({ connectionString: DATABASE_URL })
+  : null;
 
 async function col(client, table, column, def) {
   try {
@@ -19,6 +17,10 @@ async function col(client, table, column, def) {
 }
 
 export async function runMigrations() {
+  if (!DATABASE_URL) {
+    console.error("[migrate] DATABASE_URL not set — skipping migrations.");
+    return;
+  }
   return migrate();
 }
 
@@ -149,9 +151,12 @@ async function migrate() {
       );
     `);
     await col(client, "cms_quality_snapshots", "cms_provider_record_id", "INTEGER");
+    await col(client, "cms_quality_snapshots", "provider_type", "TEXT");
     await col(client, "cms_quality_snapshots", "measure_name", "TEXT");
     await col(client, "cms_quality_snapshots", "measure_value", "TEXT");
     await col(client, "cms_quality_snapshots", "measure_score", "FLOAT");
+    await col(client, "cms_quality_snapshots", "benchmark_state_value", "TEXT");
+    await col(client, "cms_quality_snapshots", "benchmark_national_value", "TEXT");
     await col(client, "cms_quality_snapshots", "period", "TEXT");
     await col(client, "cms_quality_snapshots", "source_dataset", "TEXT");
     await col(client, "cms_quality_snapshots", "updated_at", "TIMESTAMPTZ DEFAULT NOW()");
@@ -228,5 +233,9 @@ const isDirectRun = process.argv[1] && (
   process.argv[1].endsWith("db-migrate.js") || process.argv[1].includes("db-migrate")
 );
 if (isDirectRun) {
+  if (!pool) {
+    console.error("[migrate] DATABASE_URL not set — cannot run directly.");
+    process.exit(1);
+  }
   migrate().catch(() => process.exit(1)).finally(() => pool.end());
 }
