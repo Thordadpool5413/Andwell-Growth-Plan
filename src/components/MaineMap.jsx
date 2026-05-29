@@ -350,7 +350,96 @@ function MapLegend({ isGradientMode, gradientLow, gradientHigh, heatmapMode, hea
   );
 }
 
-function MapInner({ heatmapMode, rows, selectedCounty, onSelectCounty, dark, showHospitals, showRings, showOffices }) {
+function CompetitorMarkers({ visible, dark, competitors }) {
+  const [selected, setSelected] = useState(null);
+  if (!visible || !competitors?.length) return null;
+
+  const COUNTY_COORDS = {
+    Cumberland: { lat: 43.82, lng: -70.38 },
+    York: { lat: 43.45, lng: -70.72 },
+    Penobscot: { lat: 44.93, lng: -68.67 },
+    Kennebec: { lat: 44.41, lng: -69.77 },
+    Knox: { lat: 44.07, lng: -69.18 },
+    Lincoln: { lat: 43.98, lng: -69.57 },
+    Androscoggin: { lat: 44.18, lng: -70.23 },
+    Sagadahoc: { lat: 43.93, lng: -69.87 },
+    Aroostook: { lat: 46.72, lng: -68.01 },
+    Somerset: { lat: 45.52, lng: -69.96 },
+    Franklin: { lat: 44.97, lng: -70.44 },
+    Oxford: { lat: 44.22, lng: -70.74 },
+    Washington: { lat: 44.99, lng: -67.64 },
+    Hancock: { lat: 44.56, lng: -68.39 },
+    Waldo: { lat: 44.44, lng: -69.13 },
+    Piscataquis: { lat: 45.81, lng: -69.28 },
+  };
+
+  const placed = competitors
+    .filter((c) => c.known_counties?.length || c.county)
+    .flatMap((c, idx) => {
+      const counties = c.known_counties?.length ? c.known_counties : c.county ? [c.county] : [];
+      return counties.slice(0, 2).map((county, ci) => {
+        const base = COUNTY_COORDS[county];
+        if (!base) return null;
+        const jitter = (idx * 0.03 + ci * 0.015);
+        return { ...c, lat: base.lat + jitter, lng: base.lng + jitter, county };
+      }).filter(Boolean);
+    })
+    .slice(0, 40);
+
+  const isNational = (c) => {
+    const CHAINS = ["amedisys", "gentiva", "kindred", "compassus", "constellation", "lhc group"];
+    return CHAINS.some((ch) => (c.name || "").toLowerCase().includes(ch) || (c.parent_company || "").toLowerCase().includes(ch));
+  };
+
+  return (
+    <>
+      {placed.map((comp, i) => {
+        const sel = selected?.name === comp.name && selected?.county === comp.county;
+        const national = isNational(comp);
+        return (
+          <React.Fragment key={`${comp.name}-${comp.county}-${i}`}>
+            <AdvancedMarker
+              position={{ lat: comp.lat, lng: comp.lng }}
+              onClick={() => setSelected(sel ? null : comp)}
+            >
+              <div
+                title={comp.name}
+                style={{
+                  width: sel ? 14 : 10,
+                  height: sel ? 14 : 10,
+                  borderRadius: "50%",
+                  background: national ? (dark ? "#fbbf24" : "#f59e0b") : (dark ? "#a78bfa" : "#7c3aed"),
+                  border: `2px solid ${sel ? "#fff" : dark ? "#1e293b" : "#fff"}`,
+                  boxShadow: sel ? "0 0 0 2px #7c3aed, 0 2px 6px rgba(0,0,0,0.4)" : "0 1px 4px rgba(0,0,0,0.3)",
+                  transition: "all 0.15s",
+                  cursor: "pointer",
+                }}
+              />
+            </AdvancedMarker>
+            {sel && (
+              <InfoWindow
+                position={{ lat: comp.lat, lng: comp.lng }}
+                onCloseClick={() => setSelected(null)}
+                pixelOffset={[0, -10]}
+              >
+                <div style={{ fontFamily: "system-ui, sans-serif", minWidth: 180, maxWidth: 240, padding: "2px 0" }}>
+                  <p style={{ margin: 0, fontWeight: 800, fontSize: 13, color: "#0f172a", lineHeight: 1.3 }}>{comp.name}</p>
+                  {comp.parent_company && <p style={{ margin: "2px 0 0", fontSize: 11, color: "#475569" }}>{comp.parent_company}</p>}
+                  <p style={{ margin: "4px 0 0", fontSize: 11, color: "#475569" }}><span style={{ fontWeight: 700 }}>County:</span> {comp.county}</p>
+                  {comp.provider_type && <p style={{ margin: "2px 0 0", fontSize: 11, color: "#475569" }}><span style={{ fontWeight: 700 }}>Type:</span> {comp.provider_type}</p>}
+                  {comp.match_status && <p style={{ margin: "4px 0 0", fontSize: 11, fontWeight: 700, color: comp.match_status === "CMS Verified" ? "#059669" : "#6b7280" }}>{comp.match_status}</p>}
+                  {national && <p style={{ margin: "4px 0 0", fontSize: 10, color: "#d97706", fontWeight: 700 }}>⚠ National chain</p>}
+                </div>
+              </InfoWindow>
+            )}
+          </React.Fragment>
+        );
+      })}
+    </>
+  );
+}
+
+function MapInner({ heatmapMode, rows, selectedCounty, onSelectCounty, dark, showHospitals, showRings, showOffices, showCompetitors, competitors }) {
   const [selectedHospital, setSelectedHospital] = useState(null);
 
   return (
@@ -375,6 +464,7 @@ function MapInner({ heatmapMode, rows, selectedCounty, onSelectCounty, dark, sho
         onClose={() => setSelectedHospital(null)}
         dark={dark}
       />
+      <CompetitorMarkers visible={showCompetitors} dark={dark} competitors={competitors} />
     </>
   );
 }
@@ -384,6 +474,17 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty }) {
   const [heatmapMode, setHeatmapMode] = useState("priority");
   const [showHospitals, setShowHospitals] = useState(false);
   const [showRings, setShowRings] = useState(false);
+  const [showCompetitors, setShowCompetitors] = useState(false);
+  const [competitors, setCompetitors] = useState([]);
+
+  React.useEffect(() => {
+    if (showCompetitors && competitors.length === 0) {
+      fetch("/api/cms/competitors")
+        .then((r) => r.json())
+        .then((d) => setCompetitors(d.competitors || []))
+        .catch(() => {});
+    }
+  }, [showCompetitors]);
 
   const rowMap = {};
   if (rows) rows.forEach((row) => { rowMap[row.county] = row; });
@@ -450,6 +551,7 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty }) {
         <span className={`mr-1 text-[10px] font-black uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>Layers:</span>
         {toggleBtn("🏥 Hospitals", showHospitals, () => setShowHospitals((p) => !p), "bg-red-600")}
         {toggleBtn("⏱ Drive-time rings", showRings, () => setShowRings((p) => !p), "bg-emerald-600")}
+        {toggleBtn("🟣 Competitors", showCompetitors, () => setShowCompetitors((p) => !p), "bg-purple-600")}
       </div>
 
       <APIProvider apiKey={API_KEY}>
@@ -476,6 +578,8 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty }) {
               showHospitals={showHospitals}
               showRings={showRings}
               showOffices={showRings}
+              showCompetitors={showCompetitors}
+              competitors={competitors}
             />
           </Map>
         </div>
@@ -492,6 +596,19 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty }) {
         showHospitals={showHospitals}
         showRings={showRings}
       />
+      {showCompetitors && (
+        <div className="flex flex-wrap justify-center gap-3">
+          <div className={`flex items-center gap-1.5 text-[10px] font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>
+            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#7c3aed" }} />
+            Regional competitor
+          </div>
+          <div className={`flex items-center gap-1.5 text-[10px] font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>
+            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#f59e0b" }} />
+            National chain
+          </div>
+          <span className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>— click pin for details · Run CMS Sync to populate</span>
+        </div>
+      )}
     </div>
   );
 }
