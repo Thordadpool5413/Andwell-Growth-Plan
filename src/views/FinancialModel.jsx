@@ -6,6 +6,7 @@ import {
 import Card from "../components/Card.jsx";
 import Metric from "../components/Metric.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
+import SourceBadge from "../components/SourceBadge.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
 import { currency, number } from "../utils/formatters.js";
@@ -122,6 +123,17 @@ export default function FinancialModel({ rows }) {
       </div>
 
       <Card title="Annual financial detail" eyebrow="Detailed breakdown by year">
+        {(() => {
+          const cmsBacked = rows.filter((r) => r.basis === "CMS-backed").length;
+          const estBacked = rows.filter((r) => r.basis !== "CMS-backed").length;
+          return (
+            <div className={`mb-3 flex flex-wrap items-center gap-3 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>
+              <span className="font-black">Revenue basis:</span>
+              <span className="flex items-center gap-1.5"><SourceBadge basis="CMS-backed" /> {cmsBacked} county-service line{cmsBacked !== 1 ? "s" : ""} derived from CMS provider file volumes</span>
+              {estBacked > 0 && <span className="flex items-center gap-1.5"><SourceBadge basis="Est." /> {estBacked} derived from internal capture rate proxies</span>}
+            </div>
+          );
+        })()}
         <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
           <table className="w-full text-left text-sm">
             <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>

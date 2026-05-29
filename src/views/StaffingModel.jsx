@@ -6,6 +6,7 @@ import {
 import Card from "../components/Card.jsx";
 import Metric from "../components/Metric.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
+import Abbr from "../components/Abbr.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
 import { getStaffingModel } from "../utils/calculations.js";
@@ -51,11 +52,11 @@ export default function StaffingModel({ rows }) {
               <tr>
                 <th className="px-5 py-4">Service line</th>
                 <th className="px-5 py-4">Role</th>
-                <th className="px-5 py-4 text-right">Pts/FTE</th>
+                <th className="px-5 py-4 text-right" title="Patients per Full-Time Equivalent — how many active patients one staff member is assumed to carry simultaneously">Pts/<Abbr term="FTE">FTE</Abbr></th>
                 <th className="px-5 py-4 text-right">Avg salary</th>
-                <th className="px-5 py-4 text-right">Y1 FTE</th>
-                <th className="px-5 py-4 text-right">Y2 FTE</th>
-                <th className="px-5 py-4 text-right">Y3 FTE</th>
+                <th className="px-5 py-4 text-right">Y1 <Abbr term="FTE">FTE</Abbr></th>
+                <th className="px-5 py-4 text-right">Y2 <Abbr term="FTE">FTE</Abbr></th>
+                <th className="px-5 py-4 text-right">Y3 <Abbr term="FTE">FTE</Abbr></th>
                 <th className="px-5 py-4 text-right">Y1 cost</th>
                 <th className="px-5 py-4 text-right">Y3 cost</th>
                 <th className="px-5 py-4 text-right">Cost/start</th>
@@ -79,6 +80,9 @@ export default function StaffingModel({ rows }) {
             </tbody>
           </table>
         </div>
+        <p className={`mt-2 text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>
+          * <Abbr term="FTE">FTE</Abbr> = Full-Time Equivalent (40 hrs/week). Ratios represent modeled clinical capacity assumptions — actual caseloads vary by acuity, geography, and payer mix. Salary figures are planning estimates; validate against current Maine market rates before budgeting.
+        </p>
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">

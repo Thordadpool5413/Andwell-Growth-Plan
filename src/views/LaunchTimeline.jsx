@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import Card from "../components/Card.jsx";
 import Metric from "../components/Metric.jsx";
 import Badge from "../components/Badge.jsx";
@@ -6,6 +6,16 @@ import SectionHeader from "../components/SectionHeader.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
 import { currency, number } from "../utils/formatters.js";
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const QUARTERS = ["Q1", "Q1", "Q1", "Q2", "Q2", "Q2", "Q3", "Q3", "Q3", "Q4", "Q4", "Q4"];
+
+function monthOffsetToLabel(offset, startYear, startMonth) {
+  const absMonth = startMonth + offset;
+  const year = startYear + Math.floor(absMonth / 12);
+  const monthIdx = absMonth % 12;
+  return `${QUARTERS[monthIdx]} ${year}`;
+}
 
 const PRIORITY_TIMELINE = {
   "Priority 1": { startMonth: 1, endMonth: 12, color: COLORS.blue, phase: "Phase 1 — Immediate launch" },
@@ -26,6 +36,9 @@ export default function LaunchTimeline({ rows }) {
   const { dark } = useDarkMode();
   const totalMonths = 24;
   const barWidth = 100;
+  const currentYear = new Date().getFullYear();
+  const [startYear, setStartYear] = useState(currentYear);
+  const [startMonthIdx, setStartMonthIdx] = useState(0);
 
   const countyTimeline = useMemo(() => {
     return rows.map((row) => {
@@ -69,6 +82,24 @@ export default function LaunchTimeline({ rows }) {
       </div>
 
       <Card title="Gantt timeline" eyebrow="24-month rollout view">
+        <div className={`mb-4 flex flex-wrap items-center gap-3 rounded-xl border px-3 py-2 text-xs ${dark ? "border-slate-700 bg-slate-800/60 text-slate-400" : "border-slate-100 bg-slate-50 text-slate-500"}`}>
+          <span className="font-black">Timeline start:</span>
+          <select
+            value={startMonthIdx}
+            onChange={(e) => setStartMonthIdx(Number(e.target.value))}
+            className={`rounded-lg border px-2 py-1 text-xs ${dark ? "border-slate-600 bg-slate-700 text-slate-200" : "border-slate-200 bg-white text-slate-700"}`}
+          >
+            {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
+          </select>
+          <select
+            value={startYear}
+            onChange={(e) => setStartYear(Number(e.target.value))}
+            className={`rounded-lg border px-2 py-1 text-xs ${dark ? "border-slate-600 bg-slate-700 text-slate-200" : "border-slate-200 bg-white text-slate-700"}`}
+          >
+            {[currentYear - 1, currentYear, currentYear + 1, currentYear + 2].map((y) => <option key={y} value={y}>{y}</option>)}
+          </select>
+          <span className={`italic ${dark ? "text-slate-500" : "text-slate-400"}`}>Month labels show the calendar quarter each milestone falls in</span>
+        </div>
         <div className="space-y-1">
           <div className="flex items-center gap-2 mb-4">
             <div className={`flex-shrink-0 w-36 text-xs font-semibold ${dark ? "text-slate-500" : "text-slate-400"}`} />
@@ -76,7 +107,7 @@ export default function LaunchTimeline({ rows }) {
               {[0, 3, 6, 9, 12, 15, 18, 21, 24].map((month) => (
                 <div key={month} className="absolute top-0 flex flex-col items-center" style={{ left: `${(month / totalMonths) * 100}%` }}>
                   <div className={`h-4 border-l ${dark ? "border-slate-700" : "border-slate-200"}`} />
-                  <span className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>M{month}</span>
+                  <span className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>{monthOffsetToLabel(month, startYear, startMonthIdx)}</span>
                 </div>
               ))}
             </div>

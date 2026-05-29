@@ -93,30 +93,40 @@ export default function BoardReport({ rows, totals }) {
 
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <Card title="County status matrix" eyebrow="Traffic light indicators">
-            <div className="mb-3 flex flex-wrap items-center gap-4">
-              <p className={`text-xs font-black uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-400"}`}>Legend:</p>
-              {[
-                { color: "bg-emerald-500", label: "Competition: score ≤40 (low threat)" },
-                { color: "bg-amber-500", label: "Competition: score 40–60 (moderate)" },
-                { color: "bg-red-500", label: "Competition: score >60 (high threat)" },
-              ].map(({ color, label }) => (
-                <div key={label} className="flex items-center gap-1.5">
-                  <span className={`inline-block h-2.5 w-2.5 rounded-full ${color}`} />
-                  <span className={`text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{label}</span>
+            <div className={`mb-3 rounded-xl border px-4 py-2.5 ${dark ? "border-slate-700 bg-slate-800/60" : "border-slate-100 bg-slate-50"}`}>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                <p className={`text-[10px] font-black uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-400"}`}>Traffic light key:</p>
+                <div className="flex items-center gap-4">
+                  <p className={`text-[10px] font-semibold ${dark ? "text-slate-500" : "text-slate-400"}`}>Competition dot</p>
+                  {[
+                    { color: "bg-emerald-500", label: "On track — threat ≤40" },
+                    { color: "bg-amber-500", label: "Watch — threat 40–60" },
+                    { color: "bg-red-500", label: "At risk — threat >60" },
+                  ].map(({ color, label }) => (
+                    <div key={label} className="flex items-center gap-1.5">
+                      <span className={`inline-block h-2.5 w-2.5 rounded-full ${color}`} />
+                      <span className={`text-[10px] ${dark ? "text-slate-400" : "text-slate-500"}`}>{label}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-              <div className="flex items-center gap-1.5 ml-2 border-l pl-4">
-                {[
-                  { color: "bg-emerald-500", label: "Penetration ≥5%" },
-                  { color: "bg-amber-500", label: "2–5%" },
-                  { color: "bg-red-500", label: "<2%" },
-                ].map(({ color, label }) => (
-                  <div key={label} className="flex items-center gap-1.5">
-                    <span className={`inline-block h-2.5 w-2.5 rounded-full ${color}`} />
-                    <span className={`text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{label}</span>
-                  </div>
-                ))}
+                <div className={`flex items-center gap-4 border-l pl-4 ${dark ? "border-slate-700" : "border-slate-200"}`}>
+                  <p className={`text-[10px] font-semibold ${dark ? "text-slate-500" : "text-slate-400"}`}>Penetration dot</p>
+                  {[
+                    { color: "bg-emerald-500", label: "On track ≥5%" },
+                    { color: "bg-amber-500", label: "Watch 2–5%" },
+                    { color: "bg-red-500", label: "At risk <2%" },
+                  ].map(({ color, label }) => (
+                    <div key={label} className="flex items-center gap-1.5">
+                      <span className={`inline-block h-2.5 w-2.5 rounded-full ${color}`} />
+                      <span className={`text-[10px] ${dark ? "text-slate-400" : "text-slate-500"}`}>{label}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
+            </div>
+            <div className={`mb-3 flex items-start gap-2 rounded-xl border px-3 py-2.5 text-xs ${dark ? "border-amber-900/40 bg-amber-950/30 text-amber-300" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
+              <span className="mt-0.5 shrink-0 text-amber-500">⚠</span>
+              <span><span className="font-black">Provider file share ≠ market share.</span> Revenue figures are modeled from CMS provider file beneficiary volume — a proxy for relative market position, not independently verified county market share. True market share requires county-attributed claims data not available in this dataset.</span>
             </div>
             <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
               <table className="w-full text-left text-sm">

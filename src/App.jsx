@@ -62,6 +62,7 @@ function Dashboard() {
             <button
               onClick={toggle}
               className={`shrink-0 rounded-full p-3 transition-all duration-300 ${dark ? "bg-slate-700 text-amber-300 hover:bg-slate-600" : "bg-slate-700/50 text-slate-300 hover:bg-slate-600/50"}`}
+              aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
               title={dark ? "Switch to light mode" : "Switch to dark mode"}
             >
               {dark ? (
@@ -115,8 +116,8 @@ function Dashboard() {
             </div>
           </div>
 
-          {showScenario && <ScenarioPanel scenario={scenario} setScenario={setScenario} />}
-          {showCompare && <ScenarioCompare currentScenario={scenario} />}
+          {showScenario && <div className="print:hidden"><ScenarioPanel scenario={scenario} setScenario={setScenario} /></div>}
+          {showCompare && <div className="print:hidden"><ScenarioCompare currentScenario={scenario} /></div>}
 
           <div id="tab-content">
             {activeTab === "Executive View" && <ExecutiveView rows={rows} totals={totals} />}
