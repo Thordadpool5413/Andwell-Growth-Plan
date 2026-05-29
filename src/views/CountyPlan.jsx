@@ -1,19 +1,54 @@
-import React from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import Card from "../components/Card.jsx";
 import Metric from "../components/Metric.jsx";
 import Badge from "../components/Badge.jsx";
 import ServiceBadge from "../components/ServiceBadge.jsx";
 import SourceBadge from "../components/SourceBadge.jsx";
 import Abbr from "../components/Abbr.jsx";
+import AiBadge from "../components/AiBadge.jsx";
 import MaineMap from "../components/MaineMap.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { getCountyIntelligence } from "../utils/calculations.js";
+import { streamChat, buildCountyPrompt, AI_AVAILABLE } from "../utils/ai.js";
 import { currency, number, percent } from "../utils/formatters.js";
 
 export default function CountyPlan({ rows, selectedCounty, setSelectedCounty }) {
   const { dark } = useDarkMode();
   const selected = rows.find((row) => row.county === selectedCounty) || rows[0];
   const intel = getCountyIntelligence(selected.county, rows);
+
+  const [aiText, setAiText] = useState("");
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiError, setAiError] = useState(null);
+  const abortRef = useRef(null);
+
+  useEffect(() => {
+    abortRef.current?.abort();
+    setAiText("");
+    setAiError(null);
+    setAiGenerating(false);
+  }, [selectedCounty]);
+
+  const generateSummary = useCallback(() => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    setAiText("");
+    setAiError(null);
+    setAiGenerating(true);
+
+    streamChat({
+      messages: buildCountyPrompt(selected, intel, rows),
+      signal: controller.signal,
+      onChunk: (_, full) => setAiText(full),
+      onDone: () => setAiGenerating(false),
+      onError: (err) => {
+        setAiError(err.message);
+        setAiGenerating(false);
+      },
+    });
+  }, [selected, intel, rows]);
 
   return (
     <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
@@ -108,6 +143,44 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty }) 
                 </div>
               ))}
             </div>
+
+            {AI_AVAILABLE && (
+              <div>
+                {!aiText && !aiGenerating && (
+                  <button
+                    onClick={generateSummary}
+                    className={`w-full rounded-2xl border-2 border-dashed py-3 text-sm font-black transition ${
+                      dark
+                        ? "border-violet-700 text-violet-400 hover:border-violet-500 hover:bg-violet-950/30"
+                        : "border-violet-200 text-violet-600 hover:border-violet-400 hover:bg-violet-50"
+                    }`}
+                  >
+                    ✦ Generate AI Summary
+                  </button>
+                )}
+                {(aiText || aiGenerating) && (
+                  <AiBadge
+                    label="County intelligence summary"
+                    generating={aiGenerating}
+                    onRegenerate={!aiGenerating ? generateSummary : undefined}
+                  >
+                    {aiText ? (
+                      <p className={`text-sm leading-7 ${dark ? "text-slate-200" : "text-slate-700"}`}>
+                        {aiText}
+                        {aiGenerating && (
+                          <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-violet-400" />
+                        )}
+                      </p>
+                    ) : (
+                      <p className={`text-sm ${dark ? "text-slate-500" : "text-slate-400"}`}>Generating…</p>
+                    )}
+                  </AiBadge>
+                )}
+                {aiError && (
+                  <p className={`mt-2 text-xs ${dark ? "text-red-400" : "text-red-600"}`}>{aiError}</p>
+                )}
+              </div>
+            )}
           </div>
         </Card>
 
