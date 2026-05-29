@@ -1,6 +1,7 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useMemo } from "react";
 import { useDarkMode } from "./DarkModeContext.jsx";
 import { streamChat, buildAskPrompt, AI_AVAILABLE } from "../utils/ai.js";
+import { getCountyIntelligence } from "../utils/calculations.js";
 
 export default function AskPanel({ rows, totals }) {
   const { dark } = useDarkMode();
@@ -10,6 +11,11 @@ export default function AskPanel({ rows, totals }) {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
   const abortRef = useRef(null);
+
+  const intelMap = useMemo(() => {
+    const counties = [...new Set(rows.map((r) => r.county))];
+    return Object.fromEntries(counties.map((c) => [c, getCountyIntelligence(c, rows)]));
+  }, [rows]);
 
   const handleAsk = useCallback(() => {
     if (!question.trim() || generating) return;
@@ -22,7 +28,7 @@ export default function AskPanel({ rows, totals }) {
     setGenerating(true);
 
     streamChat({
-      messages: buildAskPrompt(question, rows, totals),
+      messages: buildAskPrompt(question, rows, totals, intelMap),
       signal: controller.signal,
       onChunk: (_, full) => setAnswer(full),
       onDone: () => setGenerating(false),
@@ -31,7 +37,7 @@ export default function AskPanel({ rows, totals }) {
         setGenerating(false);
       },
     });
-  }, [question, rows, totals, generating]);
+  }, [question, rows, totals, intelMap, generating]);
 
   const handleClear = useCallback(() => {
     abortRef.current?.abort();

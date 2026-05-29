@@ -12,17 +12,64 @@ const OPENAI_BASE = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL || "https://api.
 const OPENAI_KEY_ACTUAL = process.env.AI_INTEGRATIONS_OPENAI_API_KEY || OPENAI_KEY;
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: "32kb" }));
 
-app.post("/api/ai/chat", async (req, res) => {
+const rateLimitMap = new Map();
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX = 20;
+
+function rateLimit(req, res, next) {
+  const ip = req.ip || req.socket.remoteAddress || "unknown";
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip) || { count: 0, resetAt: now + RATE_WINDOW_MS };
+  if (now > entry.resetAt) {
+    entry.count = 0;
+    entry.resetAt = now + RATE_WINDOW_MS;
+  }
+  entry.count += 1;
+  rateLimitMap.set(ip, entry);
+  if (entry.count > RATE_MAX) {
+    res.status(429).json({ error: "Too many requests — try again in a minute." });
+    return;
+  }
+  next();
+}
+
+function originCheck(req, res, next) {
+  const origin = req.headers.origin || "";
+  const host = req.headers.host || "";
+  const referer = req.headers.referer || "";
+  const devDomain = process.env.REPLIT_DEV_DOMAIN || "";
+  const replitDomains = (process.env.REPLIT_DOMAINS || "").split(",").map((d) => d.trim());
+
+  const allowed =
+    !origin ||
+    origin.includes("localhost") ||
+    origin.includes("127.0.0.1") ||
+    (devDomain && origin.includes(devDomain)) ||
+    replitDomains.some((d) => d && origin.includes(d)) ||
+    (referer && (referer.includes(host) || (devDomain && referer.includes(devDomain))));
+
+  if (!allowed) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+  next();
+}
+
+app.post("/api/ai/chat", originCheck, rateLimit, async (req, res) => {
   if (!OPENAI_KEY_ACTUAL) {
-    res.status(503).json({ error: "AI not configured" });
+    res.status(503).json({ error: "AI not configured — add OPENAI_API_KEY to secrets." });
     return;
   }
 
   const { messages, max_tokens = 700 } = req.body;
-  if (!Array.isArray(messages)) {
-    res.status(400).json({ error: "messages must be an array" });
+  if (!Array.isArray(messages) || messages.length === 0) {
+    res.status(400).json({ error: "messages must be a non-empty array" });
+    return;
+  }
+  if (max_tokens > 1500) {
+    res.status(400).json({ error: "max_tokens exceeds limit" });
     return;
   }
 
@@ -77,7 +124,7 @@ if (isDev) {
 } else {
   const distPath = path.join(__dirname, "dist");
   app.use(express.static(distPath));
-  app.get("*", (_req, res) => {
+  app.get("/{*splat}", (_req, res) => {
     res.sendFile(path.join(distPath, "index.html"));
   });
 }

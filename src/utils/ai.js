@@ -135,16 +135,31 @@ Write a 2–3 paragraph executive summary covering: (1) the overall financial op
   ];
 }
 
-export function buildAskPrompt(question, rows, totals) {
+export function buildAskPrompt(question, rows, totals, intelMap = {}) {
   const counties = [...new Set(rows.map((r) => r.county))];
   const countyLines = counties
     .map((county) => {
       const cr = rows.filter((r) => r.county === county);
       const y1Rev = cr.reduce((s, r) => s + r.revenue[0], 0);
+      const y2Rev = cr.reduce((s, r) => s + r.revenue[1], 0);
+      const y3Rev = cr.reduce((s, r) => s + r.revenue[2], 0);
       const y1Starts = cr.reduce((s, r) => s + r.starts[0], 0);
+      const y3Starts = cr.reduce((s, r) => s + r.starts[2], 0);
+      const y1Referrals = cr.reduce((s, r) => s + r.referrals[0], 0);
       const launchGroup = cr[0]?.launchGroup ?? "—";
       const service = cr.map((r) => r.service).join(", ");
-      return `${county} (${launchGroup}): Y1 rev $${Math.round(y1Rev).toLocaleString()}, Y1 starts ${y1Starts}, services: ${service}`;
+      const intel = intelMap[county];
+      const oppScore = intel?.opportunityScore?.score ?? "N/A";
+      const oppTier = intel?.opportunityScore?.tier ?? "N/A";
+      const threatScore = intel?.threat?.score ?? "N/A";
+      const threatLevel = intel?.threat?.level ?? "N/A";
+      const pen = intel?.penetration;
+      const y1Pen = pen ? (pen.y1Penetration * 100).toFixed(1) + "%" : "N/A";
+      const y1FTE = cr.reduce((s, r) => {
+        const perStart = r.service === "Home Healthcare" ? 1 / 35 : r.service === "Hospice" ? 1 / 12 : 1 / 40;
+        return s + Math.ceil(r.starts[0] * perStart);
+      }, 0);
+      return `${county} (${launchGroup}): services=${service} | opp=${oppScore}/100 (${oppTier}) | threat=${threatScore}/100 (${threatLevel}) | Y1 pen=${y1Pen} | Y1 rev=$${Math.round(y1Rev).toLocaleString()} Y2=$${Math.round(y2Rev).toLocaleString()} Y3=$${Math.round(y3Rev).toLocaleString()} | Y1 starts=${y1Starts} Y3=${y3Starts} | Y1 referrals=${y1Referrals} | Y1 FTEs=${y1FTE}`;
     })
     .join("\n");
 
