@@ -9,4 +9,7 @@ export default defineConfig({
     port: 5000,
     allowedHosts: true,
   },
+  define: {
+    "import.meta.env.VITE_GOOGLE_MAPS_API_KEY": JSON.stringify(process.env.GOOGLE_MAPS_API_KEY || ""),
+  },
 });
