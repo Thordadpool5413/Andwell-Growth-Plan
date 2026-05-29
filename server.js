@@ -350,6 +350,15 @@ app.post("/api/ai/cms-analyze", strictOriginCheck, tokenCheck, rateLimit, async 
 // CMS MCP Routes
 // ──────────────────────────────────────────────
 let cmsReady = false;
+// ──────────────────────────────────────────────
+// DB bootstrap — must complete before CMS seeding
+// ──────────────────────────────────────────────
+try {
+  await runMigrations();
+} catch (err) {
+  console.error("[startup] DB migration failed — CMS features may be unavailable:", err.message);
+}
+
 let cmsModule = null;
 
 async function loadCms() {
@@ -366,7 +375,7 @@ async function loadCms() {
   }
 }
 
-loadCms();
+await loadCms();
 
 function cmsReadyCheck(req, res, next) {
   if (!cmsReady || !cmsModule) {
@@ -498,16 +507,6 @@ app.get("/api/cms/tools", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-// ──────────────────────────────────────────────
-// DB bootstrap — run before CMS module loads
-// ──────────────────────────────────────────────
-try {
-  await runMigrations();
-} catch (err) {
-  console.error("[startup] DB migration failed:", err.message);
-  console.error("[startup] CMS features may be unavailable until schema is fixed.");
-}
 
 // ──────────────────────────────────────────────
 // Vite / Static

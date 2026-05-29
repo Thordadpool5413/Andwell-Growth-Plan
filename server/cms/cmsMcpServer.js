@@ -402,8 +402,11 @@ async function matchCompetitor(competitorName, providerType, args) {
   if (!deduplicated.length) {
     if (seedRow) {
       await query(
-        `UPDATE competitor_cms_matches SET match_status='Not Verified by CMS', match_confidence=0, updated_at=NOW()
-         WHERE competitor_seed_id=$1`, [seedRow.id]
+        `INSERT INTO competitor_cms_matches (competitor_seed_id, match_status, match_confidence, verified_by_ai, updated_at)
+         VALUES ($1, 'Not Verified by CMS', 0, false, NOW())
+         ON CONFLICT (competitor_seed_id) DO UPDATE SET
+           match_status='Not Verified by CMS', match_confidence=0, updated_at=NOW()`,
+        [seedRow.id]
       );
     }
     return {
