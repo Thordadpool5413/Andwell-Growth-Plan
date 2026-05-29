@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import Card from "../components/Card.jsx";
 import Metric from "../components/Metric.jsx";
 import Badge from "../components/Badge.jsx";
+import Abbr from "../components/Abbr.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
