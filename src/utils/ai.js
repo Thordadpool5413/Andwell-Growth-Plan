@@ -1,10 +1,29 @@
 export const AI_AVAILABLE = true;
 
+let _cachedToken = null;
+let _tokenFetchedAt = 0;
+const TOKEN_TTL_MS = 3.5 * 60 * 60 * 1000;
+
+async function getToken() {
+  const now = Date.now();
+  if (_cachedToken && now - _tokenFetchedAt < TOKEN_TTL_MS) return _cachedToken;
+  const res = await fetch("/api/ai/token");
+  if (!res.ok) throw new Error("Could not obtain AI session token.");
+  const { token } = await res.json();
+  _cachedToken = token;
+  _tokenFetchedAt = now;
+  return token;
+}
+
 export async function streamChat({ messages, onChunk, onDone, onError, signal }) {
   try {
+    const token = await getToken();
     const res = await fetch("/api/ai/chat", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-ai-token": token,
+      },
       body: JSON.stringify({ messages, max_tokens: 700 }),
       signal,
     });
@@ -181,7 +200,7 @@ Overall scenario totals:
 - Year 1 patient starts: ${totals.y1Starts}
 - Year 1 referrals needed: ${totals.y1Referrals}
 
-County breakdown:
+County breakdown (opp=opportunity score, threat=competitive threat, pen=market penetration):
 ${countyLines}
 
 Question: ${question}`,
