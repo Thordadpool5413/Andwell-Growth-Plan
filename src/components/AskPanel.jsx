@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useMemo } from "react";
 import { useDarkMode } from "./DarkModeContext.jsx";
-import { streamChat, buildAskPrompt, AI_AVAILABLE, callCmsAnalyze, isCmsQuestion } from "../utils/ai.js";
+import { streamChat, buildAskPrompt, AI_AVAILABLE } from "../utils/ai.js";
 import { getCountyIntelligence } from "../utils/calculations.js";
 
 export default function AskPanel({ rows, totals }) {
@@ -28,22 +28,6 @@ export default function AskPanel({ rows, totals }) {
     setError(null);
     setGenerating(true);
     setLastQuestion(q);
-
-    if (isCmsQuestion(q)) {
-      callCmsAnalyze(q)
-        .then((data) => {
-          const text = data.answer || data.result || JSON.stringify(data, null, 2);
-          setAnswer(text);
-          setGenerating(false);
-        })
-        .catch((err) => {
-          if (err.name !== "AbortError") {
-            setError(err.message);
-            setGenerating(false);
-          }
-        });
-      return;
-    }
 
     streamChat({
       messages: buildAskPrompt(q, rows, totals, intelMap),
