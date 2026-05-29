@@ -29,7 +29,7 @@ export default function CmsData() {
   return (
     <div className="space-y-6">
       <SectionHeader eyebrow="CMS data" title="County-level Medicare market data (CMS 2022)">
-        All figures are sourced from the CMS 2022 Home Health and Hospice Public Use File (PUF) and the Medicare Provider of Service File. FFS (Fee-For-Service) beneficiary counts represent traditional Medicare enrollees — the addressable population for home health and hospice services. Provider density is calculated as providers per 10,000 FFS beneficiaries.
+        All figures are sourced from the CMS 2022 Home Health and Hospice <Abbr term="PUF">Public Use File (PUF)</Abbr> and the Medicare Provider of Service File. <Abbr term="FFS">FFS</Abbr> (Fee-For-Service) beneficiary counts represent traditional Medicare enrollees — the addressable population for home health and hospice services. Provider density is calculated as providers per 10,000 <Abbr term="FFS">FFS</Abbr> beneficiaries.
       </SectionHeader>
 
       <div className="grid gap-4 md:grid-cols-4">
