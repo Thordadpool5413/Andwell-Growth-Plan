@@ -200,6 +200,271 @@ app.post("/api/ai/chat", strictOriginCheck, tokenCheck, rateLimit, async (req, r
   }
 });
 
+// ──────────────────────────────────────────────
+// AI + CMS function calling route
+// ──────────────────────────────────────────────
+app.post("/api/ai/cms-analyze", strictOriginCheck, tokenCheck, rateLimit, async (req, res) => {
+  if (!OPENAI_KEY_ACTUAL) {
+    res.status(503).json({ error: "AI not configured — add OPENAI_API_KEY to secrets." });
+    return;
+  }
+  const { question } = req.body;
+  if (!question || typeof question !== "string" || question.length > 2000) {
+    res.status(400).json({ error: "question must be a non-empty string under 2000 chars" });
+    return;
+  }
+
+  try {
+    const mod = await loadCms();
+    const tools = mod?.CMS_TOOLS || [];
+
+    const openaiTools = tools.map((t) => ({
+      type: "function",
+      function: {
+        name: t.name,
+        description: t.description,
+        parameters: t.inputSchema || { type: "object", properties: {} },
+      },
+    }));
+
+    const messages = [
+      {
+        role: "system",
+        content: `You are a competitive intelligence analyst for Andwell, a Maine home health and hospice provider. You have access to CMS (Centers for Medicare & Medicaid Services) Provider Data Catalog tools to look up competitor certifications, quality scores, service areas, and Medicare enrollment data. Use these tools to answer questions about Maine home health and hospice competitors. Be concise and specific.`,
+      },
+      { role: "user", content: question },
+    ];
+
+    let iterations = 0;
+    const MAX_ITERATIONS = 3;
+
+    while (iterations < MAX_ITERATIONS) {
+      iterations++;
+      const body = {
+        model: "gpt-4o-mini",
+        messages,
+        max_tokens: 1000,
+        tools: openaiTools.length ? openaiTools : undefined,
+        tool_choice: openaiTools.length ? "auto" : undefined,
+      };
+
+      const upstream = await fetch(`${OPENAI_BASE}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${OPENAI_KEY_ACTUAL}`,
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!upstream.ok) {
+        const errText = await upstream.text().catch(() => "");
+        res.status(upstream.status).json({ error: `Upstream AI error: ${errText.slice(0, 200)}` });
+        return;
+      }
+
+      const data = await upstream.json();
+      const choice = data.choices?.[0];
+      if (!choice) {
+        res.status(500).json({ error: "No response from AI" });
+        return;
+      }
+
+      messages.push(choice.message);
+
+      if (choice.finish_reason === "stop" || choice.finish_reason === "length") {
+        res.json({
+          answer: choice.message.content,
+          tool_calls_made: messages.filter((m) => m.role === "tool").length,
+          model: data.model,
+        });
+        return;
+      }
+
+      if (choice.finish_reason === "tool_calls" && choice.message.tool_calls?.length) {
+        for (const tc of choice.message.tool_calls) {
+          let toolResult;
+          try {
+            const args = JSON.parse(tc.function.arguments || "{}");
+            toolResult = mod ? await mod.callTool(tc.function.name, args) : { error: "CMS module not ready" };
+          } catch (err) {
+            toolResult = { error: err.message };
+          }
+          messages.push({
+            role: "tool",
+            tool_call_id: tc.id,
+            content: typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult),
+          });
+        }
+        continue;
+      }
+
+      res.json({ answer: choice.message.content || "(no response)", tool_calls_made: 0, model: data.model });
+      return;
+    }
+
+    res.status(429).json({ error: "Too many tool call iterations" });
+  } catch (err) {
+    if (!res.headersSent) res.status(500).json({ error: err.message });
+  }
+});
+
+// ──────────────────────────────────────────────
+// CMS MCP Routes
+// ──────────────────────────────────────────────
+let cmsReady = false;
+let cmsModule = null;
+
+async function loadCms() {
+  if (cmsModule) return cmsModule;
+  try {
+    cmsModule = await import("./server/cms/cmsMcpServer.js");
+    await cmsModule.seedCompetitors();
+    cmsReady = true;
+    console.log("[CMS] MCP server ready");
+    return cmsModule;
+  } catch (err) {
+    console.error("[CMS] Failed to load MCP server:", err.message);
+    return null;
+  }
+}
+
+loadCms();
+
+function cmsReadyCheck(req, res, next) {
+  if (!cmsReady || !cmsModule) {
+    res.status(503).json({ error: "CMS module not yet ready. Retry in a moment." });
+    return;
+  }
+  next();
+}
+
+app.get("/api/cms/stats", async (req, res) => {
+  try {
+    const mod = await loadCms();
+    if (!mod) { res.json({ datasetsDiscovered: 0, maineHospiceProviders: 0, maineHHAgencies: 0, competitorMatches: 0, needsReview: 0 }); return; }
+    const stats = await mod.getCmsStats();
+    res.json(stats);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/cms/competitors", async (req, res) => {
+  try {
+    const mod = await loadCms();
+    if (!mod) { res.json({ competitors: [] }); return; }
+    const competitors = await mod.getCompetitorSummary();
+    res.json({ competitors, count: competitors.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/cms/sync", async (req, res) => {
+  try {
+    const mod = await loadCms();
+    if (!mod) { res.status(503).json({ error: "CMS module not ready" }); return; }
+    const providerType = req.body?.provider_type || "both";
+    const result = await mod.callTool("sync_cms_provider_data", { provider_type: providerType });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/cms/crawl", async (req, res) => {
+  try {
+    const { crawlAllCompetitors } = await import("./server/cms/competitorCrawler.js");
+    res.json({ status: "started", message: "Crawl running in background." });
+    crawlAllCompetitors().then((results) => {
+      console.log("[Crawl] Complete:", results.map((r) => `${r.name}:${r.status}`).join(", "));
+    }).catch((err) => {
+      console.error("[Crawl] Error:", err.message);
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/cms/match", async (req, res) => {
+  try {
+    const mod = await loadCms();
+    if (!mod) { res.status(503).json({ error: "CMS module not ready" }); return; }
+    const { competitor_name, provider_type } = req.body;
+    if (!competitor_name) { res.status(400).json({ error: "competitor_name required" }); return; }
+    const result = await mod.callTool("match_competitor_to_cms_provider", {
+      competitor_name,
+      provider_type: provider_type || "both",
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/cms/search-datasets", async (req, res) => {
+  try {
+    const mod = await loadCms();
+    if (!mod) { res.status(503).json({ error: "CMS module not ready" }); return; }
+    const { keyword, topic } = req.body;
+    if (!keyword) { res.status(400).json({ error: "keyword required" }); return; }
+    const result = await mod.callTool("search_cms_provider_datasets", { keyword, topic });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/cms/query-dataset", async (req, res) => {
+  try {
+    const mod = await loadCms();
+    if (!mod) { res.status(503).json({ error: "CMS module not ready" }); return; }
+    const { dataset_id, filters, limit, offset } = req.body;
+    if (!dataset_id) { res.status(400).json({ error: "dataset_id required" }); return; }
+    const result = await mod.callTool("query_cms_dataset", { dataset_id, filters, limit, offset });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/cms/tool", async (req, res) => {
+  try {
+    const mod = await loadCms();
+    if (!mod) { res.status(503).json({ error: "CMS module not ready" }); return; }
+    const { tool_name, args } = req.body;
+    if (!tool_name) { res.status(400).json({ error: "tool_name required" }); return; }
+    const ALLOWED_TOOLS = new Set([
+      "search_cms_provider_datasets", "get_cms_dataset_metadata", "query_cms_dataset",
+      "fetch_maine_hospice_providers", "fetch_maine_home_health_agencies",
+      "match_competitor_to_cms_provider", "normalize_provider_identity",
+      "get_provider_quality_snapshot", "get_provider_service_area_snapshot",
+    ]);
+    if (!ALLOWED_TOOLS.has(tool_name)) {
+      res.status(400).json({ error: `Unknown or restricted tool: ${tool_name}` });
+      return;
+    }
+    const result = await mod.callTool(tool_name, args || {});
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/cms/tools", async (req, res) => {
+  try {
+    const mod = await loadCms();
+    if (!mod) { res.json({ tools: [] }); return; }
+    res.json({ tools: mod.CMS_TOOLS });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ──────────────────────────────────────────────
+// Vite / Static
+// ──────────────────────────────────────────────
 if (isDev) {
   const vite = await createViteServer({
     server: { middlewareMode: true },
@@ -217,3 +482,29 @@ if (isDev) {
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on http://0.0.0.0:${PORT} [${isDev ? "dev" : "production"}]`);
 });
+
+// ──────────────────────────────────────────────
+// Daily CMS sync cron (3:00 AM)
+// ──────────────────────────────────────────────
+async function setupCron() {
+  try {
+    const cron = (await import("node-cron")).default;
+    cron.schedule("0 3 * * *", async () => {
+      console.log("[CMS Cron] Starting daily sync...");
+      try {
+        const mod = await loadCms();
+        if (mod) {
+          await mod.callTool("sync_cms_provider_data", { provider_type: "both" });
+          console.log("[CMS Cron] Daily sync complete");
+        }
+      } catch (err) {
+        console.error("[CMS Cron] Sync error:", err.message);
+      }
+    }, { timezone: "America/New_York" });
+    console.log("[CMS Cron] Scheduled daily sync at 3:00 AM ET");
+  } catch (err) {
+    console.error("[CMS Cron] Setup failed:", err.message);
+  }
+}
+
+setupCron();
