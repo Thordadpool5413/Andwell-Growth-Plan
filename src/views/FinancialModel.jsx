@@ -5,6 +5,7 @@ import {
 } from "recharts";
 import Card from "../components/Card.jsx";
 import Metric from "../components/Metric.jsx";
+import SectionHeader from "../components/SectionHeader.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
 import { currency, number } from "../utils/formatters.js";
@@ -27,18 +28,22 @@ export default function FinancialModel({ rows }) {
 
   return (
     <div className="space-y-6">
+      <SectionHeader eyebrow="Financial model" title="3-year revenue and contribution projections">
+        Revenue is modeled from CMS beneficiary volumes multiplied by internal capture rate assumptions and Medicare reimbursement rates. Contribution margin reflects the modeled gross margin per service line. Use the Scenario Model sliders to stress-test different capture and conversion rate assumptions.
+      </SectionHeader>
+
       <div className="grid gap-4 md:grid-cols-4">
         <Metric
           label="3-year total revenue"
           value={currency(totalRevenue)}
-          detail="Combined modeled gross revenue across all years."
+          detail="Combined modeled gross revenue across all three years."
           sparkData={yearRows.map((y) => y.revenue)}
           sparkColor={COLORS.blue}
         />
         <Metric
           label="3-year contribution"
           value={currency(totalContribution)}
-          detail="Total margin contribution across all service lines."
+          detail="Total margin contribution across all service lines and years."
           sparkData={yearRows.map((y) => y.contribution)}
           sparkColor={COLORS.green}
         />
@@ -64,31 +69,48 @@ export default function FinancialModel({ rows }) {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card title="Three year financial and referral outlook" eyebrow="Financial impact">
+        <Card title="3-year financial and referral outlook" eyebrow="Revenue · Contribution · Referrals · Starts">
           <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={yearRows}>
+              <LineChart data={yearRows} margin={{ left: 10, right: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
                 <XAxis dataKey="year" tick={{ fill: dark ? "#94a3b8" : "#475569" }} />
-                <YAxis yAxisId="left" tickFormatter={(value) => `$${Math.round(value / 1000000)}M`} tick={{ fill: dark ? "#94a3b8" : "#475569" }} />
-                <YAxis yAxisId="right" orientation="right" tick={{ fill: dark ? "#94a3b8" : "#475569" }} />
-                <Tooltip formatter={(value, name) => name === "Revenue" || name === "Contribution" ? currency(value) : number(value)} contentStyle={dark ? { backgroundColor: "#1e293b", border: "1px solid #334155", color: "#f1f5f9" } : undefined} />
+                <YAxis
+                  yAxisId="left"
+                  tickFormatter={(value) => `$${Math.round(value / 1000000)}M`}
+                  tick={{ fill: dark ? "#94a3b8" : "#475569" }}
+                  label={{ value: "Revenue / Contribution ($)", angle: -90, position: "insideLeft", offset: -8, fontSize: 10, fill: dark ? "#64748b" : "#94a3b8" }}
+                />
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  tick={{ fill: dark ? "#94a3b8" : "#475569" }}
+                  label={{ value: "Count (Referrals / Starts)", angle: 90, position: "insideRight", offset: -8, fontSize: 10, fill: dark ? "#64748b" : "#94a3b8" }}
+                />
+                <Tooltip
+                  formatter={(value, name) => name === "Revenue" || name === "Contribution" ? currency(value) : number(value)}
+                  contentStyle={dark ? { backgroundColor: "#1e293b", border: "1px solid #334155", color: "#f1f5f9" } : undefined}
+                />
                 <Legend />
-                <Line yAxisId="left" type="monotone" dataKey="revenue" name="Revenue" stroke={COLORS.blue} strokeWidth={3} />
-                <Line yAxisId="left" type="monotone" dataKey="contribution" name="Contribution" stroke={COLORS.green} strokeWidth={3} strokeDasharray="5 5" />
-                <Line yAxisId="right" type="monotone" dataKey="referrals" name="Referrals" stroke={COLORS.amber} strokeWidth={3} />
-                <Line yAxisId="right" type="monotone" dataKey="starts" name="Starts" stroke={COLORS.purple} strokeWidth={3} />
+                <Line yAxisId="left" type="monotone" dataKey="revenue" name="Revenue" stroke={COLORS.blue} strokeWidth={3} dot={{ r: 5 }} />
+                <Line yAxisId="left" type="monotone" dataKey="contribution" name="Contribution" stroke={COLORS.green} strokeWidth={3} strokeDasharray="5 5" dot={{ r: 5 }} />
+                <Line yAxisId="right" type="monotone" dataKey="referrals" name="Referrals" stroke={COLORS.amber} strokeWidth={3} dot={{ r: 5 }} />
+                <Line yAxisId="right" type="monotone" dataKey="starts" name="Starts" stroke={COLORS.purple} strokeWidth={3} dot={{ r: 5 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </Card>
-        <Card title="Year over year breakdown" eyebrow="Revenue and contribution">
+        <Card title="Year over year breakdown" eyebrow="Revenue vs. contribution by year">
           <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={yearRows}>
+              <BarChart data={yearRows} margin={{ left: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
                 <XAxis dataKey="year" tick={{ fill: dark ? "#94a3b8" : "#475569" }} />
-                <YAxis tickFormatter={(value) => `$${Math.round(value / 1000000)}M`} tick={{ fill: dark ? "#94a3b8" : "#475569" }} />
+                <YAxis
+                  tickFormatter={(value) => `$${Math.round(value / 1000000)}M`}
+                  tick={{ fill: dark ? "#94a3b8" : "#475569" }}
+                  label={{ value: "Dollars ($)", angle: -90, position: "insideLeft", offset: -8, fontSize: 10, fill: dark ? "#64748b" : "#94a3b8" }}
+                />
                 <Tooltip formatter={(value) => currency(value)} contentStyle={dark ? { backgroundColor: "#1e293b", border: "1px solid #334155", color: "#f1f5f9" } : undefined} />
                 <Legend />
                 <Bar dataKey="revenue" name="Revenue" fill={COLORS.blue} radius={[8, 8, 0, 0]} />
@@ -99,7 +121,7 @@ export default function FinancialModel({ rows }) {
         </Card>
       </div>
 
-      <Card title="Annual financial detail" eyebrow="Detailed breakdown">
+      <Card title="Annual financial detail" eyebrow="Detailed breakdown by year">
         <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
           <table className="w-full text-left text-sm">
             <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>

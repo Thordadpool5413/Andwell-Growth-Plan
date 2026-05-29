@@ -85,10 +85,13 @@ export default function StaffingModel({ rows }) {
         <Card title="FTE ramp by service" eyebrow="Hiring trajectory">
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={serviceChartData}>
+              <BarChart data={serviceChartData} margin={{ left: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
                 <XAxis dataKey="service" tick={{ fontSize: 11, fill: dark ? "#94a3b8" : "#475569" }} />
-                <YAxis tick={{ fill: dark ? "#94a3b8" : "#475569" }} />
+                <YAxis
+                  tick={{ fill: dark ? "#94a3b8" : "#475569" }}
+                  label={{ value: "FTEs", angle: -90, position: "insideLeft", offset: -8, fontSize: 10, fill: dark ? "#64748b" : "#94a3b8" }}
+                />
                 <Tooltip contentStyle={dark ? { backgroundColor: "#1e293b", border: "1px solid #334155", color: "#f1f5f9" } : undefined} />
                 <Legend />
                 <Bar dataKey="Y1 FTE" fill={COLORS.blue} radius={[8, 8, 0, 0]} />

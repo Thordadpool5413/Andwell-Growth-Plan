@@ -93,6 +93,31 @@ export default function BoardReport({ rows, totals }) {
 
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <Card title="County status matrix" eyebrow="Traffic light indicators">
+            <div className="mb-3 flex flex-wrap items-center gap-4">
+              <p className={`text-xs font-black uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-400"}`}>Legend:</p>
+              {[
+                { color: "bg-emerald-500", label: "Competition: score ≤40 (low threat)" },
+                { color: "bg-amber-500", label: "Competition: score 40–60 (moderate)" },
+                { color: "bg-red-500", label: "Competition: score >60 (high threat)" },
+              ].map(({ color, label }) => (
+                <div key={label} className="flex items-center gap-1.5">
+                  <span className={`inline-block h-2.5 w-2.5 rounded-full ${color}`} />
+                  <span className={`text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{label}</span>
+                </div>
+              ))}
+              <div className="flex items-center gap-1.5 ml-2 border-l pl-4">
+                {[
+                  { color: "bg-emerald-500", label: "Penetration ≥5%" },
+                  { color: "bg-amber-500", label: "2–5%" },
+                  { color: "bg-red-500", label: "<2%" },
+                ].map(({ color, label }) => (
+                  <div key={label} className="flex items-center gap-1.5">
+                    <span className={`inline-block h-2.5 w-2.5 rounded-full ${color}`} />
+                    <span className={`text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
             <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
               <table className="w-full text-left text-sm">
                 <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>

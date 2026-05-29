@@ -28,24 +28,24 @@ function TornadoBar({ variable, maxRange, dark }) {
           Range: {currency(variable.range)}
         </p>
       </div>
-      <svg viewBox={`0 0 ${barWidth} 36`} className="w-full h-9">
-        <line x1={center} y1="0" x2={center} y2="36" stroke={dark ? "#475569" : "#94a3b8"} strokeWidth="1" strokeDasharray="3 3" />
+      <svg viewBox={`0 0 ${barWidth} 44`} className="w-full" style={{ height: "44px" }}>
+        <line x1={center} y1="0" x2={center} y2="32" stroke={dark ? "#475569" : "#94a3b8"} strokeWidth="1" strokeDasharray="3 3" />
         {variable.lowDelta < 0 && (
-          <rect x={lowX} y="4" width={lowWidth} height="12" rx="4" fill="#ef4444" opacity="0.8" />
+          <rect x={lowX} y="6" width={lowWidth} height="16" rx="4" fill="#ef4444" opacity="0.85" />
         )}
         {variable.lowDelta > 0 && (
-          <rect x={lowX} y="4" width={lowWidth} height="12" rx="4" fill="#22c55e" opacity="0.8" />
+          <rect x={lowX} y="6" width={lowWidth} height="16" rx="4" fill="#22c55e" opacity="0.85" />
         )}
         {variable.highDelta > 0 && (
-          <rect x={highX} y="4" width={highWidth} height="12" rx="4" fill="#22c55e" opacity="0.8" />
+          <rect x={highX} y="6" width={highWidth} height="16" rx="4" fill="#22c55e" opacity="0.85" />
         )}
         {variable.highDelta < 0 && (
-          <rect x={highX} y="4" width={highWidth} height="12" rx="4" fill="#ef4444" opacity="0.8" />
+          <rect x={highX} y="6" width={highWidth} height="16" rx="4" fill="#ef4444" opacity="0.85" />
         )}
-        <text x={Math.max(lowX - 4, 4)} y="28" textAnchor="end" fontSize="9" fill={dark ? "#94a3b8" : "#64748b"}>
+        <text x={Math.max(lowX - 4, 2)} y="40" textAnchor="end" fontSize="11" fill={dark ? "#94a3b8" : "#64748b"}>
           {formatVal(variable.low)} → {currency(variable.lowDelta)}
         </text>
-        <text x={Math.min(center + highWidth + 4, barWidth - 4)} y="28" textAnchor="start" fontSize="9" fill={dark ? "#94a3b8" : "#64748b"}>
+        <text x={Math.min(center + highWidth + 4, barWidth - 2)} y="40" textAnchor="start" fontSize="11" fill={dark ? "#94a3b8" : "#64748b"}>
           {formatVal(variable.high)} → +{currency(variable.highDelta)}
         </text>
       </svg>

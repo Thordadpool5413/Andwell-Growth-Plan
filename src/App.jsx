@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { TABS, DEFAULT_SCENARIO } from "./data/constants.js";
+import DataSourceBanner from "./components/DataSourceBanner.jsx";
 import { buildRows } from "./utils/calculations.js";
 import { DarkModeProvider, useDarkMode } from "./components/DarkModeContext.jsx";
 import ScenarioPanel from "./components/ScenarioPanel.jsx";
@@ -47,7 +48,7 @@ function Dashboard() {
   return (
     <div className={`min-h-screen transition-colors duration-300 ${dark ? "bg-slate-950 text-slate-100" : "bg-gradient-to-b from-slate-50 to-white text-slate-900"}`}>
       <div className="px-4 py-10 sm:px-6 lg:px-10">
-        <header className={`mx-auto mb-8 max-w-7xl rounded-3xl px-8 py-12 shadow-xl transition-colors duration-300 ${dark ? "bg-gradient-to-br from-blue-950 via-slate-900 to-slate-950 border border-slate-800" : "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"}`}>
+        <header className={`mx-auto mb-8 max-w-7xl rounded-3xl px-8 py-12 shadow-xl transition-colors duration-300 print:hidden ${dark ? "bg-gradient-to-br from-blue-950 via-slate-900 to-slate-950 border border-slate-800" : "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"}`}>
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.3em] text-blue-300">Andwell Maine Innovation and Growth Plan</p>
@@ -76,35 +77,41 @@ function Dashboard() {
           </div>
         </header>
 
+        <div className="print:hidden"><DataSourceBanner /></div>
         <div className="mx-auto max-w-7xl space-y-6">
-          <div className="flex flex-wrap items-center gap-2">
-            {TABS.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`rounded-full px-5 py-2.5 text-sm font-black transition-all duration-200 ${
-                  activeTab === tab
-                    ? dark ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25" : "bg-slate-900 text-white shadow-md"
-                    : dark ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-            <div className="ml-auto flex items-center gap-2">
+          <div className="space-y-3 print:hidden">
+            <div className="flex flex-wrap items-center gap-2">
+              {TABS.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`rounded-full px-5 py-2.5 text-sm font-black transition-all duration-200 ${
+                    activeTab === tab
+                      ? dark ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25" : "bg-slate-900 text-white shadow-md"
+                      : dark ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+            <div className={`flex flex-wrap items-center gap-2 border-t pt-3 ${dark ? "border-slate-800" : "border-slate-100"}`}>
+              <span className={`text-xs font-black uppercase tracking-wide ${dark ? "text-slate-600" : "text-slate-400"}`}>Tools:</span>
               <button
                 onClick={() => { setShowCompare((p) => !p); if (showScenario) setShowScenario(false); }}
                 className={`rounded-full px-4 py-2 text-sm font-black transition ${showCompare ? "bg-indigo-600 text-white" : dark ? "bg-slate-800 text-indigo-400 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-50"}`}
               >
-                {showCompare ? "Hide Compare" : "Compare"}
+                {showCompare ? "Hide Compare" : "⇄ Compare scenarios"}
               </button>
               <button
                 onClick={() => { setShowScenario((p) => !p); if (showCompare) setShowCompare(false); }}
                 className={`rounded-full px-4 py-2 text-sm font-black transition ${showScenario ? "bg-blue-600 text-white" : dark ? "bg-slate-800 text-blue-400 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-blue-700 ring-1 ring-blue-200 hover:bg-blue-50"}`}
               >
-                {showScenario ? "Hide Scenarios" : "Scenario Model"}
+                {showScenario ? "Hide scenario model" : "⚙ Scenario model"}
               </button>
-              <ExportButton targetId="tab-content" filename={`Andwell - ${activeTab}`} />
+              <div className="ml-auto">
+                <ExportButton targetId="tab-content" filename={`Andwell - ${activeTab}`} />
+              </div>
             </div>
           </div>
 
