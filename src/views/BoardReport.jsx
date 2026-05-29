@@ -1,5 +1,6 @@
 import React, { useMemo, useRef } from "react";
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell } from "recharts";
+import ChartContainer from "../components/ChartContainer.jsx";
 import Card from "../components/Card.jsx";
 import Badge from "../components/Badge.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
@@ -174,8 +175,7 @@ export default function BoardReport({ rows, totals }) {
 
           <div className="space-y-6">
             <Card title="Y1 service mix" eyebrow="Revenue breakdown">
-              <div className="h-52">
-                <ResponsiveContainer width="100%" height="100%">
+              <ChartContainer height="h-52">
                   <PieChart>
                     <Pie data={serviceMix} dataKey="revenue" nameKey="service" cx="50%" cy="50%" outerRadius={80} label={({ service, revenue }) => `${service}: ${currency(revenue)}`}>
                       {serviceMix.map((entry) => (
@@ -183,8 +183,7 @@ export default function BoardReport({ rows, totals }) {
                       ))}
                     </Pie>
                   </PieChart>
-                </ResponsiveContainer>
-              </div>
+              </ChartContainer>
             </Card>
 
             {riskCounties.length > 0 && (

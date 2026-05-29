@@ -1,9 +1,10 @@
 import React from "react";
 import {
   CartesianGrid, Line, LineChart, Bar, BarChart,
-  ResponsiveContainer, Tooltip, XAxis, YAxis, Legend,
+  Tooltip, XAxis, YAxis, Legend,
 } from "recharts";
 import Card from "../components/Card.jsx";
+import ChartContainer from "../components/ChartContainer.jsx";
 import Metric from "../components/Metric.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
 import SourceBadge from "../components/SourceBadge.jsx";
@@ -72,8 +73,7 @@ export default function FinancialModel({ rows }) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card title="3-year financial and referral outlook" eyebrow="Revenue · Contribution · Referrals · Starts">
-          <div className="h-96">
-            <ResponsiveContainer width="100%" height="100%">
+          <ChartContainer height="h-96">
               <LineChart data={yearRows} margin={{ left: 10, right: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
                 <XAxis dataKey="year" tick={{ fill: dark ? "#94a3b8" : "#475569" }} />
@@ -99,12 +99,10 @@ export default function FinancialModel({ rows }) {
                 <Line yAxisId="right" type="monotone" dataKey="referrals" name="Referrals" stroke={COLORS.amber} strokeWidth={3} dot={{ r: 5 }} />
                 <Line yAxisId="right" type="monotone" dataKey="starts" name="Starts" stroke={COLORS.purple} strokeWidth={3} dot={{ r: 5 }} />
               </LineChart>
-            </ResponsiveContainer>
-          </div>
+          </ChartContainer>
         </Card>
         <Card title="Year over year breakdown" eyebrow="Revenue vs. contribution by year">
-          <div className="h-96">
-            <ResponsiveContainer width="100%" height="100%">
+          <ChartContainer height="h-96">
               <BarChart data={yearRows} margin={{ left: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
                 <XAxis dataKey="year" tick={{ fill: dark ? "#94a3b8" : "#475569" }} />
@@ -118,20 +116,19 @@ export default function FinancialModel({ rows }) {
                 <Bar dataKey="revenue" name="Revenue" fill={COLORS.blue} radius={[8, 8, 0, 0]} />
                 <Bar dataKey="contribution" name="Contribution" fill={COLORS.green} radius={[8, 8, 0, 0]} />
               </BarChart>
-            </ResponsiveContainer>
-          </div>
+          </ChartContainer>
         </Card>
       </div>
 
       <Card title="Annual financial detail" eyebrow="Detailed breakdown by year">
         {(() => {
-          const cmsBacked = rows.filter((r) => r.basis === "CMS-backed").length;
-          const estBacked = rows.filter((r) => r.basis !== "CMS-backed").length;
+          const cmsBacked = rows.filter((r) => r.basis && r.basis.toLowerCase().includes("cms")).length;
+          const estBacked = rows.filter((r) => !r.basis || !r.basis.toLowerCase().includes("cms")).length;
           return (
             <div className={`mb-3 flex flex-wrap items-center gap-3 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>
               <span className="font-black">Revenue basis:</span>
-              <span className="flex items-center gap-1.5"><SourceBadge basis="CMS-backed" /> {cmsBacked} county-service line{cmsBacked !== 1 ? "s" : ""} derived from CMS provider file volumes</span>
-              {estBacked > 0 && <span className="flex items-center gap-1.5"><SourceBadge basis="Est." /> {estBacked} derived from internal capture rate proxies</span>}
+              <span className="flex items-center gap-1.5"><SourceBadge basis="CMS direct HH market" /> {cmsBacked} county-service line{cmsBacked !== 1 ? "s" : ""} derived from CMS provider file volumes</span>
+              {estBacked > 0 && <span className="flex items-center gap-1.5"><SourceBadge basis="Planning proxy" /> {estBacked} derived from internal capture rate proxies</span>}
             </div>
           );
         })()}
@@ -171,7 +168,7 @@ export default function FinancialModel({ rows }) {
 
       <Card title="County & service line detail" eyebrow="Revenue basis by row">
         <p className={`mb-3 text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>
-          Each row shows the data provenance for its revenue projection. <SourceBadge basis="CMS-backed" /> = derived from CMS provider file beneficiary volumes. <SourceBadge basis="Est." /> = internal capture rate proxy.
+          Each row shows the data provenance for its revenue projection. <SourceBadge basis="CMS direct HH market" /> = derived from CMS provider file beneficiary volumes. <SourceBadge basis="Planning proxy" /> = internal capture rate proxy.
         </p>
         <div className="relative">
           <div className={`pointer-events-none absolute inset-y-0 right-0 z-10 w-12 rounded-r-2xl bg-gradient-to-l ${dark ? "from-slate-800/90" : "from-white/90"}`} />
