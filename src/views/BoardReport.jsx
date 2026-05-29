@@ -3,6 +3,7 @@ import { PieChart, Pie, Cell } from "recharts";
 import ChartContainer from "../components/ChartContainer.jsx";
 import Card from "../components/Card.jsx";
 import Badge from "../components/Badge.jsx";
+import Abbr from "../components/Abbr.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
 import { rollupByService, getOpportunityScore, getCompetitiveThreatScore, getMarketPenetration } from "../utils/calculations.js";
@@ -125,7 +126,7 @@ export default function BoardReport({ rows, totals }) {
             </div>
             <div className={`mb-3 flex items-start gap-2 rounded-xl border px-3 py-2.5 text-xs ${dark ? "border-amber-900/40 bg-amber-950/30 text-amber-300" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
               <span className="mt-0.5 shrink-0 text-amber-500">⚠</span>
-              <span><span className="font-black">Provider file share ≠ market share.</span> Revenue figures are modeled from CMS provider file beneficiary volume — a proxy for relative market position, not independently verified county market share. True market share requires county-attributed claims data not available in this dataset.</span>
+              <span><span className="font-black"><Abbr term="Provider File Share">Provider file share</Abbr> ≠ market share.</span> Revenue figures are modeled from <Abbr term="CMS">CMS</Abbr> provider file beneficiary volume — a proxy for relative market position, not independently verified county market share. True market share requires county-attributed claims data not available in this dataset.</span>
             </div>
             <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
               <table className="w-full text-left text-sm">

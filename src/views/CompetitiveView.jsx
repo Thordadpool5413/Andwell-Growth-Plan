@@ -7,6 +7,7 @@ import Card from "../components/Card.jsx";
 import ChartContainer from "../components/ChartContainer.jsx";
 import Metric from "../components/Metric.jsx";
 import Badge from "../components/Badge.jsx";
+import Abbr from "../components/Abbr.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
@@ -34,7 +35,7 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty }) {
         <Metric label={`${service} providers`} value={summary.providers} detail="Named Maine provider rows loaded." />
         <Metric label="Total beneficiaries" value={number(summary.beneficiaries)} detail="Provider file beneficiary volume." />
         <Metric label="Andwell rank" value={summary.andwellRank ? `#${summary.andwellRank}` : "N/A"} detail="Ranked by beneficiary volume in the provider file." />
-        <Metric label="Andwell provider file share" value={percent(summary.andwellShare)} detail="Not county market share. This is provider file share." />
+        <Metric label="Andwell provider file share" value={percent(summary.andwellShare)} detail={<span>Not county market share. This is <Abbr term="Provider File Share">provider file share</Abbr>.</span>} />
       </div>
 
       {threat && (
