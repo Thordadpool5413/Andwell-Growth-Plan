@@ -38,19 +38,23 @@ export default function CmsDataPanel() {
   const [loadingComps, setLoadingComps] = useState(false);
   const [activePanel, setActivePanel] = useState("overview");
 
-  const fetchStats = () => {
-    fetch("/api/cms/stats")
-      .then((r) => r.json())
-      .then((d) => setStats(d))
-      .catch(() => {});
+  const fetchStats = async () => {
+    try {
+      const token = await getCmsToken();
+      const r = await fetch("/api/cms/stats", { headers: { "x-ai-token": token } });
+      if (r.ok) setStats(await r.json());
+    } catch (_) {}
   };
 
-  const fetchCompetitors = () => {
+  const fetchCompetitors = async () => {
     setLoadingComps(true);
-    fetch("/api/cms/competitors")
-      .then((r) => r.json())
-      .then((d) => { setCompetitors(d.competitors || []); setLoadingComps(false); })
-      .catch(() => setLoadingComps(false));
+    try {
+      const token = await getCmsToken();
+      const r = await fetch("/api/cms/competitors", { headers: { "x-ai-token": token } });
+      const d = r.ok ? await r.json() : { competitors: [] };
+      setCompetitors(d.competitors || []);
+    } catch (_) {}
+    setLoadingComps(false);
   };
 
   useEffect(() => {

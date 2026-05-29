@@ -522,10 +522,15 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty }) {
 
   React.useEffect(() => {
     if (showCompetitors && competitors.length === 0) {
-      fetch("/api/cms/competitors")
-        .then((r) => r.json())
-        .then((d) => setCompetitors(d.competitors || []))
-        .catch(() => {});
+      (async () => {
+        try {
+          const tr = await fetch("/api/ai/token");
+          const { token } = tr.ok ? await tr.json() : { token: "" };
+          const r = await fetch("/api/cms/competitors", { headers: { "x-ai-token": token } });
+          const d = r.ok ? await r.json() : { competitors: [] };
+          setCompetitors(d.competitors || []);
+        } catch (_) {}
+      })();
     }
   }, [showCompetitors]);
 
