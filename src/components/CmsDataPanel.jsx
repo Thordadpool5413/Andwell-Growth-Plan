@@ -167,6 +167,59 @@ export default function CmsDataPanel() {
             </div>
           </div>
 
+          {/* Match-status breakdown */}
+          {stats?.matchStatusBreakdown?.length > 0 && (
+            <div className={`rounded-2xl border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+              <p className={`text-sm font-black mb-3 ${dark ? "text-white" : "text-slate-950"}`}>Verification status breakdown</p>
+              <div className="flex flex-wrap gap-2">
+                {stats.matchStatusBreakdown.map((row) => (
+                  <div key={row.match_status} className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs ${dark ? "bg-slate-700/40" : "bg-slate-50"}`}>
+                    <span className={`h-2 w-2 rounded-full ${row.match_status?.includes("Verified") ? "bg-emerald-500" : row.match_status === "Needs Review" ? "bg-amber-400" : "bg-slate-400"}`} />
+                    <span className={dark ? "text-slate-300" : "text-slate-700"}>{row.match_status || "Unknown"}</span>
+                    <span className={`font-black ${dark ? "text-white" : "text-slate-950"}`}>{row.c}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Failed sync messages */}
+          {stats?.failedSyncs?.length > 0 && (
+            <div className={`rounded-2xl border p-5 ${dark ? "border-red-900/50 bg-red-950/20" : "border-red-200 bg-red-50"}`}>
+              <p className={`text-sm font-black mb-2 ${dark ? "text-red-300" : "text-red-800"}`}>Failed sync events</p>
+              {stats.failedSyncs.map((f, i) => (
+                <div key={i} className={`mt-1.5 text-xs ${dark ? "text-red-400" : "text-red-700"}`}>
+                  <span className="font-semibold">{f.provider_type} / {f.dataset_identifier || "unknown"}</span>
+                  {" — "}{f.error_message?.slice(0, 80) || "Error (no detail)"}{" "}
+                  <span className={dark ? "text-red-600" : "text-red-400"}>{f.completed_at ? new Date(f.completed_at).toLocaleDateString() : ""}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Dataset list with dictionary links */}
+          {stats?.datasetList?.length > 0 && (
+            <div className={`rounded-2xl border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+              <p className={`text-sm font-black mb-3 ${dark ? "text-white" : "text-slate-950"}`}>Discovered datasets</p>
+              <div className="space-y-2">
+                {stats.datasetList.map((ds) => (
+                  <div key={ds.cms_dataset_identifier} className={`flex items-center justify-between rounded-xl px-4 py-2 text-xs ${dark ? "bg-slate-700/30" : "bg-slate-50"}`}>
+                    <div className="min-w-0">
+                      <p className={`font-semibold truncate ${dark ? "text-slate-200" : "text-slate-800"}`}>{ds.title || ds.cms_dataset_identifier}</p>
+                      <p className={`mt-0.5 ${dark ? "text-slate-500" : "text-slate-400"}`}>{ds.topic} · {ds.cms_dataset_identifier}</p>
+                    </div>
+                    {ds.api_reference && (
+                      <a href={ds.api_reference} target="_blank" rel="noopener noreferrer"
+                        className={`ml-3 shrink-0 rounded-full px-2 py-0.5 font-black text-[10px] transition ${dark ? "bg-blue-900/40 text-blue-300 hover:bg-blue-900/60" : "bg-blue-50 text-blue-700 hover:bg-blue-100"}`}>
+                        Dictionary ↗
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className={`rounded-2xl border p-5 text-xs leading-6 ${dark ? "border-slate-700 bg-slate-800/50 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
             <p className="font-black mb-1">Data provenance and limitations</p>
             <p>Provider records are sourced from the CMS Provider Data Catalog via the public DKAN API. Records reflect Medicare certification status only. CMS data does not include Medicaid-only or private-pay providers. Match confidence scores are computed from name normalization and location proximity — review flagged records before treating as definitive competitive intelligence.</p>
