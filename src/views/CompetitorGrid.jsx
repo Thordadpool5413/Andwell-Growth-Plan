@@ -189,7 +189,7 @@ function SortableMatrix({ competitors, dark, providerType }) {
                     {comp.estimated_beneficiaries ? comp.estimated_beneficiaries.toLocaleString() : "—"}
                   </td>
                   <td className={`px-4 py-3 text-[11px] ${dark ? "text-slate-300" : "text-slate-700"}`}>
-                    {comp.quality_star_rating ? `${comp.quality_star_rating}★` : "—"}
+                    {comp.quality_star_rating ? `${comp.quality_star_rating}★` : <span title="Requires CMS quality dataset sync — not derived from match confidence">N/A</span>}
                   </td>
                   <td className={`px-4 py-3 ${dark ? "text-slate-300" : "text-slate-600"}`}>
                     {comp.known_counties?.length ? comp.known_counties.slice(0, 3).join(", ") + (comp.known_counties.length > 3 ? ` +${comp.known_counties.length - 3}` : "") : "—"}
@@ -250,7 +250,7 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE })
       case "cms_status": return status === "CMS Verified" || status === "CMS and Website Verified" ? "Verified" : "Unconfirmed";
       case "match_conf": return comp.match_confidence != null ? `${Math.round(comp.match_confidence * 100)}%` : "—";
       case "est_beneficiaries": return comp.estimated_beneficiaries ? comp.estimated_beneficiaries.toLocaleString() : "—";
-      case "quality_star": return comp.quality_star_rating ? `${comp.quality_star_rating}★` : "—";
+      case "quality_star": return comp.quality_star_rating ? `${comp.quality_star_rating}★` : "N/A";
       case "counties": return counties > 0 ? `${counties} counties` : "Unknown";
       case "services": return services > 0 ? `${services} lines` : "Unknown";
       case "affiliations": return comp.parent_company || (national ? "National chain" : "None");
