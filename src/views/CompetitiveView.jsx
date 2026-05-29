@@ -80,9 +80,14 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty }) {
         <Card title={`Top ${service} providers`} eyebrow="Provider file share">
           <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartRows} layout="vertical" margin={{ left: 10, right: 20 }}>
+              <BarChart data={chartRows} layout="vertical" margin={{ left: 10, right: 20, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
-                <XAxis type="number" tickFormatter={(value) => `${value}%`} tick={{ fill: dark ? "#94a3b8" : "#475569" }} />
+                <XAxis
+                  type="number"
+                  tickFormatter={(value) => `${value}%`}
+                  tick={{ fill: dark ? "#94a3b8" : "#475569" }}
+                  label={{ value: "Provider file share (%)", position: "insideBottom", offset: -12, fontSize: 10, fill: dark ? "#64748b" : "#94a3b8" }}
+                />
                 <YAxis type="category" dataKey="providerName" width={170} tick={{ fontSize: 11, fill: dark ? "#94a3b8" : "#475569" }} />
                 <Tooltip formatter={(value, name) => name === "sharePct" ? `${value}%` : number(value)} contentStyle={dark ? { backgroundColor: "#1e293b", border: "1px solid #334155", color: "#f1f5f9" } : undefined} />
                 <Bar dataKey="sharePct" name="Provider file share" radius={[0, 8, 8, 0]}>
