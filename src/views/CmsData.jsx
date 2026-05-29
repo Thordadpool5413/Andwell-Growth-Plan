@@ -1,10 +1,11 @@
 import React from "react";
 import {
   Bar, CartesianGrid, ComposedChart, Line,
-  ResponsiveContainer, Tooltip, XAxis, YAxis,
+  ResponsiveContainer, Tooltip, XAxis, YAxis, Legend,
 } from "recharts";
 import Card from "../components/Card.jsx";
 import Metric from "../components/Metric.jsx";
+import SectionHeader from "../components/SectionHeader.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
 import cmsCountyMarket from "../data/cmsCountyMarket.js";
@@ -26,11 +27,15 @@ export default function CmsData() {
 
   return (
     <div className="space-y-6">
+      <SectionHeader eyebrow="CMS data" title="County-level Medicare market data (CMS 2022)">
+        All figures are sourced from the CMS 2022 Home Health and Hospice Public Use File (PUF) and the Medicare Provider of Service File. FFS (Fee-For-Service) beneficiary counts represent traditional Medicare enrollees — the addressable population for home health and hospice services. Provider density is calculated as providers per 10,000 FFS beneficiaries.
+      </SectionHeader>
+
       <div className="grid gap-4 md:grid-cols-4">
-        <Metric label="CMS counties loaded" value={rows.length} detail="County market rows included in this dashboard." />
-        <Metric label="HH users" value={number(rows.reduce((sum, row) => sum + row.hh.users, 0))} detail="Home health users across loaded rows." />
-        <Metric label="Hospice users" value={number(rows.reduce((sum, row) => sum + row.hos.users, 0))} detail="Hospice users across loaded rows." />
-        <Metric label="Total HH payments" value={currency(totalHHPay)} detail="Medicare HH payments across all counties." />
+        <Metric label="CMS counties loaded" value={rows.length} detail="County market rows from CMS 2022 PUF included in this model." />
+        <Metric label="HH users" value={number(rows.reduce((sum, row) => sum + row.hh.users, 0))} detail="Medicare home health users across all loaded counties." />
+        <Metric label="Hospice users" value={number(rows.reduce((sum, row) => sum + row.hos.users, 0))} detail="Medicare hospice users across all loaded counties." />
+        <Metric label="Total HH payments" value={currency(totalHHPay)} detail="Aggregate Medicare home health payments across all counties." />
       </div>
 
       <div className="flex justify-end">
@@ -42,16 +47,24 @@ export default function CmsData() {
         </button>
       </div>
 
-      <Card title="CMS county market data" eyebrow="Market data">
+      <Card title="HH users vs. Hospice users by county" eyebrow="CMS 2022 PUF — beneficiary volumes">
         <div className="h-96">
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={rows}>
+            <ComposedChart data={rows} margin={{ left: 10, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
-              <XAxis dataKey="county" tick={{ fontSize: 12, fill: dark ? "#94a3b8" : "#475569" }} />
-              <YAxis tick={{ fill: dark ? "#94a3b8" : "#475569" }} />
+              <XAxis
+                dataKey="county"
+                tick={{ fontSize: 11, fill: dark ? "#94a3b8" : "#475569" }}
+                label={{ value: "County", position: "insideBottom", offset: -12, fontSize: 11, fill: dark ? "#64748b" : "#94a3b8" }}
+              />
+              <YAxis
+                tick={{ fill: dark ? "#94a3b8" : "#475569" }}
+                label={{ value: "Beneficiary users", angle: -90, position: "insideLeft", offset: -8, fontSize: 10, fill: dark ? "#64748b" : "#94a3b8" }}
+              />
               <Tooltip contentStyle={dark ? { backgroundColor: "#1e293b", border: "1px solid #334155", color: "#f1f5f9" } : undefined} />
+              <Legend />
               <Bar dataKey="hh.users" name="HH users" fill={COLORS.blue} radius={[8, 8, 0, 0]} />
-              <Line type="monotone" dataKey="hos.users" name="Hospice users" stroke="#9333ea" strokeWidth={3} />
+              <Line type="monotone" dataKey="hos.users" name="Hospice users" stroke="#9333ea" strokeWidth={3} dot={{ r: 4 }} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>

@@ -1,6 +1,7 @@
 import React from "react";
 import Card from "../components/Card.jsx";
 import ServiceBadge from "../components/ServiceBadge.jsx";
+import SectionHeader from "../components/SectionHeader.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { number } from "../utils/formatters.js";
 import { exportReferralCSV } from "../utils/csvExport.js";
@@ -8,8 +9,13 @@ import { exportReferralCSV } from "../utils/csvExport.js";
 export default function ReferralPlan({ rows }) {
   const { dark } = useDarkMode();
   return (
-    <Card title="Referral requirements by county" eyebrow="Referral plan">
-      <div className="mb-4 flex justify-end">
+    <div className="space-y-6">
+      <SectionHeader eyebrow="Referral plan" title="Required referrals by county and service line">
+        Referral requirements are derived from patient start goals using a 75% conversion baseline (industry median: 72–78% per NAHC 2023). For every 100 referrals, ~75 are expected to convert to patient starts. Adjust the Scenario Model to see how different conversion rates affect the referral load.
+      </SectionHeader>
+      <Card title="Referral requirements by county" eyebrow="Referral plan">
+      <div className="mb-4 flex items-center justify-between">
+        <p className={`text-xs font-semibold ${dark ? "text-slate-500" : "text-slate-400"}`}>Scroll right to see all years →</p>
         <button
           onClick={() => exportReferralCSV(rows)}
           className={`rounded-full px-4 py-2 text-xs font-black transition ${dark ? "bg-slate-700 text-emerald-400 ring-1 ring-slate-600 hover:bg-slate-600" : "bg-white text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-50"}`}
@@ -17,7 +23,7 @@ export default function ReferralPlan({ rows }) {
           Export CSV
         </button>
       </div>
-      <div className="overflow-x-auto rounded-2xl border border-slate-100">
+      <div className={`relative overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
         <table className={`w-full min-w-[1050px] text-left text-sm ${dark ? "border-slate-700" : ""}`}>
           <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
             <tr>
@@ -55,5 +61,6 @@ export default function ReferralPlan({ rows }) {
         </table>
       </div>
     </Card>
+    </div>
   );
 }

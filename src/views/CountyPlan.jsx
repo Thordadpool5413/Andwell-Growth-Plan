@@ -3,6 +3,7 @@ import Card from "../components/Card.jsx";
 import Metric from "../components/Metric.jsx";
 import Badge from "../components/Badge.jsx";
 import ServiceBadge from "../components/ServiceBadge.jsx";
+import SourceBadge from "../components/SourceBadge.jsx";
 import MaineMap from "../components/MaineMap.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { getCountyIntelligence } from "../utils/calculations.js";
@@ -75,7 +76,7 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty }) 
             <Metric
               label="Year 1 revenue"
               value={currency(selected.revenue[0])}
-              detail={selected.basis}
+              detail={<span className="flex items-center gap-1.5 flex-wrap"><SourceBadge basis={selected.basis} /><span>{selected.basis}</span></span>}
               sparkData={selected.revenue}
               sparkColor="#16a34a"
             />
