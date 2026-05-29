@@ -18,6 +18,10 @@ async function col(client, table, column, def) {
   }
 }
 
+export async function runMigrations() {
+  return migrate();
+}
+
 async function migrate() {
   const client = await pool.connect();
   try {
@@ -211,11 +215,15 @@ async function migrate() {
     console.log("[migrate] All CMS tables and indexes verified/created.");
   } catch (err) {
     console.error("[migrate] Migration error:", err.message);
-    process.exit(1);
+    throw err;
   } finally {
     client.release();
-    await pool.end();
   }
 }
 
-migrate();
+const isDirectRun = process.argv[1] && (
+  process.argv[1].endsWith("db-migrate.js") || process.argv[1].includes("db-migrate")
+);
+if (isDirectRun) {
+  migrate().catch(() => process.exit(1)).finally(() => pool.end());
+}

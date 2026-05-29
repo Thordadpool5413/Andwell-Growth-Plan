@@ -241,22 +241,21 @@ export async function callTool(toolName, args) {
     }
 
     case "sync_cms_provider_data": {
-      const types = args.provider_type === "both" ? ["hospice", "homehealth"] : [args.provider_type || "both"];
+      const types = (args.provider_type === "both" || !args.provider_type)
+        ? ["hospice", "homehealth"]
+        : [args.provider_type];
       const results = {};
-      for (const pt of types === ["both"] ? ["hospice", "homehealth"] : types) {
+      for (const pt of types) {
         const startedAt = new Date();
         try {
           const datasets = await discoverDatasets(pt);
-          let totalCounts = { created: 0, updated: 0, unchanged: 0, failed: 0 };
-          for (const ds of datasets.slice(0, 2)) {
-            const providers = await fetchMaineProviders(pt);
-            const counts = await syncToDatabase(providers, pt, ds.identifier || ds.cms_dataset_identifier);
-            totalCounts.created += counts.created;
-            totalCounts.updated += counts.updated;
-            totalCounts.failed += counts.failed;
+          for (const ds of datasets.slice(0, 3)) {
+            await upsertDataset(ds, pt);
           }
-          await logSync({ syncType: "full", datasetId: datasets[0]?.identifier, providerType: pt, startedAt, status: "success", counts: totalCounts });
-          results[pt] = { status: "success", ...totalCounts };
+          const providers = await fetchMaineProviders(pt);
+          const counts = await syncToDatabase(providers, pt, datasets[0]?.identifier);
+          await logSync({ syncType: "full", datasetId: datasets[0]?.identifier, providerType: pt, startedAt, status: "success", counts });
+          results[pt] = { status: "success", ...counts };
         } catch (err) {
           await logSync({ syncType: "full", providerType: pt, startedAt, status: "error", error: err.message });
           results[pt] = { status: "error", error: err.message };

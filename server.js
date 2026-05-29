@@ -3,6 +3,7 @@ import { createServer as createViteServer } from "vite";
 import { fileURLToPath } from "url";
 import path from "path";
 import crypto from "crypto";
+import { runMigrations } from "./scripts/db-migrate.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isDev = process.env.NODE_ENV !== "production";
@@ -159,6 +160,49 @@ app.post("/api/ai/chat", strictOriginCheck, tokenCheck, rateLimit, async (req, r
   const clampedTokens = Math.min(Math.max(Number(max_tokens) || 700, 50), 1500);
 
   try {
+    const mod = await loadCms().catch(() => null);
+    const cmsTools = mod?.CMS_TOOLS || [];
+    let chatMessages = messages;
+
+    // CMS tool-call pre-pass (non-streaming) — runs before streaming the final answer
+    if (cmsTools.length && mod) {
+      let toolRound = 0;
+      while (toolRound < 2) {
+        const toolRes = await fetch(`${OPENAI_BASE}/chat/completions`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_KEY_ACTUAL}` },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: chatMessages,
+            tools: cmsTools,
+            tool_choice: "auto",
+            max_tokens: clampedTokens,
+          }),
+        });
+        if (!toolRes.ok) break;
+        const toolData = await toolRes.json();
+        const choice = toolData.choices?.[0];
+        if (!choice || choice.finish_reason !== "tool_calls") break;
+
+        const assistantMsg = choice.message;
+        chatMessages = [...chatMessages, assistantMsg];
+        for (const tc of assistantMsg.tool_calls || []) {
+          let toolResult;
+          try {
+            const toolArgs = JSON.parse(tc.function.arguments || "{}");
+            toolResult = await mod.callTool(tc.function.name, toolArgs);
+          } catch (e) {
+            toolResult = { error: e.message };
+          }
+          chatMessages = [
+            ...chatMessages,
+            { role: "tool", tool_call_id: tc.id, content: JSON.stringify(toolResult).slice(0, 4000) },
+          ];
+        }
+        toolRound++;
+      }
+    }
+
     const upstream = await fetch(`${OPENAI_BASE}/chat/completions`, {
       method: "POST",
       headers: {
@@ -167,7 +211,7 @@ app.post("/api/ai/chat", strictOriginCheck, tokenCheck, rateLimit, async (req, r
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        messages,
+        messages: chatMessages,
         stream: true,
         max_tokens: clampedTokens,
       }),
@@ -454,6 +498,16 @@ app.get("/api/cms/tools", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// ──────────────────────────────────────────────
+// DB bootstrap — run before CMS module loads
+// ──────────────────────────────────────────────
+try {
+  await runMigrations();
+} catch (err) {
+  console.error("[startup] DB migration failed:", err.message);
+  console.error("[startup] CMS features may be unavailable until schema is fixed.");
+}
 
 // ──────────────────────────────────────────────
 // Vite / Static
