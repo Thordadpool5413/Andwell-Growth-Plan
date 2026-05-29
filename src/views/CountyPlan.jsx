@@ -4,6 +4,7 @@ import Metric from "../components/Metric.jsx";
 import Badge from "../components/Badge.jsx";
 import ServiceBadge from "../components/ServiceBadge.jsx";
 import SourceBadge from "../components/SourceBadge.jsx";
+import Abbr from "../components/Abbr.jsx";
 import MaineMap from "../components/MaineMap.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { getCountyIntelligence } from "../utils/calculations.js";
@@ -137,16 +138,16 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty }) 
                 </p>
               </div>
               <div className={`rounded-2xl border p-4 ${dark ? "border-slate-700 bg-slate-700/30" : "border-slate-100 bg-slate-50"}`}>
-                <p className={`text-sm font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>HH provider density</p>
+                <p className={`text-sm font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}><Abbr term="HH">HH</Abbr> provider density</p>
                 <p className={`mt-2 text-2xl font-black ${dark ? "text-white" : "text-slate-950"}`}>{intel.providerDensityHH}</p>
-                <p className={`mt-1 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>Providers per 10K FFS beneficiaries</p>
+                <p className={`mt-1 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>Providers per 10K <Abbr term="FFS">FFS</Abbr> beneficiaries</p>
               </div>
               <div className={`rounded-2xl border p-4 ${dark ? "border-slate-700 bg-slate-700/30" : "border-slate-100 bg-slate-50"}`}>
                 <p className={`text-sm font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>Revenue per beneficiary</p>
                 <p className={`mt-2 text-2xl font-black ${dark ? "text-white" : "text-slate-950"}`}>
                   {intel.penetration ? currency(intel.penetration.revenuePerBeneficiary) : "—"}
                 </p>
-                <p className={`mt-1 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>Y1 revenue / {number(intel.ffs)} FFS</p>
+                <p className={`mt-1 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>Y1 revenue / {number(intel.ffs)} <Abbr term="FFS">FFS</Abbr></p>
               </div>
             </div>
           </Card>

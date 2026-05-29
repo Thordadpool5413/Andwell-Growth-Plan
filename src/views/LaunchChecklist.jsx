@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Card from "../components/Card.jsx";
 import Badge from "../components/Badge.jsx";
 import ServiceBadge from "../components/ServiceBadge.jsx";
+import Abbr from "../components/Abbr.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import launchPlan from "../data/launchPlan.js";
