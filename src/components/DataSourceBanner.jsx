@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useDarkMode } from "./DarkModeContext.jsx";
-
-const MODEL_DATE = "May 2026";
+import cmsMeta from "../data/cmsMeta.js";
 
 export default function DataSourceBanner() {
   const { dark } = useDarkMode();
@@ -21,7 +20,7 @@ export default function DataSourceBanner() {
           </svg>
           {collapsed ? (
             <p className={`text-xs font-semibold ${dark ? "text-blue-300" : "text-blue-700"}`}>
-              Data sources: CMS 2022 Home Health &amp; Hospice PUF · Medicare Provider of Service File · Modeled projections · <span className="font-black">Model as of {MODEL_DATE}</span>
+              Data sources: CMS {cmsMeta.datasetYear} Home Health &amp; Hospice PUF · Medicare Provider of Service File · Modeled projections · <span className="font-black">Model as of {cmsMeta.modelDate}</span>
             </p>
           ) : (
             <div className="min-w-0">
@@ -30,12 +29,12 @@ export default function DataSourceBanner() {
                   Data sources &amp; methodology
                 </p>
                 <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${dark ? "bg-blue-900/60 text-blue-300" : "bg-blue-100 text-blue-700"}`}>
-                  Model as of {MODEL_DATE}
+                  Model as of {cmsMeta.modelDate}
                 </span>
               </div>
               <div className={`mt-1.5 grid gap-1 text-xs leading-5 ${dark ? "text-blue-200/80" : "text-blue-900/70"}`}>
                 <p>
-                  <span className="font-semibold">Market data:</span> CMS 2022 Home Health &amp; Hospice Public Use File (PUF) · Medicare Provider of Service File · County-level Fee-For-Service (FFS) beneficiary counts
+                  <span className="font-semibold">Market data:</span> CMS {cmsMeta.datasetYear} Home Health &amp; Hospice Public Use File (PUF) · Medicare Provider of Service File · County-level Fee-For-Service (FFS) beneficiary counts
                 </p>
                 <p>
                   <span className="font-semibold">Methodology:</span> Referral math uses a 75% conversion baseline (NAHC 2023 industry median: 72–78%). Capture rates are internal Andwell planning assumptions (HH Y1: 10%, industry median range: 8–15%). Competitive scores are composite weighted averages across provider density, market share, and national chain presence. "Est." badges indicate figures derived from proxies, not direct CMS county data.
