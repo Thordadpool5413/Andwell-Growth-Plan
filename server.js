@@ -498,6 +498,189 @@ app.post("/api/cms/tool", strictOriginCheck, tokenCheck, async (req, res) => {
   }
 });
 
+app.get("/api/cms/hh-quality", strictOriginCheck, tokenCheck, async (req, res) => {
+  try {
+    const { query: dbQuery } = await import("./server/cms/db.js");
+    const result = await dbQuery(
+      `SELECT q.*,
+              cs.name AS seed_name,
+              trend.trend_direction,
+              trend.prev_star_rating
+       FROM cms_hh_quality q
+       LEFT JOIN cms_provider_records cpr ON cpr.cms_certification_number = q.ccn AND cpr.state = 'ME'
+       LEFT JOIN competitor_cms_matches ccm ON ccm.cms_provider_record_id = cpr.id
+       LEFT JOIN competitor_seeds cs ON cs.id = ccm.competitor_seed_id
+       LEFT JOIN LATERAL (
+         SELECT
+           CASE
+             WHEN COUNT(*) < 2 THEN 'flat'
+             WHEN (array_agg(star_rating ORDER BY measure_date DESC))[1] >
+                  (array_agg(star_rating ORDER BY measure_date DESC))[2] THEN 'up'
+             WHEN (array_agg(star_rating ORDER BY measure_date DESC))[1] <
+                  (array_agg(star_rating ORDER BY measure_date DESC))[2] THEN 'down'
+             ELSE 'flat'
+           END AS trend_direction,
+           (array_agg(star_rating ORDER BY measure_date DESC))[2] AS prev_star_rating
+         FROM cms_hh_quality_history
+         WHERE ccn = q.ccn AND star_rating IS NOT NULL
+       ) trend ON true
+       WHERE q.state = 'ME'
+       ORDER BY q.star_rating DESC NULLS LAST, q.provider_name`
+    );
+    res.json({ rows: result.rows, count: result.rows.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/cms/hh-quality-history", strictOriginCheck, tokenCheck, async (req, res) => {
+  try {
+    const { query: dbQuery } = await import("./server/cms/db.js");
+    const result = await dbQuery(
+      `SELECT ccn, provider_name, star_rating, ppr_rate, measure_date, synced_at
+       FROM cms_hh_quality_history
+       WHERE star_rating IS NOT NULL
+       ORDER BY ccn, measure_date ASC`
+    );
+    const byccn = {};
+    for (const row of result.rows) {
+      if (!byccn[row.ccn]) byccn[row.ccn] = { ccn: row.ccn, provider_name: row.provider_name, snapshots: [] };
+      byccn[row.ccn].snapshots.push({
+        date: row.measure_date,
+        star_rating: row.star_rating != null ? parseFloat(row.star_rating) : null,
+        ppr_rate: row.ppr_rate != null ? parseFloat(row.ppr_rate) : null,
+        synced_at: row.synced_at,
+      });
+    }
+    res.json({ agencies: Object.values(byccn), count: Object.keys(byccn).length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/cms/hospice-quality", strictOriginCheck, tokenCheck, async (req, res) => {
+  try {
+    const { query: dbQuery } = await import("./server/cms/db.js");
+    const result = await dbQuery(
+      `SELECT ccn, provider_name, state,
+              jsonb_object_agg(measure_code, json_build_object('score', score, 'star_rating', star_rating, 'measure_name', measure_name, 'reporting_date', reporting_date)) AS measures,
+              MAX(synced_at) AS synced_at
+       FROM cms_hospice_quality
+       WHERE state = 'ME'
+       GROUP BY ccn, provider_name, state
+       ORDER BY provider_name`
+    );
+    res.json({ rows: result.rows, count: result.rows.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/cms/hhvbp", strictOriginCheck, tokenCheck, async (req, res) => {
+  try {
+    const { query: dbQuery } = await import("./server/cms/db.js");
+    const [maineResult, nationalResult] = await Promise.all([
+      dbQuery(
+        `SELECT v.*,
+                CASE WHEN v.ccn = '207019' THEN true ELSE false END AS is_andwell
+         FROM cms_hhvbp_scores v
+         WHERE v.state = 'ME'
+         ORDER BY v.total_performance_score DESC NULLS LAST`
+      ),
+      dbQuery(
+        `SELECT AVG(total_performance_score::numeric) AS nat_avg
+         FROM cms_hhvbp_scores
+         WHERE total_performance_score IS NOT NULL`
+      ),
+    ]);
+    const scoredRows = maineResult.rows.filter((r) => r.total_performance_score != null);
+    const stateAvgTps = scoredRows.length
+      ? scoredRows.reduce((s, r) => s + parseFloat(r.total_performance_score), 0) / scoredRows.length
+      : null;
+    const nationalAvgRaw = nationalResult.rows[0]?.nat_avg;
+    const nationalAvgTps = nationalAvgRaw != null ? parseFloat(parseFloat(nationalAvgRaw).toFixed(2)) : null;
+    res.json({
+      rows: maineResult.rows,
+      count: maineResult.rows.length,
+      state_avg_tps: stateAvgTps != null ? parseFloat(stateAvgTps.toFixed(2)) : null,
+      national_avg_tps: nationalAvgTps,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/cms/quality-summary", strictOriginCheck, tokenCheck, async (req, res) => {
+  try {
+    const { query: dbQuery } = await import("./server/cms/db.js");
+    const [andwellRow, stateRow, rankRow, hhvbpRow, competitorAvgRow] = await Promise.all([
+      dbQuery(`SELECT * FROM cms_hh_quality WHERE ccn = '207019' LIMIT 1`),
+      dbQuery(`SELECT AVG(star_rating) AS avg_star, AVG(ppr_rate) AS avg_ppr, AVG(medicare_spend_ratio) AS avg_spend, COUNT(*) AS total_agencies FROM cms_hh_quality WHERE state = 'ME' AND star_rating IS NOT NULL`),
+      dbQuery(`SELECT COUNT(*) AS rank FROM cms_hh_quality WHERE state = 'ME' AND star_rating > (SELECT COALESCE((SELECT star_rating FROM cms_hh_quality WHERE ccn = '207019'), 0))`),
+      dbQuery(`SELECT total_performance_score, payment_adjustment_pct FROM cms_hhvbp_scores WHERE ccn = '207019' LIMIT 1`),
+      // Competitor average: avg star rating of all seeded competitors (excludes Andwell CCN 207019)
+      // Joins competitor_seeds → cms_matches → cms_provider_records → cms_hh_quality
+      dbQuery(`
+        SELECT AVG(q.star_rating) AS avg_star,
+               AVG(q.ppr_rate) AS avg_ppr,
+               AVG(q.medicare_spend_ratio) AS avg_spend,
+               COUNT(DISTINCT cs.id) AS count
+        FROM competitor_seeds cs
+        JOIN competitor_cms_matches ccm ON ccm.competitor_seed_id = cs.id
+        JOIN cms_provider_records cpr ON cpr.id = ccm.cms_provider_record_id
+        JOIN cms_hh_quality q ON q.ccn = cpr.cms_certification_number
+        WHERE q.state = 'ME' AND q.ccn != '207019' AND q.star_rating IS NOT NULL
+      `),
+    ]);
+    const andwell = andwellRow.rows[0] || null;
+    const state = stateRow.rows[0] || {};
+    const compAvg = competitorAvgRow.rows[0] || {};
+    const rankNum = andwell ? parseInt(rankRow.rows[0]?.rank || 0) + 1 : null;
+    res.json({
+      andwell: andwell ? {
+        ccn: andwell.ccn,
+        provider_name: andwell.provider_name,
+        star_rating: andwell.star_rating,
+        ppr_rate: andwell.ppr_rate,
+        medicare_spend_ratio: andwell.medicare_spend_ratio,
+        timely_care_pct: andwell.timely_care_pct,
+        walking_improve_pct: andwell.walking_improve_pct,
+        med_adherence_pct: andwell.med_adherence_pct,
+        fall_injury_pct: andwell.fall_injury_pct,
+        synced_at: andwell.synced_at,
+      } : null,
+      state_avg_star: state.avg_star ? parseFloat(state.avg_star).toFixed(2) : null,
+      state_avg_ppr: state.avg_ppr ? parseFloat(state.avg_ppr).toFixed(4) : null,
+      state_avg_spend: state.avg_spend ? parseFloat(state.avg_spend).toFixed(2) : null,
+      total_maine_agencies: parseInt(state.total_agencies || 0),
+      andwell_rank: rankNum,
+      competitor_avg_star: compAvg.avg_star ? parseFloat(compAvg.avg_star).toFixed(2) : null,
+      competitor_avg_ppr: compAvg.avg_ppr ? parseFloat(compAvg.avg_ppr).toFixed(4) : null,
+      competitor_avg_spend: compAvg.avg_spend ? parseFloat(compAvg.avg_spend).toFixed(2) : null,
+      competitor_count_with_stars: parseInt(compAvg.count || 0),
+      hhvbp: hhvbpRow.rows[0] || null,
+      has_data: !!andwell,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/cms/sync-quality", strictOriginCheck, tokenCheck, async (req, res) => {
+  try {
+    const mod = await loadCms();
+    if (!mod) { res.status(503).json({ error: "CMS module not ready" }); return; }
+    const [hhq, hosp, vbp] = await Promise.all([
+      mod.callTool("sync_hh_quality_measures", {}),
+      mod.callTool("sync_hospice_quality", {}),
+      mod.callTool("sync_hhvbp_scores", {}),
+    ]);
+    res.json({ hh_quality: hhq, hospice_quality: hosp, hhvbp: vbp });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get("/api/cms/tools", strictOriginCheck, tokenCheck, async (req, res) => {
   try {
     const mod = await loadCms();

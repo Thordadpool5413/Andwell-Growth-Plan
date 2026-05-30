@@ -52,12 +52,6 @@ function TierChip({ tier }) {
 
 const TIER_FILTERS = ["All", "Prime", "Strong", "Developing"];
 const GROUP_FILTERS = ["All", "Priority 1", "Priority 2", "Priority 3"];
-const SCORE_FILTERS = [
-  { label: "Any score", min: 0 },
-  { label: "40+", min: 40 },
-  { label: "60+", min: 60 },
-  { label: "80+", min: 80 },
-];
 
 function FilterChip({ label, active, onClick, dark }) {
   return (
@@ -193,17 +187,46 @@ export default function OpportunityScore({ rows }) {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <span className={`text-xs font-black uppercase tracking-wide ${dark ? "text-slate-400" : "text-slate-500"}`}>Min score</span>
-              <div className="flex flex-wrap gap-1.5">
-                {SCORE_FILTERS.map((sf) => (
-                  <FilterChip
-                    key={sf.label}
-                    label={sf.label}
-                    active={minScore === sf.min}
-                    onClick={() => setMinScore(sf.min)}
-                    dark={dark}
+              <span className={`text-xs font-black uppercase tracking-wide flex-shrink-0 ${dark ? "text-slate-400" : "text-slate-500"}`}>Min score</span>
+              <div className="flex flex-1 items-center gap-3 min-w-[200px]">
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={minScore}
+                  onChange={(e) => setMinScore(Number(e.target.value))}
+                  className="flex-1 h-1.5 cursor-pointer accent-blue-500"
+                  aria-label="Minimum opportunity score threshold"
+                />
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={minScore}
+                    onChange={(e) => {
+                      const v = Math.min(100, Math.max(0, Number(e.target.value)));
+                      setMinScore(isNaN(v) ? 0 : v);
+                    }}
+                    className={`w-14 rounded-lg border px-2 py-1 text-center text-xs font-black transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      dark
+                        ? "border-slate-600 bg-slate-700 text-white"
+                        : "border-slate-200 bg-white text-slate-900"
+                    }`}
+                    aria-label="Minimum score value"
                   />
-                ))}
+                  <span className={`text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>/ 100</span>
+                </div>
+                {minScore > 0 && (
+                  <button
+                    onClick={() => setMinScore(0)}
+                    className="flex-shrink-0 text-xs text-blue-500 hover:underline font-black"
+                    aria-label="Clear minimum score filter"
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
             </div>
             <p className={`text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>

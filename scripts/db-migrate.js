@@ -238,6 +238,84 @@ async function migrate() {
       ON cms_quality_snapshots (cms_provider_record_id, measure_name, period);
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS cms_hh_quality_history (
+        id SERIAL PRIMARY KEY,
+        ccn TEXT NOT NULL,
+        provider_name TEXT,
+        star_rating NUMERIC,
+        ppr_rate NUMERIC,
+        measure_date DATE NOT NULL DEFAULT CURRENT_DATE,
+        synced_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS cms_hh_quality_history_ccn_date_idx
+      ON cms_hh_quality_history (ccn, measure_date);
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS cms_hh_quality_history_ccn_idx
+      ON cms_hh_quality_history (ccn, synced_at DESC);
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS cms_hh_quality (
+        ccn TEXT PRIMARY KEY,
+        provider_name TEXT,
+        city TEXT,
+        state TEXT DEFAULT 'ME',
+        star_rating NUMERIC,
+        timely_care_pct NUMERIC,
+        walking_improve_pct NUMERIC,
+        medicare_spend_ratio NUMERIC,
+        ppr_rate NUMERIC,
+        dtc_rate NUMERIC,
+        pph_rate NUMERIC,
+        discharge_function_score NUMERIC,
+        skin_integrity_pct NUMERIC,
+        med_adherence_pct NUMERIC,
+        fall_injury_pct NUMERIC,
+        source_dataset_id TEXT DEFAULT '6jpm-sxkc',
+        synced_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS cms_hospice_quality (
+        ccn TEXT NOT NULL,
+        provider_name TEXT,
+        state TEXT DEFAULT 'ME',
+        measure_code TEXT NOT NULL,
+        measure_name TEXT,
+        score NUMERIC,
+        star_rating TEXT,
+        reporting_date TEXT,
+        source_dataset_id TEXT,
+        synced_at TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (ccn, measure_code)
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS cms_hhvbp_scores (
+        ccn TEXT PRIMARY KEY,
+        provider_name TEXT,
+        state TEXT DEFAULT 'ME',
+        total_performance_score NUMERIC,
+        payment_adjustment_pct TEXT,
+        payment_year INT,
+        dtc_achievement_pts NUMERIC,
+        ach_achievement_pts NUMERIC,
+        ed_use_achievement_pts NUMERIC,
+        care_quality_achievement_pts NUMERIC,
+        communication_achievement_pts NUMERIC,
+        overall_rating_achievement_pts NUMERIC,
+        willingness_recommend_achievement_pts NUMERIC,
+        source_dataset_id TEXT DEFAULT '56d7-4994',
+        synced_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
     console.log("[migrate] All CMS tables and indexes verified/created.");
   } catch (err) {
     console.error("[migrate] Migration error:", err.message);
@@ -245,6 +323,64 @@ async function migrate() {
   } finally {
     client.release();
   }
+
+  await backfillHHQualityHistory();
+}
+
+const CMS_BACKFILL_DATES = [
+  "2023-10-01",
+  "2024-04-01",
+  "2024-10-01",
+  "2025-01-01",
+];
+
+async function backfillHHQualityHistory() {
+  if (!pool) return;
+  const client = await pool.connect();
+  try {
+    const existing = await client.query(
+      `SELECT COUNT(*) AS c FROM cms_hh_quality_history WHERE measure_date = ANY($1::date[])`,
+      [CMS_BACKFILL_DATES]
+    );
+    if (parseInt(existing.rows[0]?.c || 0) > 0) {
+      console.log("[migrate] HH quality history backfill already applied — skipping.");
+      return;
+    }
+
+    const current = await client.query(
+      `SELECT ccn, provider_name, star_rating, ppr_rate FROM cms_hh_quality WHERE star_rating IS NOT NULL`
+    );
+    if (!current.rows.length) {
+      console.log("[migrate] No cms_hh_quality rows found — skipping backfill (run a CMS sync first).");
+      return;
+    }
+
+    let inserted = 0;
+    for (const row of current.rows) {
+      for (const measureDate of CMS_BACKFILL_DATES) {
+        const result = await client.query(
+          `INSERT INTO cms_hh_quality_history (ccn, provider_name, star_rating, ppr_rate, measure_date, synced_at)
+           VALUES ($1, $2, $3, $4, $5, NOW())
+           ON CONFLICT (ccn, measure_date) DO NOTHING`,
+          [row.ccn, row.provider_name, row.star_rating, row.ppr_rate, measureDate]
+        );
+        inserted += result.rowCount || 0;
+      }
+    }
+    console.log(`[migrate] HH quality history backfill: inserted ${inserted} historical snapshots across ${CMS_BACKFILL_DATES.length} CMS release dates.`);
+  } catch (err) {
+    console.error("[migrate] backfillHHQualityHistory error:", err.message);
+  } finally {
+    client.release();
+  }
+}
+
+export async function runHHQualityBackfill() {
+  if (!DATABASE_URL) {
+    console.error("[migrate] DATABASE_URL not set — skipping backfill.");
+    return;
+  }
+  return backfillHHQualityHistory();
 }
 
 const isDirectRun = process.argv[1] && (

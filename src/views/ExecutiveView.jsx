@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart,
   XAxis, YAxis,
@@ -36,8 +36,45 @@ function AtAGlanceIndicator({ label, status, dark }) {
   );
 }
 
+async function getCmsToken() {
+  try {
+    const r = await fetch("/api/ai/token");
+    if (!r.ok) return "";
+    const { token } = await r.json();
+    return token;
+  } catch { return ""; }
+}
+
+function QualityKPI({ label, value, sub, dark, color = "emerald" }) {
+  const colorMap = {
+    emerald: { bg: dark ? "bg-emerald-950/40 border-emerald-800/40" : "bg-emerald-50 border-emerald-200", label: dark ? "text-emerald-400" : "text-emerald-700", value: dark ? "text-white" : "text-slate-950" },
+    blue: { bg: dark ? "bg-blue-950/40 border-blue-800/40" : "bg-blue-50 border-blue-200", label: dark ? "text-blue-400" : "text-blue-700", value: dark ? "text-white" : "text-slate-950" },
+    amber: { bg: dark ? "bg-amber-950/40 border-amber-800/40" : "bg-amber-50 border-amber-200", label: dark ? "text-amber-400" : "text-amber-700", value: dark ? "text-white" : "text-slate-950" },
+    violet: { bg: dark ? "bg-violet-950/40 border-violet-800/40" : "bg-violet-50 border-violet-200", label: dark ? "text-violet-400" : "text-violet-700", value: dark ? "text-white" : "text-slate-950" },
+  };
+  const c = colorMap[color] || colorMap.emerald;
+  return (
+    <div className={`rounded-2xl border p-4 ${c.bg}`}>
+      <p className={`text-xs font-black uppercase tracking-wide ${c.label}`}>{label}</p>
+      <p className={`mt-1 text-2xl font-black ${c.value}`}>{value}</p>
+      {sub && <p className={`mt-0.5 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{sub}</p>}
+    </div>
+  );
+}
+
 export default function ExecutiveView({ rows, totals }) {
   const { dark } = useDarkMode();
+  const [qualitySummary, setQualitySummary] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await getCmsToken();
+        const r = await fetch("/api/cms/quality-summary", { headers: { "x-ai-token": token } });
+        if (r.ok) setQualitySummary(await r.json());
+      } catch (_) {}
+    })();
+  }, []);
 
   const totalMarket = Object.values(cmsCountyMarket).reduce((s, m) => s + m.hh.users + m.hos.users, 0);
   const y1Penetration = totalMarket > 0 ? totals.y1Starts / totalMarket : 0;
@@ -147,6 +184,49 @@ export default function ExecutiveView({ rows, totals }) {
           </p>
         </div>
       </div>
+
+      {qualitySummary?.has_data && (
+        <div className={`rounded-2xl border p-5 ${dark ? "border-emerald-800/40 bg-slate-800" : "border-emerald-200 bg-white"}`}>
+          <div className="flex items-center gap-2 mb-4 flex-wrap">
+            <span className="text-base">⭐</span>
+            <p className={`text-sm font-black uppercase tracking-wide ${dark ? "text-emerald-400" : "text-emerald-700"}`}>Andwell quality position</p>
+            <span className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-black ${dark ? "bg-blue-900/40 text-blue-300" : "bg-blue-100 text-blue-700"}`}>CMS-verified</span>
+            {qualitySummary.andwell?.synced_at && (
+              <FreshnessChip lastSynced={qualitySummary.andwell.synced_at} label="Quality" syncType="CMS 6jpm-sxkc" />
+            )}
+          </div>
+          <div className="grid gap-3 sm:grid-cols-4">
+            <QualityKPI
+              label="Quality Star Rating"
+              value={qualitySummary.andwell?.star_rating != null ? `${parseFloat(qualitySummary.andwell.star_rating)} ★` : "—"}
+              sub="CMS Home Health Care Quality"
+              dark={dark}
+              color="emerald"
+            />
+            <QualityKPI
+              label="Maine Ranking"
+              value={qualitySummary.andwell_rank != null ? `#${qualitySummary.andwell_rank} in Maine` : "—"}
+              sub={`of ${qualitySummary.total_maine_agencies} agencies`}
+              dark={dark}
+              color="blue"
+            />
+            <QualityKPI
+              label="Medicare Cost Index"
+              value={qualitySummary.andwell?.medicare_spend_ratio != null ? parseFloat(qualitySummary.andwell.medicare_spend_ratio).toFixed(2) : "—"}
+              sub={qualitySummary.andwell?.medicare_spend_ratio != null && parseFloat(qualitySummary.andwell.medicare_spend_ratio) < 1.0 ? "Below national avg (favorable)" : "vs. national avg = 1.0"}
+              dark={dark}
+              color="amber"
+            />
+            <QualityKPI
+              label="Preventable Readmissions"
+              value={qualitySummary.andwell?.ppr_rate != null ? `${parseFloat(qualitySummary.andwell.ppr_rate).toFixed(2)}%` : "—"}
+              sub="PPR risk-standardized rate"
+              dark={dark}
+              color="violet"
+            />
+          </div>
+        </div>
+      )}
 
       <div className={`flex items-start gap-3 rounded-2xl border px-5 py-4 ${dark ? "border-amber-800/50 bg-amber-950/30 text-amber-300" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
         <span className="mt-0.5 shrink-0 text-base">⚠️</span>
