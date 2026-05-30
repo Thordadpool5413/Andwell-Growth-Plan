@@ -612,9 +612,11 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty, provide
     );
   }
 
-  const toggleBtn = (label, active, onClick, color) => (
+  const toggleBtn = (label, active, onClick, color, ariaLabel) => (
     <button
       onClick={onClick}
+      aria-label={ariaLabel}
+      aria-pressed={active}
       className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-black transition ${
         active
           ? `${color} text-white`
@@ -649,9 +651,9 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty, provide
 
       <div className={`flex flex-wrap items-center gap-1.5 rounded-xl border px-3 py-2 ${dark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
         <span className={`mr-1 text-[10px] font-black uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>Layers:</span>
-        {toggleBtn("🏥 Hospitals", showHospitals, () => setShowHospitals((p) => !p), "bg-red-600")}
-        {toggleBtn("⏱ Drive-time rings", showRings, () => setShowRings((p) => !p), "bg-emerald-600")}
-        {toggleBtn("🟣 Competitors", showCompetitors, () => setShowCompetitors((p) => !p), "bg-purple-600")}
+        {toggleBtn("🏥 Hospitals", showHospitals, () => setShowHospitals((p) => !p), "bg-red-600", "Toggle Hospitals layer")}
+        {toggleBtn("⏱ Drive-time rings", showRings, () => setShowRings((p) => !p), "bg-emerald-600", "Toggle Drive-time rings layer")}
+        {toggleBtn("🟣 Competitors", showCompetitors, () => setShowCompetitors((p) => !p), "bg-purple-600", "Toggle Competitors layer")}
         {showCompetitors && (
           <>
             <span className={`ml-2 text-[10px] font-black uppercase tracking-widest ${dark ? "text-slate-600" : "text-slate-400"}`}>|</span>
