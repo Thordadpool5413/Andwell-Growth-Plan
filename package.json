@@ -4,8 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node scripts/apply-replit-host-fix.mjs",
     "dev": "node server.js",
+    "prebuild": "node scripts/apply-replit-host-fix.mjs",
     "build": "vite build",
+    "prestart": "node scripts/apply-replit-host-fix.mjs",
     "start": "NODE_ENV=production node server.js",
     "preview": "vite preview --host 0.0.0.0"
   },
