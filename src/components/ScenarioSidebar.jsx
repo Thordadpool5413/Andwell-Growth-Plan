@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { DEFAULT_SCENARIO } from "../data/constants.js";
 import { useDarkMode } from "./DarkModeContext.jsx";
 
@@ -33,9 +33,10 @@ function SliderGroup({ title, dark, children }) {
   );
 }
 
-export default function ScenarioSidebar({ scenario, setScenario, open, onClose }) {
+export default function ScenarioSidebar({ scenario, setScenario, open, onClose, wasRestored, onRestoredDismiss }) {
   const { dark } = useDarkMode();
   const pct = (v) => `${(v * 100).toFixed(0)}%`;
+  const [showRestoredBanner, setShowRestoredBanner] = useState(false);
 
   const update = (key, value) =>
     setScenario((prev) => ({ ...prev, [key]: value }));
@@ -47,6 +48,12 @@ export default function ScenarioSidebar({ scenario, setScenario, open, onClose }
       return { ...prev, [key]: arr };
     });
 
+  const handleReset = () => {
+    setScenario(DEFAULT_SCENARIO);
+    setShowRestoredBanner(false);
+    onRestoredDismiss?.();
+  };
+
   const isDefault =
     scenario.conversionRate === DEFAULT_SCENARIO.conversionRate &&
     JSON.stringify(scenario.hhCapture) === JSON.stringify(DEFAULT_SCENARIO.hhCapture) &&
@@ -54,6 +61,17 @@ export default function ScenarioSidebar({ scenario, setScenario, open, onClose }
     JSON.stringify(scenario.therapyCapture) === JSON.stringify(DEFAULT_SCENARIO.therapyCapture);
 
   const panelRef = useRef(null);
+
+  useEffect(() => {
+    if (open && wasRestored) {
+      setShowRestoredBanner(true);
+      const timer = setTimeout(() => {
+        setShowRestoredBanner(false);
+        onRestoredDismiss?.();
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [open, wasRestored]);
 
   useEffect(() => {
     if (!open) return;
@@ -99,14 +117,14 @@ export default function ScenarioSidebar({ scenario, setScenario, open, onClose }
           <div className="flex items-center gap-1.5">
             {!isDefault && (
               <button
-                onClick={() => setScenario(DEFAULT_SCENARIO)}
+                onClick={handleReset}
                 className={`rounded-full px-2.5 py-1 text-[10px] font-black ring-1 transition ${
                   dark
                     ? "bg-slate-700 text-slate-200 ring-slate-600 hover:bg-slate-600"
                     : "bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100"
                 }`}
               >
-                Reset
+                Reset defaults
               </button>
             )}
             <button
@@ -120,6 +138,15 @@ export default function ScenarioSidebar({ scenario, setScenario, open, onClose }
             </button>
           </div>
         </div>
+
+        {showRestoredBanner && (
+          <div className={`shrink-0 flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b transition-colors ${dark ? "bg-blue-950/60 border-blue-800 text-blue-300" : "bg-blue-50 border-blue-100 text-blue-700"}`}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 shrink-0">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+            </svg>
+            Custom scenario restored
+          </div>
+        )}
 
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
           <SliderGroup title="Conversion" dark={dark}>
