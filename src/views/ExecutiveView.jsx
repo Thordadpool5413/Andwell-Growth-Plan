@@ -1,10 +1,11 @@
 import React from "react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart,
-  Tooltip, XAxis, YAxis,
+  XAxis, YAxis,
 } from "recharts";
 import Card from "../components/Card.jsx";
 import ChartContainer from "../components/ChartContainer.jsx";
+import CustomTooltip from "../components/CustomTooltip.jsx";
 import Metric from "../components/Metric.jsx";
 import Badge from "../components/Badge.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
@@ -19,6 +20,21 @@ import cmsCountyMarket from "../data/cmsCountyMarket.js";
 import { currency, number, percent } from "../utils/formatters.js";
 
 const CMS_LAST_SYNCED = "2026-05-01";
+
+function AtAGlanceIndicator({ label, status, dark }) {
+  const colorMap = {
+    green: { dot: "bg-emerald-500", text: dark ? "text-emerald-400" : "text-emerald-700", bg: dark ? "bg-emerald-950/40 border-emerald-800/40" : "bg-emerald-50 border-emerald-200" },
+    amber: { dot: "bg-amber-500", text: dark ? "text-amber-400" : "text-amber-700", bg: dark ? "bg-amber-950/40 border-amber-800/40" : "bg-amber-50 border-amber-200" },
+    red: { dot: "bg-red-500", text: dark ? "text-red-400" : "text-red-700", bg: dark ? "bg-red-950/40 border-red-800/40" : "bg-red-50 border-red-200" },
+  };
+  const c = colorMap[status] || colorMap.amber;
+  return (
+    <div className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${c.bg}`}>
+      <span className={`h-2.5 w-2.5 flex-shrink-0 rounded-full ${c.dot}`} />
+      <span className={`text-xs font-black ${c.text}`}>{label}</span>
+    </div>
+  );
+}
 
 export default function ExecutiveView({ rows, totals }) {
   const { dark } = useDarkMode();
@@ -36,9 +52,13 @@ export default function ExecutiveView({ rows, totals }) {
 
   const serviceMix = rollupByService(rows);
 
+  const marketStatus = y1Penetration >= 0.05 ? "green" : y1Penetration >= 0.02 ? "amber" : "red";
+  const competitionStatus = avgThreat < 40 ? "green" : avgThreat < 60 ? "amber" : "red";
+  const financialStatus = totals.y1Revenue > 5000000 ? "green" : totals.y1Revenue > 2000000 ? "amber" : "red";
+
   return (
     <div className="space-y-6">
-      <SectionHeader eyebrow="Executive view" title="Market opportunity and growth thesis">
+      <SectionHeader eyebrow="Executive view" icon="📊" title="Market opportunity and growth thesis">
         A high-level summary connecting Andwell's market opportunity across 12 Maine counties. Revenue figures are modeled projections based on CMS 2022 beneficiary volumes, internal capture rate assumptions, and NAHC-benchmarked conversion rates. Adjust the Scenario Model to see how changes in these assumptions affect all figures.
       </SectionHeader>
 
@@ -46,63 +66,81 @@ export default function ExecutiveView({ rows, totals }) {
         <FreshnessChip lastSynced={CMS_LAST_SYNCED} label="CMS data" />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <Metric
-          label="Active growth counties"
-          value={rows.length}
-          detail="County and service line combinations in the active model."
-          color="emerald"
-          sourceType="cms"
-        />
-        <Metric
-          label="Year 1 referrals"
-          value={number(totals.y1Referrals)}
-          detail={<span>Gross referrals at a <EstBadge reason="75% referral-to-start conversion rate — NAHC 2023 median for home health and hospice providers.">Est.</EstBadge> 75% conversion baseline (NAHC median).</span>}
-          sparkData={[totals.y1Referrals, totals.y2Referrals, totals.y3Referrals]}
-          sparkColor={COLORS.blue}
-          color="blue"
-          sourceType="modeled"
-        />
-        <Metric
-          label="Year 1 revenue"
-          value={currency(totals.y1Revenue)}
-          detail="Modeled Year 1 gross revenue from all active service lines."
-          sparkData={[totals.y1Revenue, totals.y2Revenue, totals.y3Revenue]}
-          sparkColor={COLORS.green}
-          color="indigo"
-          sourceType="modeled"
-        />
-        <Metric
-          label="Named competitors"
-          value={namedProviderRows.length}
-          detail="Home Healthcare and Hospice provider rows loaded into the competitive layer."
-          color="amber"
-          sourceType="cms"
-        />
+      <div className={`flex flex-wrap items-center gap-3 rounded-2xl border px-5 py-3 ${dark ? "border-slate-700 bg-slate-800/60" : "border-slate-100 bg-slate-50"}`}>
+        <p className={`text-xs font-black uppercase tracking-wide mr-1 ${dark ? "text-slate-400" : "text-slate-500"}`}>At a glance</p>
+        <AtAGlanceIndicator label="Market Opportunity" status={marketStatus} dark={dark} />
+        <AtAGlanceIndicator label="Competitive Position" status={competitionStatus} dark={dark} />
+        <AtAGlanceIndicator label="Financial Readiness" status={financialStatus} dark={dark} />
+      </div>
+
+      <div className={`rounded-2xl px-6 py-5 ${dark ? "bg-gradient-to-r from-slate-800 to-slate-800/60" : "bg-gradient-to-r from-slate-50 to-white"}`}>
+        <div className="grid gap-4 md:grid-cols-4">
+          <Metric
+            label="Active growth counties"
+            value={rows.length}
+            detail="County and service line combinations in the active model."
+            color="emerald"
+            sourceType="cms"
+          />
+          <Metric
+            label="Year 1 referrals"
+            value={number(totals.y1Referrals)}
+            detail={<span>Gross referrals at a <EstBadge reason="75% referral-to-start conversion rate — NAHC 2023 median for home health and hospice providers.">Est.</EstBadge> 75% conversion baseline (NAHC median).</span>}
+            sparkData={[totals.y1Referrals, totals.y2Referrals, totals.y3Referrals]}
+            sparkColor={COLORS.blue}
+            color="blue"
+            sourceType="modeled"
+          />
+          <Metric
+            label="Year 1 revenue"
+            value={currency(totals.y1Revenue)}
+            detail="Modeled Year 1 gross revenue from all active service lines."
+            sparkData={[totals.y1Revenue, totals.y2Revenue, totals.y3Revenue]}
+            sparkColor={COLORS.green}
+            color="indigo"
+            sourceType="modeled"
+          />
+          <Metric
+            label="Named competitors"
+            value={namedProviderRows.length}
+            detail="Home Healthcare and Hospice provider rows loaded into the competitive layer."
+            color="amber"
+            sourceType="cms"
+          />
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <div className={`rounded-3xl border p-5 shadow-sm transition-colors duration-300 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
-          <p className={`text-sm font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>Market penetration (Y1)</p>
-          <p className={`mt-2 text-3xl font-black ${dark ? "text-white" : "text-slate-950"}`}>{percent(y1Penetration)}</p>
+        <div className={`rounded-3xl border-l-4 border-l-emerald-500 border p-5 shadow-sm transition-colors duration-300 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-base">📈</span>
+            <p className={`text-xs font-black uppercase tracking-wide ${dark ? "text-emerald-400" : "text-emerald-700"}`}>Market penetration (Y1)</p>
+          </div>
+          <p className={`mt-2 text-4xl font-black ${dark ? "text-white" : "text-slate-950"}`}>{percent(y1Penetration)}</p>
           <p className={`mt-2 text-sm leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>
             <EstBadge reason="Modeled Y1 starts divided by total CMS addressable beneficiary volume — a planning proxy, not observed market share.">Est.</EstBadge>{" "}
             Y1 starts vs total CMS addressable market ({number(totalMarket)} beneficiary users).
           </p>
         </div>
-        <div className={`rounded-3xl border p-5 shadow-sm transition-colors duration-300 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
-          <p className={`text-sm font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>Avg competitive threat</p>
+        <div className={`rounded-3xl border-l-4 border-l-amber-500 border p-5 shadow-sm transition-colors duration-300 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-base">⚔️</span>
+            <p className={`text-xs font-black uppercase tracking-wide ${dark ? "text-amber-400" : "text-amber-700"}`}>Avg competitive threat</p>
+          </div>
           <div className="mt-2 flex items-center gap-3">
-            <p className={`text-3xl font-black ${dark ? "text-white" : "text-slate-950"}`}>{Math.round(avgThreat)}/100</p>
+            <p className={`text-4xl font-black ${dark ? "text-white" : "text-slate-950"}`}>{Math.round(avgThreat)}<span className="text-xl">/100</span></p>
             <Badge tone={avgThreat >= 70 ? "red" : avgThreat >= 50 ? "amber" : avgThreat >= 30 ? "blue" : "green"}>
               {avgThreat >= 70 ? "Fortress" : avgThreat >= 50 ? "High" : avgThreat >= 30 ? "Moderate" : "Low"}
             </Badge>
           </div>
           <p className={`mt-2 text-sm leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>Composite weighted score across all 12 target counties.</p>
         </div>
-        <div className={`rounded-3xl border p-5 shadow-sm transition-colors duration-300 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
-          <p className={`text-sm font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>Revenue per <Abbr term="FFS">FFS</Abbr> beneficiary</p>
-          <p className={`mt-2 text-3xl font-black ${dark ? "text-white" : "text-slate-950"}`}>{currency(revPerBeneficiary)}</p>
+        <div className={`rounded-3xl border-l-4 border-l-indigo-500 border p-5 shadow-sm transition-colors duration-300 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-base">💰</span>
+            <p className={`text-xs font-black uppercase tracking-wide ${dark ? "text-indigo-400" : "text-indigo-700"}`}>Revenue per <Abbr term="FFS">FFS</Abbr> beneficiary</p>
+          </div>
+          <p className={`mt-2 text-4xl font-black ${dark ? "text-white" : "text-slate-950"}`}>{currency(revPerBeneficiary)}</p>
           <p className={`mt-2 text-sm leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>
             <EstBadge reason="Derived: Y1 modeled revenue divided by total CMS Fee-For-Service beneficiary count — not a verified billing figure.">Est.</EstBadge>{" "}
             Y1 revenue efficiency across {number(totalFFS)} <Abbr term="FFS">Fee-For-Service</Abbr> beneficiaries.
@@ -117,7 +155,7 @@ export default function ExecutiveView({ rows, totals }) {
         </p>
       </div>
 
-      <Card title="Strategic rationale" eyebrow="Executive summary">
+      <Card title="Strategic rationale" eyebrow="Executive summary" accent="blue">
         <p className={`text-lg leading-8 ${dark ? "text-slate-300" : "text-slate-700"}`}>
           This dashboard connects Andwell service gaps, CMS market volume, referral math, financial upside, and named provider competition across 12 target Maine counties. The competitive layer reflects actual named Home Healthcare and Hospice providers from the CMS provider file — including Andwell's provider file rank and share. Note: <strong>provider file share is not county market share</strong>; county-attributed claims data would be required to calculate true market share.
         </p>
@@ -125,49 +163,52 @@ export default function ExecutiveView({ rows, totals }) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card title="Year 1 service mix" eyebrow="Revenue mix — modeled projections">
-          <ChartContainer height="h-80">
-              <PieChart>
-                <Pie
-                  data={serviceMix}
-                  dataKey="revenue"
-                  nameKey="service"
-                  innerRadius={70}
-                  outerRadius={115}
-                  paddingAngle={3}
-                  label={false}
-                >
-                  {serviceMix.map((row) => <Cell key={row.service} fill={row.color} />)}
-                </Pie>
-                <Tooltip
-                  formatter={(value) => currency(value)}
-                  contentStyle={dark ? { backgroundColor: "#1e293b", border: "1px solid #334155", color: "#f1f5f9" } : undefined}
-                />
-                <Legend
-                  formatter={(value) => (
-                    <span className={dark ? "text-slate-300" : "text-slate-700"}>{value}</span>
-                  )}
-                />
-              </PieChart>
+          <ChartContainer
+            height="h-80"
+            title="Service revenue distribution"
+            caption="Source: modeled projections — CMS beneficiary volumes × capture rates × reimbursement rates"
+          >
+            <PieChart>
+              <Pie
+                data={serviceMix}
+                dataKey="revenue"
+                nameKey="service"
+                innerRadius={70}
+                outerRadius={115}
+                paddingAngle={3}
+                label={false}
+              >
+                {serviceMix.map((row) => <Cell key={row.service} fill={row.color} />)}
+              </Pie>
+              <CustomTooltip formatter={(value) => currency(value)} />
+              <Legend
+                formatter={(value) => (
+                  <span className={dark ? "text-slate-300" : "text-slate-700"}>{value}</span>
+                )}
+              />
+            </PieChart>
           </ChartContainer>
         </Card>
         <Card title="Year 1 referral ramp by county" eyebrow="Execution math — gross referrals needed">
-          <ChartContainer height="h-80">
-              <BarChart data={rows.slice(0, 8)} margin={{ bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
-                <XAxis
-                  dataKey="county"
-                  tick={{ fontSize: 11, fill: dark ? "#94a3b8" : "#475569" }}
-                  label={{ value: "County", position: "insideBottom", offset: -12, fontSize: 11, fill: dark ? "#64748b" : "#94a3b8" }}
-                />
-                <YAxis
-                  tick={{ fill: dark ? "#94a3b8" : "#475569" }}
-                  label={{ value: "Referrals", angle: -90, position: "insideLeft", fontSize: 11, fill: dark ? "#64748b" : "#94a3b8" }}
-                />
-                <Tooltip
-                  contentStyle={dark ? { backgroundColor: "#1e293b", border: "1px solid #334155", color: "#f1f5f9" } : undefined}
-                />
-                <Bar dataKey={(row) => row.referrals[0]} name="Year 1 referrals" fill={COLORS.blue} radius={[8, 8, 0, 0]} />
-              </BarChart>
+          <ChartContainer
+            height="h-80"
+            title="Top 8 counties by referral volume"
+            caption="Source: modeled — patient start goals ÷ 75% conversion rate (NAHC 2023 median)"
+          >
+            <BarChart data={rows.slice(0, 8)} margin={{ bottom: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
+              <XAxis
+                dataKey="county"
+                tick={{ fontSize: 11, fill: dark ? "#94a3b8" : "#475569" }}
+                label={{ value: "County", position: "insideBottom", offset: -12, fontSize: 11, fill: dark ? "#64748b" : "#94a3b8" }}
+              />
+              <YAxis
+                tick={{ fill: dark ? "#94a3b8" : "#475569" }}
+                label={{ value: "Referrals", angle: -90, position: "insideLeft", fontSize: 11, fill: dark ? "#64748b" : "#94a3b8" }}
+              />
+              <CustomTooltip />
+              <Bar dataKey={(row) => row.referrals[0]} name="Year 1 referrals" fill={COLORS.blue} radius={[8, 8, 0, 0]} />
+            </BarChart>
           </ChartContainer>
         </Card>
       </div>
