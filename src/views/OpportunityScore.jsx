@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import Card from "../components/Card.jsx";
 import Metric from "../components/Metric.jsx";
 import Badge from "../components/Badge.jsx";
@@ -50,13 +50,60 @@ function TierChip({ tier }) {
   );
 }
 
+const TIER_FILTERS = ["All", "Prime", "Strong", "Developing"];
+const GROUP_FILTERS = ["All", "Priority 1", "Priority 2", "Priority 3"];
+const SCORE_FILTERS = [
+  { label: "Any score", min: 0 },
+  { label: "40+", min: 40 },
+  { label: "60+", min: 60 },
+  { label: "80+", min: 80 },
+];
+
+function FilterChip({ label, active, onClick, dark }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-xl border px-3 py-1.5 text-xs font-black transition-all ${
+        active
+          ? "border-blue-500 bg-blue-600 text-white shadow-sm"
+          : dark
+          ? "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-500 hover:text-slate-200"
+          : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
 export default function OpportunityScore({ rows }) {
   const { dark } = useDarkMode();
+  const [tierFilter, setTierFilter] = useState("All");
+  const [groupFilter, setGroupFilter] = useState("All");
+  const [minScore, setMinScore] = useState(0);
+
   const counties = [...new Set(rows.map((r) => r.county))];
   const scores = useMemo(
     () => counties.map((c) => getOpportunityScore(c, rows)).filter(Boolean).sort((a, b) => b.score - a.score),
     [rows],
   );
+
+  const scoredWithGroup = useMemo(
+    () => scores.map((s) => {
+      const countyRow = rows.find((r) => r.county === s.county);
+      return { ...s, launchGroup: countyRow?.launchGroup ?? "—" };
+    }),
+    [scores, rows],
+  );
+
+  const visibleScores = useMemo(() => {
+    return scoredWithGroup.filter((c) => {
+      const tierOk = tierFilter === "All" || c.tier === tierFilter;
+      const groupOk = groupFilter === "All" || c.launchGroup === groupFilter;
+      const scoreOk = c.score >= minScore;
+      return tierOk && groupOk && scoreOk;
+    });
+  }, [scoredWithGroup, tierFilter, groupFilter, minScore]);
 
   const avgScore = scores.length > 0 ? Math.round(scores.reduce((s, c) => s + c.score, 0) / scores.length) : 0;
   const primeCount = scores.filter((s) => s.tier === "Prime").length;
@@ -106,69 +153,147 @@ export default function OpportunityScore({ rows }) {
       </div>
 
       <Card title="County opportunity leaderboard" eyebrow="Ranked by composite score">
-        <div className="space-y-3">
-          {scores.map((county, index) => (
-            <div key={county.county} className={`rounded-2xl border p-5 transition ${dark ? "border-slate-700 bg-slate-800 hover:border-slate-600" : "border-slate-200 bg-white hover:border-slate-300"}`}>
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl font-black text-lg flex-shrink-0 ${
-                    index === 0 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
-                    : index === 1 ? "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                    : index === 2 ? "bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300"
-                    : dark ? "bg-slate-700 text-slate-300" : "bg-slate-100 text-slate-500"
-                  }`}>
-                    {index + 1}
-                  </div>
-                  <div>
-                    <p className={`text-lg font-black ${dark ? "text-white" : "text-slate-950"}`}>{county.county}</p>
-                    <div className="mt-1 flex items-center gap-2 flex-wrap">
-                      <TierChip tier={county.tier} />
-                      <span className={`text-sm ${dark ? "text-slate-400" : "text-slate-500"}`}>
-                        {number(county.marketUsers)} users · Threat {county.threatScore}/100
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className={`text-4xl font-black ${county.score >= 60 ? dark ? "text-emerald-400" : "text-emerald-600" : dark ? "text-amber-400" : "text-amber-600"}`}>
-                    {county.score}
-                  </p>
-                  <p className={`text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>/100</p>
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <div className="flex items-center justify-between mb-1 text-xs">
-                  <span className={dark ? "text-slate-500" : "text-slate-400"}>Score</span>
-                  <span className={`font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>{county.score}/100</span>
-                </div>
-                <div className={`h-2.5 w-full overflow-hidden rounded-full ${dark ? "bg-slate-700" : "bg-slate-100"}`}>
-                  <div
-                    className={`h-full rounded-full transition-all ${county.score >= 80 ? "bg-emerald-500" : county.score >= 60 ? "bg-blue-500" : county.score >= 40 ? "bg-amber-500" : "bg-slate-400"}`}
-                    style={{ width: `${county.score}%` }}
+        <div className="space-y-4">
+          <div className={`rounded-2xl border p-4 space-y-3 ${dark ? "border-slate-700 bg-slate-800/50" : "border-slate-100 bg-slate-50"}`}>
+            <div className="flex flex-wrap items-center gap-3">
+              <span className={`text-xs font-black uppercase tracking-wide ${dark ? "text-slate-400" : "text-slate-500"}`}>Tier</span>
+              <div className="flex flex-wrap gap-1.5">
+                {TIER_FILTERS.map((t) => (
+                  <FilterChip
+                    key={t}
+                    label={t}
+                    active={tierFilter === t}
+                    onClick={() => setTierFilter(t)}
+                    dark={dark}
                   />
-                </div>
-              </div>
-
-              <div className="mt-4 grid grid-cols-5 gap-2">
-                {county.factors.map((factor) => (
-                  <div key={factor.name} className={`rounded-xl p-2.5 text-center ${dark ? "bg-slate-700/50" : "bg-slate-50"}`}>
-                    <p className={`text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{factor.name}</p>
-                    <p className={`mt-1 text-sm font-black ${factor.direction === "up" ? "text-emerald-600" : dark ? "text-amber-400" : "text-amber-600"}`}>
-                      {factor.value}
-                    </p>
-                    <p className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>{Math.round(factor.weight * 100)}% wt</p>
-                  </div>
                 ))}
               </div>
-
-              <div className="mt-3 flex gap-6 text-sm">
-                <div><span className={dark ? "text-slate-400" : "text-slate-500"}>Y1 rev: </span><span className={`font-black ${dark ? "text-blue-400" : "text-blue-700"}`}>{currency(county.y1Revenue)}</span></div>
-                <div><span className={dark ? "text-slate-400" : "text-slate-500"}>Y3 rev: </span><span className={`font-black ${dark ? "text-emerald-400" : "text-emerald-600"}`}>{currency(county.y3Revenue)}</span></div>
-                <div><span className={dark ? "text-slate-400" : "text-slate-500"}>Growth: </span><span className="font-black text-emerald-600">+{county.y1Revenue > 0 ? Math.round((county.y3Revenue - county.y1Revenue) / county.y1Revenue * 100) : 0}%</span></div>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <span className={`text-xs font-black uppercase tracking-wide ${dark ? "text-slate-400" : "text-slate-500"}`}>Launch group</span>
+              <div className="flex flex-wrap gap-1.5">
+                {GROUP_FILTERS.map((g) => (
+                  <FilterChip
+                    key={g}
+                    label={g}
+                    active={groupFilter === g}
+                    onClick={() => setGroupFilter(g)}
+                    dark={dark}
+                  />
+                ))}
               </div>
             </div>
-          ))}
+            <div className="flex flex-wrap items-center gap-3">
+              <span className={`text-xs font-black uppercase tracking-wide ${dark ? "text-slate-400" : "text-slate-500"}`}>Min score</span>
+              <div className="flex flex-wrap gap-1.5">
+                {SCORE_FILTERS.map((sf) => (
+                  <FilterChip
+                    key={sf.label}
+                    label={sf.label}
+                    active={minScore === sf.min}
+                    onClick={() => setMinScore(sf.min)}
+                    dark={dark}
+                  />
+                ))}
+              </div>
+            </div>
+            <p className={`text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>
+              Showing <span className={`font-black ${dark ? "text-slate-300" : "text-slate-700"}`}>{visibleScores.length}</span> of <span className="font-black">{scoredWithGroup.length}</span> counties
+            </p>
+          </div>
+
+          {visibleScores.length === 0 ? (
+            <div className={`rounded-2xl border p-10 text-center ${dark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
+              <p className={`text-sm font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>No counties match the selected filters.</p>
+              <button
+                onClick={() => { setTierFilter("All"); setGroupFilter("All"); setMinScore(0); }}
+                className="mt-3 text-xs text-blue-500 hover:underline font-black"
+              >
+                Clear filters
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {scoredWithGroup.map((county, index) => {
+                const tierOk = tierFilter === "All" || county.tier === tierFilter;
+                const groupOk = groupFilter === "All" || county.launchGroup === groupFilter;
+                const scoreOk = county.score >= minScore;
+                const visible = tierOk && groupOk && scoreOk;
+                return (
+                  <div
+                    key={county.county}
+                    className={`overflow-hidden rounded-2xl border transition-all duration-300 ${
+                      visible ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0 border-transparent py-0"
+                    } ${dark ? "border-slate-700 bg-slate-800 hover:border-slate-600" : "border-slate-200 bg-white hover:border-slate-300"}`}
+                  >
+                    <div className="p-5">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                          <div className={`flex h-10 w-10 items-center justify-center rounded-xl font-black text-lg flex-shrink-0 ${
+                            index === 0 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
+                            : index === 1 ? "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                            : index === 2 ? "bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300"
+                            : dark ? "bg-slate-700 text-slate-300" : "bg-slate-100 text-slate-500"
+                          }`}>
+                            {index + 1}
+                          </div>
+                          <div>
+                            <p className={`text-lg font-black ${dark ? "text-white" : "text-slate-950"}`}>{county.county}</p>
+                            <div className="mt-1 flex items-center gap-2 flex-wrap">
+                              <TierChip tier={county.tier} />
+                              <span className={`text-xs rounded-full border px-2 py-0.5 font-semibold ${dark ? "border-slate-600 text-slate-400" : "border-slate-200 text-slate-500"}`}>
+                                {county.launchGroup}
+                              </span>
+                              <span className={`text-sm ${dark ? "text-slate-400" : "text-slate-500"}`}>
+                                {number(county.marketUsers)} users · Threat {county.threatScore}/100
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <p className={`text-4xl font-black ${county.score >= 60 ? dark ? "text-emerald-400" : "text-emerald-600" : dark ? "text-amber-400" : "text-amber-600"}`}>
+                            {county.score}
+                          </p>
+                          <p className={`text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>/100</p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4">
+                        <div className="flex items-center justify-between mb-1 text-xs">
+                          <span className={dark ? "text-slate-500" : "text-slate-400"}>Score</span>
+                          <span className={`font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>{county.score}/100</span>
+                        </div>
+                        <div className={`h-2.5 w-full overflow-hidden rounded-full ${dark ? "bg-slate-700" : "bg-slate-100"}`}>
+                          <div
+                            className={`h-full rounded-full transition-all ${county.score >= 80 ? "bg-emerald-500" : county.score >= 60 ? "bg-blue-500" : county.score >= 40 ? "bg-amber-500" : "bg-slate-400"}`}
+                            style={{ width: `${county.score}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mt-4 grid grid-cols-5 gap-2">
+                        {county.factors.map((factor) => (
+                          <div key={factor.name} className={`rounded-xl p-2.5 text-center ${dark ? "bg-slate-700/50" : "bg-slate-50"}`}>
+                            <p className={`text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{factor.name}</p>
+                            <p className={`mt-1 text-sm font-black ${factor.direction === "up" ? "text-emerald-600" : dark ? "text-amber-400" : "text-amber-600"}`}>
+                              {factor.value}
+                            </p>
+                            <p className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>{Math.round(factor.weight * 100)}% wt</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="mt-3 flex gap-6 text-sm">
+                        <div><span className={dark ? "text-slate-400" : "text-slate-500"}>Y1 rev: </span><span className={`font-black ${dark ? "text-blue-400" : "text-blue-700"}`}>{currency(county.y1Revenue)}</span></div>
+                        <div><span className={dark ? "text-slate-400" : "text-slate-500"}>Y3 rev: </span><span className={`font-black ${dark ? "text-emerald-400" : "text-emerald-600"}`}>{currency(county.y3Revenue)}</span></div>
+                        <div><span className={dark ? "text-slate-400" : "text-slate-500"}>Growth: </span><span className="font-black text-emerald-600">+{county.y1Revenue > 0 ? Math.round((county.y3Revenue - county.y1Revenue) / county.y1Revenue * 100) : 0}%</span></div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </Card>
     </div>
