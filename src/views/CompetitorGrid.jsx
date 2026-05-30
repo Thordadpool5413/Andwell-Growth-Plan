@@ -88,6 +88,99 @@ function DimCell({ value, dark, isAndwell, dimKey }) {
   );
 }
 
+function pickBestMeasure(measures) {
+  if (!measures || !measures.length) return null;
+  const ORDER = ["hhcahps_patient_satisfaction", "patient_satisfaction", "overall_quality", "overall_confidence"];
+  const ranked = [...measures].sort((a, b) => {
+    const ai = ORDER.indexOf(a.measure_name ?? "");
+    const bi = ORDER.indexOf(b.measure_name ?? "");
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+  });
+  return ranked[0];
+}
+
+function QualityScoreBar({ score, measureName, measureValue, nationalBenchmark, dark, isAndwell, compact = false }) {
+  const pct = score != null ? Math.round(Math.min(Math.max(score, 0), 1) * 100) : null;
+  const national = nationalBenchmark != null ? Math.round(Math.min(Math.max(parseFloat(nationalBenchmark) || 0, 0), 1) * 100) : null;
+
+  const barColor = isAndwell
+    ? (pct == null ? (dark ? "bg-slate-600" : "bg-slate-300") : "bg-blue-500")
+    : pct == null
+      ? dark ? "bg-slate-600" : "bg-slate-300"
+      : pct >= 80 ? "bg-emerald-500"
+      : pct >= 60 ? "bg-amber-500"
+      : "bg-red-500";
+
+  const labelColor = isAndwell
+    ? (pct == null
+        ? (dark ? "text-slate-500" : "text-slate-400")
+        : (dark ? "text-blue-300" : "text-blue-700"))
+    : pct == null
+      ? (dark ? "text-slate-500" : "text-slate-400")
+      : pct >= 80 ? (dark ? "text-emerald-400" : "text-emerald-700")
+      : pct >= 60 ? (dark ? "text-amber-400" : "text-amber-700")
+      : (dark ? "text-red-400" : "text-red-700");
+
+  const displayLabel = measureName === "hhcahps_patient_satisfaction" || measureName === "patient_satisfaction"
+    ? "HHCAHPS satisfaction"
+    : measureName === "overall_quality"
+      ? "Overall quality"
+      : measureName === "overall_confidence"
+        ? "CMS match quality"
+        : "Quality score";
+
+  if (compact) {
+    return (
+      <div className="flex items-center gap-1.5 min-w-0">
+        <div className={`h-1.5 w-16 rounded-full overflow-hidden ${dark ? "bg-slate-700" : "bg-slate-200"}`}>
+          <div
+            className={`h-full rounded-full transition-all ${barColor}`}
+            style={{ width: `${pct ?? 0}%` }}
+          />
+        </div>
+        <span className={`text-[10px] font-black tabular-nums ${labelColor}`}>
+          {pct != null ? `${pct}%` : "—"}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between gap-1">
+        <span className={`text-[10px] font-black uppercase tracking-wide truncate ${dark ? "text-slate-400" : "text-slate-500"}`}>
+          {displayLabel}
+        </span>
+        <span className={`text-[10px] font-black tabular-nums shrink-0 ${labelColor}`}>
+          {pct != null ? `${pct}%` : "—"}
+        </span>
+      </div>
+      <div className={`h-2 w-full rounded-full overflow-hidden ${dark ? "bg-slate-700" : "bg-slate-200"}`}>
+        <div
+          className={`h-full rounded-full transition-all duration-300 ${barColor}`}
+          style={{ width: `${pct ?? 0}%` }}
+        />
+      </div>
+      {national != null && pct != null && (
+        <div className="flex items-center justify-between">
+          <span className={`text-[9px] ${dark ? "text-slate-600" : "text-slate-400"}`}>
+            Natl. avg: {national}%
+          </span>
+          {pct > national && (
+            <span className={`text-[9px] font-black ${dark ? "text-emerald-500" : "text-emerald-600"}`}>↑ above avg</span>
+          )}
+          {pct < national && (
+            <span className={`text-[9px] font-black ${dark ? "text-amber-500" : "text-amber-600"}`}>↓ below avg</span>
+          )}
+        </div>
+      )}
+      {pct == null && (
+        <p className={`text-[9px] ${dark ? "text-slate-600" : "text-slate-400"}`}>Run CMS sync to populate</p>
+      )}
+    </div>
+  );
+}
+
 function SortableMatrix({ competitors, dark, providerType }) {
   const [sortKey, setSortKey] = useState("name");
   const [sortAsc, setSortAsc] = useState(true);
@@ -188,8 +281,21 @@ function SortableMatrix({ competitors, dark, providerType }) {
                   <td className={`px-4 py-3 text-[11px] ${dark ? "text-slate-400" : "text-slate-500"}`}>
                     {comp.estimated_beneficiaries ? comp.estimated_beneficiaries.toLocaleString() : "—"}
                   </td>
-                  <td className={`px-4 py-3 text-[11px] ${dark ? "text-slate-300" : "text-slate-700"}`}>
-                    {comp.quality_star_rating ? `${comp.quality_star_rating}★` : <span title="Requires CMS quality dataset sync — not derived from match confidence">N/A</span>}
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col gap-1 min-w-[120px]">
+                      {comp.quality_star_rating ? (
+                        <span className={`text-[11px] font-black ${dark ? "text-amber-300" : "text-amber-600"}`}>{comp.quality_star_rating}★</span>
+                      ) : null}
+                      <QualityScoreBar
+                        score={comp.quality_snapshot_score}
+                        measureName={comp.quality_measure_name}
+                        measureValue={comp.quality_measure_value}
+                        nationalBenchmark={comp.quality_national_benchmark}
+                        dark={dark}
+                        isAndwell={false}
+                        compact
+                      />
+                    </div>
                   </td>
                   <td className={`px-4 py-3 ${dark ? "text-slate-300" : "text-slate-600"}`}>
                     {comp.known_counties?.length ? comp.known_counties.slice(0, 3).join(", ") + (comp.known_counties.length > 3 ? ` +${comp.known_counties.length - 3}` : "") : "—"}
@@ -222,7 +328,7 @@ function SortableMatrix({ competitors, dark, providerType }) {
   );
 }
 
-function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE }) {
+function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, andwellQuality }) {
   const [expandedId, setExpandedId] = useState(null);
   const paged = competitors.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
@@ -276,6 +382,16 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE })
                 </div>
               ))}
             </div>
+            <div className={`mt-3 pt-3 border-t ${dark ? "border-slate-700" : "border-blue-200"}`}>
+              <QualityScoreBar
+                score={andwellQuality?.measure_score ?? null}
+                measureName={andwellQuality?.measure_name ?? "hhcahps_patient_satisfaction"}
+                measureValue={andwellQuality?.measure_value ?? null}
+                nationalBenchmark={andwellQuality?.benchmark_national_value ?? null}
+                dark={dark}
+                isAndwell
+              />
+            </div>
           </div>
         </div>
 
@@ -311,6 +427,17 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE })
                   </div>
                 ))}
               </div>
+              <div className={`mt-3 pt-3 border-t ${dark ? "border-slate-700" : "border-slate-100"}`}>
+                <QualityScoreBar
+                  score={comp.quality_snapshot_score != null ? comp.quality_snapshot_score : null}
+                  measureName={comp.quality_measure_name}
+                  measureValue={comp.quality_measure_value}
+                  nationalBenchmark={comp.quality_national_benchmark}
+                  stateBenchmark={comp.quality_state_benchmark}
+                  dark={dark}
+                  isAndwell={false}
+                />
+              </div>
               {expanded && <CmsEvidenceCard competitor={comp} />}
               <button
                 onClick={() => setExpandedId(expanded ? null : (comp.id || comp.name))}
@@ -340,6 +467,7 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
   const [filter, setFilter] = useState("all");
   const [page, setPage] = useState(0);
   const [viewMode, setViewMode] = useState("columns");
+  const [andwellQuality, setAndwellQuality] = useState(null);
   const PAGE_SIZE = 6;
 
   useEffect(() => {
@@ -348,17 +476,29 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
       try {
         const tr = await fetch("/api/ai/token");
         const { token } = tr.ok ? await tr.json() : { token: "" };
-        const r = await fetch("/api/cms/competitors", { headers: { "x-ai-token": token } });
-        if (!r.ok) throw new Error(r.statusText);
-        const data = await r.json();
+        const [compRes, qualRes] = await Promise.all([
+          fetch("/api/cms/competitors", { headers: { "x-ai-token": token } }),
+          fetch("/api/cms/tool", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-ai-token": token },
+            body: JSON.stringify({ tool_name: "get_provider_quality_snapshot", args: { provider_name: "Andwell", provider_type: providerType } }),
+          }),
+        ]);
+        if (!compRes.ok) throw new Error(compRes.statusText);
+        const data = await compRes.json();
         setCompetitors(data.competitors || []);
+        if (qualRes.ok) {
+          const qualData = await qualRes.json();
+          const best = pickBestMeasure(qualData.quality_measures || []);
+          setAndwellQuality(best || null);
+        }
       } catch (err) {
         setError(err.toString());
       } finally {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [providerType]);
 
   const filtered = useMemo(() => {
     return competitors.filter((c) => {
@@ -424,7 +564,7 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
 
       {!loading && !error && viewMode === "columns" && (
         <>
-          <ComparisonColumns competitors={filtered} dark={dark} providerType={providerType} page={page} PAGE_SIZE={PAGE_SIZE} />
+          <ComparisonColumns competitors={filtered} dark={dark} providerType={providerType} page={page} PAGE_SIZE={PAGE_SIZE} andwellQuality={andwellQuality} />
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2">
               <button disabled={page === 0} onClick={() => setPage((p) => p - 1)}
