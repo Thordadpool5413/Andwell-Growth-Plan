@@ -12,7 +12,7 @@ import { getCountyIntelligence } from "../utils/calculations.js";
 import { streamChat, buildCountyPrompt, AI_AVAILABLE } from "../utils/ai.js";
 import { currency, number, percent } from "../utils/formatters.js";
 
-export default function CountyPlan({ rows, selectedCounty, setSelectedCounty }) {
+export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, competitorProviderType, setCompetitorProviderType }) {
   const { dark } = useDarkMode();
   const selected = rows.find((row) => row.county === selectedCounty) || rows[0];
   const intel = getCountyIntelligence(selected.county, rows);
@@ -54,7 +54,7 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty }) 
     <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
       <div className="space-y-6">
         <Card title="Maine county map" eyebrow="Geographic view">
-          <MaineMap rows={rows} selectedCounty={selectedCounty} onSelectCounty={setSelectedCounty} />
+          <MaineMap rows={rows} selectedCounty={selectedCounty} onSelectCounty={setSelectedCounty} providerTypeFilter={competitorProviderType} onProviderTypeFilterChange={setCompetitorProviderType} />
         </Card>
         <Card title="County launch queue" eyebrow="Prioritization">
           <div className={`mb-3 rounded-xl border px-3 py-2 text-xs ${dark ? "border-slate-700 bg-slate-800/60 text-slate-400" : "border-slate-100 bg-slate-50 text-slate-500"}`}>
