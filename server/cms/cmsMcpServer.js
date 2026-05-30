@@ -249,10 +249,20 @@ export async function callTool(toolName, args) {
         const startedAt = new Date();
         try {
           const datasets = await discoverDatasets(pt);
+          if (!datasets.length) {
+            console.error(`[CMS] Sync(${pt}): discoverDatasets returned 0 — aborting provider fetch`);
+            await logSync({ syncType: "sync_cms_provider_data", providerType: pt, startedAt, status: "error", error: "Dataset discovery returned zero results" });
+            continue;
+          }
           for (const ds of datasets.slice(0, 3)) {
             await upsertDataset(ds, pt);
           }
           const providers = await fetchMaineProviders(pt);
+          if (!providers.length) {
+            console.error(`[CMS] Sync(${pt}): fetchMaineProviders returned 0 records`);
+            await logSync({ syncType: "sync_cms_provider_data", datasetId: datasets[0]?.identifier, providerType: pt, startedAt, status: "error", error: "fetchMaineProviders returned zero records" });
+            continue;
+          }
           const counts = await syncToDatabase(providers, pt, datasets[0]?.identifier);
           await logSync({ syncType: "full", datasetId: datasets[0]?.identifier, providerType: pt, startedAt, status: "success", counts });
           results[pt] = { status: "success", ...counts };
@@ -326,13 +336,27 @@ async function upsertDataset(ds, topic) {
 }
 
 async function discoverDatasets(providerType) {
+  // Use progressively broader keyword terms to maximize dataset hit rate
   const terms = providerType === "hospice"
-    ? ["hospice provider data", "hospice care provider"]
-    : ["home health care agencies", "home health provider data"];
+    ? ["hospice provider data", "hospice care provider", "hospice providers", "hospice"]
+    : ["home health care agencies", "home health provider data", "home health agency", "home health agencies", "home health"];
+
   for (const term of terms) {
-    const results = await searchCmsDatasets(term, providerType);
-    if (results.length) return results;
+    // Do NOT pass providerType as topic filter — CMS uses inconsistent theme tags
+    const results = await searchCmsDatasets(term);
+    if (results.length) {
+      console.log(`[CMS] discoverDatasets(${providerType}): found ${results.length} via "${term}"`);
+      return results;
+    }
   }
+
+  // Last-resort fallback: fetch all datasets and filter by keyword in title
+  console.warn(`[CMS] discoverDatasets(${providerType}): all terms exhausted, trying broad fetch`);
+  const broadKw = providerType === "hospice" ? "hospice" : "home health";
+  const fallback = await searchCmsDatasets(broadKw);
+  if (fallback.length) return fallback;
+
+  console.error(`[CMS] discoverDatasets(${providerType}): ZERO datasets found — sync will produce no records`);
   return [];
 }
 

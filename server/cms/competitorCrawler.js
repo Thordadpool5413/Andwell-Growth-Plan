@@ -160,9 +160,11 @@ export async function crawlCompetitorWebsite(competitorSeedId, url, seedParent) 
     try {
       const seedRec = await query(
         `SELECT cs.name, cs.provider_type, cs.known_counties,
-                ccm.cms_certification_number
+                cpr.cms_certification_number,
+                ccm.match_status
          FROM competitor_seeds cs
          LEFT JOIN competitor_cms_matches ccm ON ccm.competitor_seed_id = cs.id
+         LEFT JOIN cms_provider_records cpr ON cpr.id = ccm.cms_provider_record_id
          WHERE cs.id = $1 LIMIT 1`,
         [competitorSeedId]
       );
