@@ -238,6 +238,64 @@ async function migrate() {
       ON cms_quality_snapshots (cms_provider_record_id, measure_name, period);
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS cms_hh_quality (
+        ccn TEXT PRIMARY KEY,
+        provider_name TEXT,
+        city TEXT,
+        state TEXT DEFAULT 'ME',
+        star_rating NUMERIC,
+        timely_care_pct NUMERIC,
+        walking_improve_pct NUMERIC,
+        medicare_spend_ratio NUMERIC,
+        ppr_rate NUMERIC,
+        dtc_rate NUMERIC,
+        pph_rate NUMERIC,
+        discharge_function_score NUMERIC,
+        skin_integrity_pct NUMERIC,
+        med_adherence_pct NUMERIC,
+        fall_injury_pct NUMERIC,
+        source_dataset_id TEXT DEFAULT '6jpm-sxkc',
+        synced_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS cms_hospice_quality (
+        ccn TEXT NOT NULL,
+        provider_name TEXT,
+        state TEXT DEFAULT 'ME',
+        measure_code TEXT NOT NULL,
+        measure_name TEXT,
+        score NUMERIC,
+        star_rating TEXT,
+        reporting_date TEXT,
+        source_dataset_id TEXT,
+        synced_at TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (ccn, measure_code)
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS cms_hhvbp_scores (
+        ccn TEXT PRIMARY KEY,
+        provider_name TEXT,
+        state TEXT DEFAULT 'ME',
+        total_performance_score NUMERIC,
+        payment_adjustment_pct TEXT,
+        payment_year INT,
+        dtc_achievement_pts NUMERIC,
+        ach_achievement_pts NUMERIC,
+        ed_use_achievement_pts NUMERIC,
+        care_quality_achievement_pts NUMERIC,
+        communication_achievement_pts NUMERIC,
+        overall_rating_achievement_pts NUMERIC,
+        willingness_recommend_achievement_pts NUMERIC,
+        source_dataset_id TEXT DEFAULT '56d7-4994',
+        synced_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
     console.log("[migrate] All CMS tables and indexes verified/created.");
   } catch (err) {
     console.error("[migrate] Migration error:", err.message);

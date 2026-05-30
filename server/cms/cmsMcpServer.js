@@ -11,6 +11,30 @@ export const CMS_TOOLS = [
   {
     type: "function",
     function: {
+      name: "sync_hh_quality_measures",
+      description: "Pull live CMS Home Health quality star ratings and clinical measures for Maine HHAs from dataset 6jpm-sxkc and upsert into cms_hh_quality.",
+      parameters: { type: "object", properties: {} },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "sync_hospice_quality",
+      description: "Pull Maine hospice CAHPS survey scores from CMS dataset gxki-hrr8 and upsert into cms_hospice_quality.",
+      parameters: { type: "object", properties: {} },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "sync_hhvbp_scores",
+      description: "Pull HHVBP Total Performance Scores and payment adjustment percentages for Maine HHAs from CMS dataset 56d7-4994 and upsert into cms_hhvbp_scores.",
+      parameters: { type: "object", properties: {} },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "search_cms_provider_datasets",
       description: "Search the CMS Provider Data Catalog for hospice and home health datasets by topic or keyword.",
       parameters: {
@@ -173,6 +197,18 @@ export async function callTool(toolName, args) {
   console.log("[MCP]", JSON.stringify(logEntry));
 
   switch (toolName) {
+    case "sync_hh_quality_measures": {
+      return await syncHHQualityMeasures();
+    }
+
+    case "sync_hospice_quality": {
+      return await syncHospiceQuality();
+    }
+
+    case "sync_hhvbp_scores": {
+      return await syncHHVBP();
+    }
+
     case "search_cms_provider_datasets": {
       const datasets = await searchCmsDatasets(args.keyword, args.topic);
       for (const ds of datasets.slice(0, 5)) {
@@ -285,7 +321,13 @@ export async function callTool(toolName, args) {
           }
         }
       }
-      return { results, matchingTriggered: true, countiesBackfilled, qualitySnapshots: qualityResults };
+      let hhQualityResult = null;
+      let hospiceQualityResult = null;
+      let hhvbpResult = null;
+      try { hhQualityResult = await syncHHQualityMeasures(); } catch (err) { hhQualityResult = { error: err.message }; }
+      try { hospiceQualityResult = await syncHospiceQuality(); } catch (err) { hospiceQualityResult = { error: err.message }; }
+      try { hhvbpResult = await syncHHVBP(); } catch (err) { hhvbpResult = { error: err.message }; }
+      return { results, matchingTriggered: true, countiesBackfilled, qualitySnapshots: qualityResults, hhQuality: hhQualityResult, hospiceQuality: hospiceQualityResult, hhvbp: hhvbpResult };
     }
 
     case "get_provider_quality_snapshot": {
@@ -821,6 +863,267 @@ export async function getCmsStats() {
     };
   } catch {
     return { datasetsDiscovered: 0, maineHospiceProviders: 0, maineHHAgencies: 0, competitorMatches: 0, needsReview: 0, matchStatusBreakdown: [], failedSyncs: [], datasetList: [] };
+  }
+}
+
+async function syncHHQualityMeasures() {
+  const startedAt = new Date();
+  try {
+    const result = await queryCmsDataset({
+      datasetId: "6jpm-sxkc",
+      filters: { state: "ME" },
+      limit: 500,
+      offset: 0,
+    });
+    const rows = result.rows || [];
+    if (!rows.length) {
+      await logSync({ syncType: "hh_quality", datasetId: "6jpm-sxkc", providerType: "homehealth", startedAt, status: "warn", error: "No rows returned for state=ME" });
+      return { upserted: 0, warn: "No rows returned" };
+    }
+
+    const findNum = (row, candidates) => {
+      for (const c of candidates) {
+        const key = Object.keys(row).find((k) => k.toLowerCase().includes(c.toLowerCase()));
+        if (key && row[key] != null && row[key] !== "Not Available") {
+          const n = parseFloat(String(row[key]).replace(/[^0-9.-]/g, ""));
+          if (!isNaN(n)) return n;
+        }
+      }
+      return null;
+    };
+    const findStr = (row, candidates) => {
+      for (const c of candidates) {
+        const key = Object.keys(row).find((k) => k.toLowerCase().includes(c.toLowerCase()));
+        if (key && row[key] != null) return String(row[key]);
+      }
+      return null;
+    };
+
+    let upserted = 0;
+    for (const row of rows) {
+      const ccn = findStr(row, ["cms_certification_number_ccn", "cms_certification_number", "ccn"]);
+      if (!ccn) continue;
+      const providerName = findStr(row, ["provider_name", "organization_name"]) || "";
+      const city = findStr(row, ["citytown", "city", "city_town"]) || "";
+      const starRating = findNum(row, ["quality_of_patient_care_star_rating", "star_rating"]);
+      const timelyCare = findNum(row, ["how_often_the_home_health_team_began_their_patients_care_in_d", "timely"]);
+      const walking = findNum(row, ["how_often_patients_got_better_at_walking", "walking"]);
+      const spendRatio = findNum(row, ["how_much_medicare_spends_on_an_episode_of_care_at_this_agen", "medicare_spend", "spend"]);
+      const ppr = findNum(row, ["ppr_riskstandardized_rate", "ppr_risk", "ppr"]);
+      const dtc = findNum(row, ["dtc_riskstandardized_rate", "dtc_risk", "dtc"]);
+      const pph = findNum(row, ["pph_riskstandardized_rate", "pph_risk", "pph"]);
+      const dischargeFunc = findNum(row, ["discharge_function_score", "discharge_function"]);
+      const skinIntegrity = findNum(row, ["changes_in_skin_integrity", "skin_integrity"]);
+      const medAdherence = findNum(row, ["medication_compliance", "med_adherence", "medication_adherence", "drug_education"]);
+      const fallInjury = findNum(row, ["fall_injury", "fall_prevention", "falls_with_injury", "fall_risk"]);
+
+      await query(
+        `INSERT INTO cms_hh_quality
+           (ccn, provider_name, city, state, star_rating, timely_care_pct, walking_improve_pct,
+            medicare_spend_ratio, ppr_rate, dtc_rate, pph_rate, discharge_function_score,
+            skin_integrity_pct, med_adherence_pct, fall_injury_pct, source_dataset_id, synced_at)
+         VALUES ($1,$2,$3,'ME',$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'6jpm-sxkc',NOW())
+         ON CONFLICT (ccn) DO UPDATE SET
+           provider_name=$2, city=$3, star_rating=$4, timely_care_pct=$5,
+           walking_improve_pct=$6, medicare_spend_ratio=$7, ppr_rate=$8,
+           dtc_rate=$9, pph_rate=$10, discharge_function_score=$11,
+           skin_integrity_pct=$12, med_adherence_pct=$13, fall_injury_pct=$14, synced_at=NOW()`,
+        [ccn, providerName, city, starRating, timelyCare, walking, spendRatio, ppr, dtc, pph, dischargeFunc, skinIntegrity, medAdherence, fallInjury]
+      );
+      upserted++;
+    }
+
+    await query(
+      `UPDATE competitor_seeds cs
+       SET quality_star_rating = q.star_rating
+       FROM cms_hh_quality q
+       WHERE q.ccn IN (
+         SELECT cpr.cms_certification_number
+         FROM cms_provider_records cpr
+         JOIN competitor_cms_matches ccm ON ccm.cms_provider_record_id = cpr.id
+         WHERE ccm.competitor_seed_id = cs.id
+       ) AND q.star_rating IS NOT NULL`
+    ).catch(() => {});
+
+    await logSync({ syncType: "hh_quality", datasetId: "6jpm-sxkc", providerType: "homehealth", startedAt, status: "success", counts: { created: upserted } });
+    console.log(`[MCP] syncHHQualityMeasures: upserted ${upserted} rows`);
+    return { upserted, datasetId: "6jpm-sxkc" };
+  } catch (err) {
+    console.error("[MCP] syncHHQualityMeasures error:", err.message);
+    await logSync({ syncType: "hh_quality", datasetId: "6jpm-sxkc", providerType: "homehealth", startedAt, status: "error", error: err.message });
+    return { error: err.message };
+  }
+}
+
+async function syncHospiceQuality() {
+  const startedAt = new Date();
+  const DATASETS = [
+    { id: "252m-zfp9", label: "hospice_general" },
+    { id: "gxki-hrr8", label: "hospice_cahps" },
+  ];
+
+  const findStr = (row, candidates) => {
+    for (const c of candidates) {
+      const key = Object.keys(row).find((k) => k.toLowerCase().includes(c.toLowerCase()));
+      if (key && row[key] != null) return String(row[key]);
+    }
+    return null;
+  };
+
+  let totalUpserted = 0;
+  const datasetResults = {};
+
+  for (const ds of DATASETS) {
+    try {
+      const result = await queryCmsDataset({
+        datasetId: ds.id,
+        filters: { state: "ME" },
+        limit: 500,
+        offset: 0,
+      });
+      const rows = result.rows || [];
+      if (!rows.length) {
+        console.warn(`[MCP] syncHospiceQuality(${ds.id}): no rows for state=ME`);
+        datasetResults[ds.id] = { upserted: 0, warn: "No rows returned" };
+        continue;
+      }
+
+      let upserted = 0;
+      for (const row of rows) {
+        const ccn = findStr(row, ["cms_certification_number_ccn", "cms_certification_number", "ccn"]);
+        if (!ccn) continue;
+        const providerName = findStr(row, ["provider_name", "facility_name", "organization_name"]) || "";
+        const measureCode = findStr(row, ["measure_code", "measure_id"]) || ds.label;
+        const measureName = findStr(row, ["measure_name", "measure_description"]) || measureCode;
+        const scoreRaw = findStr(row, ["score", "measure_score", "star_score", "footnote_score"]);
+        const score = scoreRaw && scoreRaw !== "Not Available" ? parseFloat(String(scoreRaw).replace(/[^0-9.-]/g, "")) || null : null;
+        const starRating = findStr(row, ["star_rating", "rating", "overall_star_rating"]) || null;
+        const reportingDate = findStr(row, ["reporting_date", "report_date", "period", "reporting_period"]) || null;
+
+        await query(
+          `INSERT INTO cms_hospice_quality
+             (ccn, provider_name, state, measure_code, measure_name, score, star_rating, reporting_date, source_dataset_id, synced_at)
+           VALUES ($1,$2,'ME',$3,$4,$5,$6,$7,$8,NOW())
+           ON CONFLICT (ccn, measure_code) DO UPDATE SET
+             provider_name=$2, measure_name=$4, score=$5, star_rating=$6, reporting_date=$7,
+             source_dataset_id=$8, synced_at=NOW()`,
+          [ccn, providerName, measureCode, measureName, score, starRating, reportingDate, ds.id]
+        );
+        upserted++;
+      }
+      totalUpserted += upserted;
+      datasetResults[ds.id] = { upserted };
+      console.log(`[MCP] syncHospiceQuality(${ds.id}): upserted ${upserted} rows`);
+    } catch (err) {
+      console.error(`[MCP] syncHospiceQuality(${ds.id}) error:`, err.message);
+      datasetResults[ds.id] = { error: err.message };
+    }
+  }
+
+  // Propagate hospice star ratings to competitor_seeds for hospice providers
+  // Uses the best available star_rating from any hospice quality record for each CCN
+  await query(
+    `UPDATE competitor_seeds cs
+     SET quality_star_rating = hq.star_rating_num
+     FROM (
+       SELECT ccn, MAX(star_rating::numeric) AS star_rating_num
+       FROM cms_hospice_quality
+       WHERE star_rating IS NOT NULL
+         AND star_rating ~ '^[0-9]+(\\.[0-9]+)?$'
+       GROUP BY ccn
+     ) hq
+     WHERE hq.ccn IN (
+       SELECT cpr.cms_certification_number
+       FROM cms_provider_records cpr
+       JOIN competitor_cms_matches ccm ON ccm.cms_provider_record_id = cpr.id
+       WHERE ccm.competitor_seed_id = cs.id
+     )
+     AND cs.quality_star_rating IS NULL`
+  ).catch((e) => console.warn("[MCP] hospice star propagation:", e.message));
+
+  await logSync({ syncType: "hospice_quality", datasetId: "252m-zfp9+gxki-hrr8", providerType: "hospice", startedAt, status: "success", counts: { created: totalUpserted } });
+  console.log(`[MCP] syncHospiceQuality: total upserted ${totalUpserted}`);
+  return { upserted: totalUpserted, datasets: datasetResults };
+}
+
+async function syncHHVBP() {
+  const startedAt = new Date();
+  try {
+    const result = await queryCmsDataset({
+      datasetId: "56d7-4994",
+      filters: { state: "ME" },
+      limit: 500,
+      offset: 0,
+    });
+    const rows = result.rows || [];
+    if (!rows.length) {
+      await logSync({ syncType: "hhvbp", datasetId: "56d7-4994", providerType: "homehealth", startedAt, status: "warn", error: "No rows returned for state=ME" });
+      return { upserted: 0, warn: "No rows returned" };
+    }
+
+    const findNum = (row, candidates) => {
+      for (const c of candidates) {
+        const key = Object.keys(row).find((k) => k.toLowerCase().includes(c.toLowerCase()));
+        if (key && row[key] != null && row[key] !== "Not Available") {
+          const n = parseFloat(String(row[key]).replace(/[^0-9.-]/g, ""));
+          if (!isNaN(n)) return n;
+        }
+      }
+      return null;
+    };
+    const findStr = (row, candidates) => {
+      for (const c of candidates) {
+        const key = Object.keys(row).find((k) => k.toLowerCase().includes(c.toLowerCase()));
+        if (key && row[key] != null) return String(row[key]);
+      }
+      return null;
+    };
+
+    let upserted = 0;
+    for (const row of rows) {
+      const ccn = findStr(row, ["cms_certification_number_ccn", "cms_certification_number", "ccn"]);
+      if (!ccn) continue;
+      const providerName = findStr(row, ["provider_name", "organization_name"]) || "";
+      const tps = findNum(row, ["total_performance_score_tps", "total_performance_score", "tps"]);
+      const payAdj = findStr(row, ["adjusted_payment_percentage_app", "payment_adjustment", "app"]);
+      const payYear = (() => {
+        const y = findStr(row, ["performance_year", "payment_year", "year"]);
+        return y ? parseInt(y) || null : null;
+      })();
+      const dtcAch = findNum(row, ["discharged_to_community", "dtc_achievement", "dtc"]);
+      const achAch = findNum(row, ["avoidable_hospitalization", "ach_achievement", "ach"]);
+      const edAch = findNum(row, ["ed_use_achievement", "ed_use"]);
+      const careQAch = findNum(row, ["care_of_patients", "care_quality"]);
+      const commAch = findNum(row, ["communication_achievement", "communication"]);
+      const overallRatingAch = findNum(row, ["overall_rating_achievement", "overall_rating"]);
+      const willingnessAch = findNum(row, ["willingness_to_recommend", "willingness_recommend"]);
+
+      await query(
+        `INSERT INTO cms_hhvbp_scores
+           (ccn, provider_name, state, total_performance_score, payment_adjustment_pct, payment_year,
+            dtc_achievement_pts, ach_achievement_pts, ed_use_achievement_pts,
+            care_quality_achievement_pts, communication_achievement_pts,
+            overall_rating_achievement_pts, willingness_recommend_achievement_pts,
+            source_dataset_id, synced_at)
+         VALUES ($1,$2,'ME',$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'56d7-4994',NOW())
+         ON CONFLICT (ccn) DO UPDATE SET
+           provider_name=$2, total_performance_score=$3, payment_adjustment_pct=$4,
+           payment_year=$5, dtc_achievement_pts=$6, ach_achievement_pts=$7,
+           ed_use_achievement_pts=$8, care_quality_achievement_pts=$9,
+           communication_achievement_pts=$10, overall_rating_achievement_pts=$11,
+           willingness_recommend_achievement_pts=$12, synced_at=NOW()`,
+        [ccn, providerName, tps, payAdj, payYear, dtcAch, achAch, edAch, careQAch, commAch, overallRatingAch, willingnessAch]
+      );
+      upserted++;
+    }
+
+    await logSync({ syncType: "hhvbp", datasetId: "56d7-4994", providerType: "homehealth", startedAt, status: "success", counts: { created: upserted } });
+    console.log(`[MCP] syncHHVBP: upserted ${upserted} rows`);
+    return { upserted, datasetId: "56d7-4994" };
+  } catch (err) {
+    console.error("[MCP] syncHHVBP error:", err.message);
+    await logSync({ syncType: "hhvbp", datasetId: "56d7-4994", providerType: "homehealth", startedAt, status: "error", error: err.message });
+    return { error: err.message };
   }
 }
 

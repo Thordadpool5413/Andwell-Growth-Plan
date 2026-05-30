@@ -106,32 +106,26 @@ function pickBestMeasure(measures) {
   return ranked[0];
 }
 
-function QualityBadge({ score, dark }) {
+function QualityBadge({ score, starRating, dark }) {
+  const star = starRating != null ? parseFloat(starRating) : null;
+  if (star != null) {
+    if (star >= 4) return <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${dark ? "bg-emerald-900/50 text-emerald-300" : "bg-emerald-50 text-emerald-700"}`}>High quality</span>;
+    if (star >= 3) return <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${dark ? "bg-amber-900/50 text-amber-300" : "bg-amber-50 text-amber-700"}`}>Avg</span>;
+    return <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${dark ? "bg-red-900/50 text-red-300" : "bg-red-50 text-red-700"}`}>Below avg</span>;
+  }
   if (score == null) return null;
   const pct = Math.round(Math.min(Math.max(score, 0), 1) * 100);
-  if (pct >= 80) {
-    return (
-      <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${dark ? "bg-emerald-900/50 text-emerald-300" : "bg-emerald-50 text-emerald-700"}`}>
-        High quality
-      </span>
-    );
-  }
-  if (pct >= 60) {
-    return (
-      <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${dark ? "bg-amber-900/50 text-amber-300" : "bg-amber-50 text-amber-700"}`}>
-        Avg
-      </span>
-    );
-  }
-  return (
-    <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${dark ? "bg-red-900/50 text-red-300" : "bg-red-50 text-red-700"}`}>
-      Below avg
-    </span>
-  );
+  if (pct >= 80) return <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${dark ? "bg-emerald-900/50 text-emerald-300" : "bg-emerald-50 text-emerald-700"}`}>High quality</span>;
+  if (pct >= 60) return <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${dark ? "bg-amber-900/50 text-amber-300" : "bg-amber-50 text-amber-700"}`}>Avg</span>;
+  return <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${dark ? "bg-red-900/50 text-red-300" : "bg-red-50 text-red-700"}`}>Below avg</span>;
 }
 
-function QualityScoreBar({ score, measureName, measureValue, nationalBenchmark, dark, isAndwell, compact = false }) {
-  const pct = score != null ? Math.round(Math.min(Math.max(score, 0), 1) * 100) : null;
+function QualityScoreBar({ score, starRating, measureName, measureValue, nationalBenchmark, dark, isAndwell, compact = false }) {
+  const star = starRating != null ? parseFloat(starRating) : null;
+  const pct = star != null
+    ? Math.round((star / 5) * 100)
+    : score != null ? Math.round(Math.min(Math.max(score, 0), 1) * 100) : null;
+  const isStarBased = star != null;
   const national = nationalBenchmark != null ? Math.round(Math.min(Math.max(parseFloat(nationalBenchmark) || 0, 0), 1) * 100) : null;
 
   const barColor = isAndwell
@@ -152,13 +146,15 @@ function QualityScoreBar({ score, measureName, measureValue, nationalBenchmark, 
       : pct >= 60 ? (dark ? "text-amber-400" : "text-amber-700")
       : (dark ? "text-red-400" : "text-red-700");
 
-  const displayLabel = measureName === "hhcahps_patient_satisfaction" || measureName === "patient_satisfaction"
-    ? "HHCAHPS satisfaction"
-    : measureName === "overall_quality"
-      ? "Overall quality"
-      : measureName === "overall_confidence"
-        ? "CMS match quality"
-        : "Quality score";
+  const displayLabel = isStarBased
+    ? "CMS quality stars"
+    : measureName === "hhcahps_patient_satisfaction" || measureName === "patient_satisfaction"
+      ? "HHCAHPS satisfaction"
+      : measureName === "overall_quality"
+        ? "Overall quality"
+        : measureName === "overall_confidence"
+          ? "CMS match quality"
+          : "Quality score";
 
   if (compact) {
     return (
@@ -319,10 +315,11 @@ function SortableMatrix({ competitors, dark, providerType }) {
                   <td className="px-4 py-3">
                     <div className="flex flex-col gap-1 min-w-[120px]">
                       {comp.quality_star_rating ? (
-                        <span className={`text-[11px] font-black ${dark ? "text-amber-300" : "text-amber-600"}`}>{comp.quality_star_rating}★</span>
+                        <span className={`text-[11px] font-black ${dark ? "text-amber-300" : "text-amber-600"}`}>{parseFloat(comp.quality_star_rating).toFixed(1)} ★</span>
                       ) : null}
                       <QualityScoreBar
                         score={comp.quality_snapshot_score}
+                        starRating={comp.quality_star_rating}
                         measureName={comp.quality_measure_name}
                         measureValue={comp.quality_measure_value}
                         nationalBenchmark={comp.quality_national_benchmark}
@@ -512,7 +509,7 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, a
                   {comp.cms_only && (
                     <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase ${dark ? "bg-violet-900/40 text-violet-400" : "bg-violet-50 text-violet-600"}`}>CMS discovered</span>
                   )}
-                  <QualityBadge score={comp.quality_snapshot_score} dark={dark} />
+                  <QualityBadge score={comp.quality_snapshot_score} starRating={comp.quality_star_rating} dark={dark} />
                 </div>
                 <p className={`text-sm font-black leading-5 ${dark ? "text-white" : "text-slate-950"}`}>{comp.name}</p>
                 {comp.parent_company && <p className={`text-[10px] mt-0.5 ${dark ? "text-slate-400" : "text-slate-500"}`}>{comp.parent_company}</p>}
@@ -559,8 +556,15 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, a
                 })}
               </div>
               <div className={`mt-3 pt-3 border-t ${dark ? "border-slate-700" : "border-slate-100"}`}>
+                {comp.quality_star_rating != null && (
+                  <div className="mb-1.5 flex items-center gap-1.5">
+                    <span className={`text-xs font-black ${dark ? "text-amber-300" : "text-amber-600"}`}>{parseFloat(comp.quality_star_rating).toFixed(1)} ★</span>
+                    <span className={`text-[9px] ${dark ? "text-slate-500" : "text-slate-400"}`}>CMS star rating</span>
+                  </div>
+                )}
                 <QualityScoreBar
                   score={comp.quality_snapshot_score != null ? comp.quality_snapshot_score : null}
+                  starRating={comp.quality_star_rating}
                   measureName={comp.quality_measure_name}
                   measureValue={comp.quality_measure_value}
                   nationalBenchmark={comp.quality_national_benchmark}
