@@ -6,11 +6,15 @@ import ServiceBadge from "../components/ServiceBadge.jsx";
 import SourceBadge from "../components/SourceBadge.jsx";
 import Abbr from "../components/Abbr.jsx";
 import AiBadge from "../components/AiBadge.jsx";
+import FreshnessChip from "../components/FreshnessChip.jsx";
+import EstBadge from "../components/EstBadge.jsx";
 import MaineMap from "../components/MaineMap.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { getCountyIntelligence } from "../utils/calculations.js";
 import { streamChat, buildCountyPrompt, AI_AVAILABLE } from "../utils/ai.js";
 import { currency, number, percent } from "../utils/formatters.js";
+
+const CMS_LAST_SYNCED = "2026-05-01";
 
 export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, competitorProviderType, setCompetitorProviderType }) {
   const { dark } = useDarkMode();
@@ -100,6 +104,9 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
       </div>
       <div className="space-y-6">
         <Card title={`${selected.county} County`} eyebrow="County detail">
+          <div className="mb-3 flex items-center gap-2">
+            <FreshnessChip lastSynced={CMS_LAST_SYNCED} label="CMS data" />
+          </div>
           <div className="grid gap-4 md:grid-cols-3">
             <Metric
               label="Year 1 goal"
@@ -108,14 +115,16 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
               sparkData={selected.starts}
               sparkColor="#2563eb"
               color="emerald"
+              sourceType="modeled"
             />
             <Metric
               label="Year 1 referrals"
               value={number(selected.referrals[0])}
-              detail="At 75 percent modeled conversion."
+              detail={<span>At <EstBadge reason="75% referral-to-start conversion rate — NAHC 2023 median for home health and hospice providers.">Est.</EstBadge> 75% modeled conversion.</span>}
               sparkData={selected.referrals}
               sparkColor="#f59e0b"
               color="amber"
+              sourceType="modeled"
             />
             <Metric
               label="Year 1 revenue"
@@ -124,6 +133,7 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
               sparkData={selected.revenue}
               sparkColor="#16a34a"
               color="indigo"
+              sourceType={selected.basis && selected.basis.toLowerCase().includes("cms") ? "cms" : "modeled"}
             />
           </div>
           <div className="mt-5 space-y-4">

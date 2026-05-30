@@ -9,12 +9,16 @@ import Metric from "../components/Metric.jsx";
 import Badge from "../components/Badge.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
 import Abbr from "../components/Abbr.jsx";
+import FreshnessChip from "../components/FreshnessChip.jsx";
+import EstBadge from "../components/EstBadge.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
 import { namedProviderRows } from "../data/providers.js";
 import { rollupByService, getCompetitiveThreatScore } from "../utils/calculations.js";
 import cmsCountyMarket from "../data/cmsCountyMarket.js";
 import { currency, number, percent } from "../utils/formatters.js";
+
+const CMS_LAST_SYNCED = "2026-05-01";
 
 export default function ExecutiveView({ rows, totals }) {
   const { dark } = useDarkMode();
@@ -38,20 +42,26 @@ export default function ExecutiveView({ rows, totals }) {
         A high-level summary connecting Andwell's market opportunity across 12 Maine counties. Revenue figures are modeled projections based on CMS 2022 beneficiary volumes, internal capture rate assumptions, and NAHC-benchmarked conversion rates. Adjust the Scenario Model to see how changes in these assumptions affect all figures.
       </SectionHeader>
 
+      <div className="flex items-center gap-2 flex-wrap">
+        <FreshnessChip lastSynced={CMS_LAST_SYNCED} label="CMS data" />
+      </div>
+
       <div className="grid gap-4 md:grid-cols-4">
         <Metric
           label="Active growth counties"
           value={rows.length}
           detail="County and service line combinations in the active model."
           color="emerald"
+          sourceType="cms"
         />
         <Metric
           label="Year 1 referrals"
           value={number(totals.y1Referrals)}
-          detail="Gross referrals needed at a 75% conversion baseline (NAHC median)."
+          detail={<span>Gross referrals at a <EstBadge reason="75% referral-to-start conversion rate — NAHC 2023 median for home health and hospice providers.">Est.</EstBadge> 75% conversion baseline (NAHC median).</span>}
           sparkData={[totals.y1Referrals, totals.y2Referrals, totals.y3Referrals]}
           sparkColor={COLORS.blue}
           color="blue"
+          sourceType="modeled"
         />
         <Metric
           label="Year 1 revenue"
@@ -60,12 +70,14 @@ export default function ExecutiveView({ rows, totals }) {
           sparkData={[totals.y1Revenue, totals.y2Revenue, totals.y3Revenue]}
           sparkColor={COLORS.green}
           color="indigo"
+          sourceType="modeled"
         />
         <Metric
           label="Named competitors"
           value={namedProviderRows.length}
           detail="Home Healthcare and Hospice provider rows loaded into the competitive layer."
           color="amber"
+          sourceType="cms"
         />
       </div>
 
@@ -73,7 +85,10 @@ export default function ExecutiveView({ rows, totals }) {
         <div className={`rounded-3xl border p-5 shadow-sm transition-colors duration-300 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
           <p className={`text-sm font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>Market penetration (Y1)</p>
           <p className={`mt-2 text-3xl font-black ${dark ? "text-white" : "text-slate-950"}`}>{percent(y1Penetration)}</p>
-          <p className={`mt-2 text-sm leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>Modeled Y1 starts vs total CMS addressable market ({number(totalMarket)} beneficiary users).</p>
+          <p className={`mt-2 text-sm leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>
+            <EstBadge reason="Modeled Y1 starts divided by total CMS addressable beneficiary volume — a planning proxy, not observed market share.">Est.</EstBadge>{" "}
+            Y1 starts vs total CMS addressable market ({number(totalMarket)} beneficiary users).
+          </p>
         </div>
         <div className={`rounded-3xl border p-5 shadow-sm transition-colors duration-300 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
           <p className={`text-sm font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>Avg competitive threat</p>
@@ -88,7 +103,10 @@ export default function ExecutiveView({ rows, totals }) {
         <div className={`rounded-3xl border p-5 shadow-sm transition-colors duration-300 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
           <p className={`text-sm font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>Revenue per <Abbr term="FFS">FFS</Abbr> beneficiary</p>
           <p className={`mt-2 text-3xl font-black ${dark ? "text-white" : "text-slate-950"}`}>{currency(revPerBeneficiary)}</p>
-          <p className={`mt-2 text-sm leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>Y1 revenue efficiency across {number(totalFFS)} <Abbr term="FFS">Fee-For-Service</Abbr> beneficiaries.</p>
+          <p className={`mt-2 text-sm leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>
+            <EstBadge reason="Derived: Y1 modeled revenue divided by total CMS Fee-For-Service beneficiary count — not a verified billing figure.">Est.</EstBadge>{" "}
+            Y1 revenue efficiency across {number(totalFFS)} <Abbr term="FFS">Fee-For-Service</Abbr> beneficiaries.
+          </p>
         </div>
       </div>
 

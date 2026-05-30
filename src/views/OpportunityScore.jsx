@@ -4,10 +4,14 @@ import Metric from "../components/Metric.jsx";
 import Badge from "../components/Badge.jsx";
 import Abbr from "../components/Abbr.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
+import FreshnessChip from "../components/FreshnessChip.jsx";
+import MethodologyCallout from "../components/MethodologyCallout.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
 import { getOpportunityScore } from "../utils/calculations.js";
 import { currency, number } from "../utils/formatters.js";
+
+const CMS_LAST_SYNCED = "2026-05-01";
 
 const tierTone = (tier) => tier === "Prime" ? "green" : tier === "Strong" ? "blue" : tier === "Developing" ? "amber" : "slate";
 
@@ -29,11 +33,41 @@ export default function OpportunityScore({ rows }) {
         Composite score (0–100) combining market size (25%), low competition (20%), Andwell presence (15%), revenue efficiency (20%), and growth potential (20%). Higher is better.
       </SectionHeader>
 
+      <div className="flex items-center gap-2 flex-wrap">
+        <FreshnessChip lastSynced={CMS_LAST_SYNCED} label="CMS data" />
+      </div>
+
+      <MethodologyCallout title="How is this calculated?">
+        <p className={`mb-3 ${dark ? "text-slate-300" : "text-slate-700"}`}>
+          Each county receives a composite Opportunity Score (0–100) built from five equally-weighted factor groups:
+        </p>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {[
+            { name: "Market size", weight: "25%", desc: "CMS FFS beneficiary volume in the county — larger addressable markets score higher." },
+            { name: "Low competition", weight: "20%", desc: "Inverse of the competitive threat score — counties with fewer or weaker competitors score higher." },
+            { name: "Andwell presence", weight: "15%", desc: "Whether Andwell already has an active CMS record in the county — existing presence lowers entry cost." },
+            { name: "Revenue efficiency", weight: "20%", desc: "Modeled Y1 revenue per FFS beneficiary — higher revenue density relative to market size scores higher." },
+            { name: "Growth potential", weight: "20%", desc: "Y1→Y3 revenue ramp rate — counties with steeper projected growth curves score higher." },
+          ].map((f) => (
+            <div key={f.name} className={`rounded-xl border p-3 ${dark ? "border-slate-700 bg-slate-800/60" : "border-slate-200 bg-white"}`}>
+              <div className="flex items-center justify-between gap-2">
+                <p className={`text-xs font-black ${dark ? "text-white" : "text-slate-900"}`}>{f.name}</p>
+                <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-black ${dark ? "bg-blue-900/50 text-blue-300" : "bg-blue-100 text-blue-700"}`}>{f.weight}</span>
+              </div>
+              <p className={`mt-1 text-[11px] leading-4 ${dark ? "text-slate-400" : "text-slate-500"}`}>{f.desc}</p>
+            </div>
+          ))}
+        </div>
+        <p className={`mt-3 text-[11px] ${dark ? "text-slate-500" : "text-slate-400"}`}>
+          Tiers: Prime ≥ 80 · Strong 60–79 · Developing 40–59 · Below 40. Scores are relative to this dataset and should not be compared across different county sets.
+        </p>
+      </MethodologyCallout>
+
       <div className="grid gap-4 md:grid-cols-4">
-        <Metric label="Average opportunity score" value={`${avgScore}/100`} detail="Mean score across all launch counties." color="emerald" />
-        <Metric label="Prime counties" value={primeCount} detail="Counties scoring 80+ (top tier)." color="emerald" />
-        <Metric label="Top county" value={topCounty?.county || "—"} detail={`Score: ${topCounty?.score || 0}/100 (${topCounty?.tier || "—"})`} color="blue" />
-        <Metric label="Total Y1 opportunity" value={currency(scores.reduce((s, c) => s + c.y1Revenue, 0))} detail="Combined Y1 revenue across all scored counties." color="indigo" />
+        <Metric label="Average opportunity score" value={`${avgScore}/100`} detail="Mean score across all launch counties." color="emerald" sourceType="derived" />
+        <Metric label="Prime counties" value={primeCount} detail="Counties scoring 80+ (top tier)." color="emerald" sourceType="derived" />
+        <Metric label="Top county" value={topCounty?.county || "—"} detail={`Score: ${topCounty?.score || 0}/100 (${topCounty?.tier || "—"})`} color="blue" sourceType="derived" />
+        <Metric label="Total Y1 opportunity" value={currency(scores.reduce((s, c) => s + c.y1Revenue, 0))} detail="Combined Y1 revenue across all scored counties." color="indigo" sourceType="modeled" />
       </div>
 
       <Card title="County opportunity leaderboard" eyebrow="Ranked by composite score">
