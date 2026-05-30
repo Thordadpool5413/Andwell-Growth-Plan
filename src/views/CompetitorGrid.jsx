@@ -99,6 +99,30 @@ function pickBestMeasure(measures) {
   return ranked[0];
 }
 
+function QualityBadge({ score, dark }) {
+  if (score == null) return null;
+  const pct = Math.round(Math.min(Math.max(score, 0), 1) * 100);
+  if (pct >= 80) {
+    return (
+      <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${dark ? "bg-emerald-900/50 text-emerald-300" : "bg-emerald-50 text-emerald-700"}`}>
+        High quality
+      </span>
+    );
+  }
+  if (pct >= 60) {
+    return (
+      <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${dark ? "bg-amber-900/50 text-amber-300" : "bg-amber-50 text-amber-700"}`}>
+        Avg
+      </span>
+    );
+  }
+  return (
+    <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${dark ? "bg-red-900/50 text-red-300" : "bg-red-50 text-red-700"}`}>
+      Below avg
+    </span>
+  );
+}
+
 function QualityScoreBar({ score, measureName, measureValue, nationalBenchmark, dark, isAndwell, compact = false }) {
   const pct = score != null ? Math.round(Math.min(Math.max(score, 0), 1) * 100) : null;
   const national = nationalBenchmark != null ? Math.round(Math.min(Math.max(parseFloat(nationalBenchmark) || 0, 0), 1) * 100) : null;
@@ -415,6 +439,7 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, a
                   {comp.cms_only && (
                     <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase ${dark ? "bg-violet-900/40 text-violet-400" : "bg-violet-50 text-violet-600"}`}>CMS discovered</span>
                   )}
+                  <QualityBadge score={comp.quality_snapshot_score} dark={dark} />
                 </div>
                 <p className={`text-sm font-black leading-5 ${dark ? "text-white" : "text-slate-950"}`}>{comp.name}</p>
                 {comp.parent_company && <p className={`text-[10px] mt-0.5 ${dark ? "text-slate-400" : "text-slate-500"}`}>{comp.parent_company}</p>}
