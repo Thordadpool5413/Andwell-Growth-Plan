@@ -84,6 +84,8 @@ async function migrate() {
     await col(client, "cms_provider_records", "source_evidence_text", "TEXT");
     await col(client, "cms_provider_records", "last_synced_at", "TIMESTAMPTZ");
     await col(client, "cms_provider_records", "updated_at", "TIMESTAMPTZ DEFAULT NOW()");
+    await col(client, "cms_provider_records", "certification_date", "TEXT");
+    await col(client, "cms_provider_records", "quality_star_rating", "FLOAT");
     await client.query(`
       CREATE UNIQUE INDEX IF NOT EXISTS cms_provider_records_norm_idx
       ON cms_provider_records (provider_name_normalized, state, provider_type)
