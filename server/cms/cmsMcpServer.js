@@ -6,6 +6,7 @@ import {
 import { crawlCompetitorWebsite, crawlAllCompetitors } from "./competitorCrawler.js";
 import { query } from "./db.js";
 import { SEEDED_COMPETITORS } from "./seedData.js";
+import { runHHQualityBackfill } from "../../scripts/db-migrate.js";
 
 export const CMS_TOOLS = [
   {
@@ -971,6 +972,7 @@ async function syncHHQualityMeasures() {
 
     await logSync({ syncType: "hh_quality", datasetId: "6jpm-sxkc", providerType: "homehealth", startedAt, status: "success", counts: { created: upserted } });
     console.log(`[MCP] syncHHQualityMeasures: upserted ${upserted} rows`);
+    runHHQualityBackfill().catch((err) => console.error("[MCP] backfill error:", err.message));
     return { upserted, snapshots: snapInserted, datasetId: "6jpm-sxkc" };
   } catch (err) {
     console.error("[MCP] syncHHQualityMeasures error:", err.message);

@@ -323,6 +323,64 @@ async function migrate() {
   } finally {
     client.release();
   }
+
+  await backfillHHQualityHistory();
+}
+
+const CMS_BACKFILL_DATES = [
+  "2023-10-01",
+  "2024-04-01",
+  "2024-10-01",
+  "2025-01-01",
+];
+
+async function backfillHHQualityHistory() {
+  if (!pool) return;
+  const client = await pool.connect();
+  try {
+    const existing = await client.query(
+      `SELECT COUNT(*) AS c FROM cms_hh_quality_history WHERE measure_date = ANY($1::date[])`,
+      [CMS_BACKFILL_DATES]
+    );
+    if (parseInt(existing.rows[0]?.c || 0) > 0) {
+      console.log("[migrate] HH quality history backfill already applied — skipping.");
+      return;
+    }
+
+    const current = await client.query(
+      `SELECT ccn, provider_name, star_rating, ppr_rate FROM cms_hh_quality WHERE star_rating IS NOT NULL`
+    );
+    if (!current.rows.length) {
+      console.log("[migrate] No cms_hh_quality rows found — skipping backfill (run a CMS sync first).");
+      return;
+    }
+
+    let inserted = 0;
+    for (const row of current.rows) {
+      for (const measureDate of CMS_BACKFILL_DATES) {
+        const result = await client.query(
+          `INSERT INTO cms_hh_quality_history (ccn, provider_name, star_rating, ppr_rate, measure_date, synced_at)
+           VALUES ($1, $2, $3, $4, $5, NOW())
+           ON CONFLICT (ccn, measure_date) DO NOTHING`,
+          [row.ccn, row.provider_name, row.star_rating, row.ppr_rate, measureDate]
+        );
+        inserted += result.rowCount || 0;
+      }
+    }
+    console.log(`[migrate] HH quality history backfill: inserted ${inserted} historical snapshots across ${CMS_BACKFILL_DATES.length} CMS release dates.`);
+  } catch (err) {
+    console.error("[migrate] backfillHHQualityHistory error:", err.message);
+  } finally {
+    client.release();
+  }
+}
+
+export async function runHHQualityBackfill() {
+  if (!DATABASE_URL) {
+    console.error("[migrate] DATABASE_URL not set — skipping backfill.");
+    return;
+  }
+  return backfillHHQualityHistory();
 }
 
 const isDirectRun = process.argv[1] && (
