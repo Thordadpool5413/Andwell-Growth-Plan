@@ -5,6 +5,50 @@ import CmsEvidenceCard from "../components/CmsEvidenceCard.jsx";
 import Badge from "../components/Badge.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
 
+async function getCmsToken() {
+  try {
+    const r = await fetch("/api/ai/token");
+    if (!r.ok) return "";
+    const { token } = await r.json();
+    return token;
+  } catch { return ""; }
+}
+
+function useTrendMap() {
+  const [trendMap, setTrendMap] = useState({});
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await getCmsToken();
+        const r = await fetch("/api/cms/hh-quality", { headers: { "x-ai-token": token } });
+        if (r.ok) {
+          const d = await r.json();
+          const map = {};
+          for (const row of d.rows || []) {
+            if (row.ccn) map[row.ccn] = { direction: row.trend_direction || "flat", prev: row.prev_star_rating, current: row.star_rating };
+          }
+          setTrendMap(map);
+        }
+      } catch (_) {}
+    })();
+  }, []);
+  return trendMap;
+}
+
+function QualityTrendIcon({ ccn, trendMap, dark }) {
+  const trend = trendMap[ccn];
+  if (!trend || !trend.direction || trend.direction === "flat") {
+    return <span className={`text-[10px] ${dark ? "text-slate-600" : "text-slate-400"}`} title="No trend data yet">→</span>;
+  }
+  if (trend.direction === "up") {
+    return <span className={`text-[10px] font-black ${dark ? "text-emerald-400" : "text-emerald-600"}`} title="Improving">↑</span>;
+  }
+  if (trend.direction === "down") {
+    return <span className={`text-[10px] font-black ${dark ? "text-red-400" : "text-red-600"}`} title="Declining">↓</span>;
+  }
+  return null;
+}
+
 const NATIONAL_CHAINS = [
   "Amedisys", "Gentiva", "Kindred", "Compassus", "Constellation",
   "LHC Group", "Centerwell", "Enhabit", "Bayada", "Elara Caring",
@@ -213,6 +257,7 @@ function SortableMatrix({ competitors, dark, providerType }) {
   const [sortAsc, setSortAsc] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [countiesOpenId, setCountiesOpenId] = useState(null);
+  const trendMap = useTrendMap();
 
   const hasHospiceCert = (c) => c.provider_type === "hospice" || c.provider_type === "both" || (c.cms_certification_number && (c.match_status === "CMS Verified" || c.match_status === "CMS and Website Verified") && (c.provider_type !== "homehealth"));
   const hasHHCert = (c) => c.provider_type === "homehealth" || c.provider_type === "both";
@@ -314,9 +359,14 @@ function SortableMatrix({ competitors, dark, providerType }) {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col gap-1 min-w-[120px]">
-                      {comp.quality_star_rating ? (
-                        <span className={`text-[11px] font-black ${dark ? "text-amber-300" : "text-amber-600"}`}>{parseFloat(comp.quality_star_rating).toFixed(1)} ★</span>
-                      ) : null}
+                      <div className="flex items-center gap-1.5">
+                        {comp.quality_star_rating ? (
+                          <span className={`text-[11px] font-black ${dark ? "text-amber-300" : "text-amber-600"}`}>{parseFloat(comp.quality_star_rating).toFixed(1)} ★</span>
+                        ) : null}
+                        {comp.cms_certification_number && (
+                          <QualityTrendIcon ccn={comp.cms_certification_number} trendMap={trendMap} dark={dark} />
+                        )}
+                      </div>
                       <QualityScoreBar
                         score={comp.quality_snapshot_score}
                         starRating={comp.quality_star_rating}
@@ -392,6 +442,7 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, a
   const [expandedId, setExpandedId] = useState(null);
   const [cardSort, setCardSort] = useState("default");
   const [countiesOpenId, setCountiesOpenId] = useState(null);
+  const trendMap = useTrendMap();
 
   const sorted = useMemo(() => {
     if (cardSort === "default") return competitors;
@@ -559,6 +610,9 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, a
                 {comp.quality_star_rating != null && (
                   <div className="mb-1.5 flex items-center gap-1.5">
                     <span className={`text-xs font-black ${dark ? "text-amber-300" : "text-amber-600"}`}>{parseFloat(comp.quality_star_rating).toFixed(1)} ★</span>
+                    {comp.cms_certification_number && (
+                      <QualityTrendIcon ccn={comp.cms_certification_number} trendMap={trendMap} dark={dark} />
+                    )}
                     <span className={`text-[9px] ${dark ? "text-slate-500" : "text-slate-400"}`}>CMS star rating</span>
                   </div>
                 )}

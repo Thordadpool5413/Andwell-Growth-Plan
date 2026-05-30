@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   Bar, CartesianGrid, ComposedChart, Line,
-  Tooltip, XAxis, YAxis, Legend, BarChart, Cell, ReferenceLine,
+  Tooltip, XAxis, YAxis, Legend, BarChart, Cell, ReferenceLine, LineChart,
 } from "recharts";
 import Card from "../components/Card.jsx";
 import ChartContainer from "../components/ChartContainer.jsx";
@@ -45,6 +45,142 @@ function StarRating({ value, dark }) {
     <span className={`font-black text-sm ${colorCls}`}>
       {stars.join("")} <span className="text-xs font-normal">({value})</span>
     </span>
+  );
+}
+
+function TrendIcon({ direction, prev, current, dark }) {
+  if (!direction || direction === "flat") {
+    return <span className={`text-[11px] font-black ${dark ? "text-slate-500" : "text-slate-400"}`} title="No change">→</span>;
+  }
+  if (direction === "up") {
+    const diff = prev != null && current != null ? (parseFloat(current) - parseFloat(prev)).toFixed(1) : null;
+    return (
+      <span className={`text-[11px] font-black ${dark ? "text-emerald-400" : "text-emerald-600"}`} title={diff ? `+${diff} from previous` : "Improving"}>
+        ↑{diff ? ` +${diff}` : ""}
+      </span>
+    );
+  }
+  if (direction === "down") {
+    const diff = prev != null && current != null ? (parseFloat(current) - parseFloat(prev)).toFixed(1) : null;
+    return (
+      <span className={`text-[11px] font-black ${dark ? "text-red-400" : "text-red-600"}`} title={diff ? `${diff} from previous` : "Declining"}>
+        ↓{diff ? ` ${diff}` : ""}
+      </span>
+    );
+  }
+  return null;
+}
+
+const AGENCY_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444", "#06b6d4", "#ec4899", "#84cc16"];
+
+function QualityTrendChart({ dark }) {
+  const [history, setHistory] = useState([]);
+  const [selected, setSelected] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await getCmsToken();
+        const r = await fetch("/api/cms/hh-quality-history", { headers: { "x-ai-token": token } });
+        if (r.ok) {
+          const d = await r.json();
+          const agencies = (d.agencies || []).filter((a) => a.snapshots.length >= 1);
+          setHistory(agencies);
+          const andwell = agencies.find((a) => a.ccn === ANDWELL_CCN);
+          const others = agencies.filter((a) => a.ccn !== ANDWELL_CCN).slice(0, 4);
+          const defaults = [...(andwell ? [andwell.ccn] : []), ...others.map((o) => o.ccn)];
+          setSelected(defaults.slice(0, 5));
+        }
+      } catch (_) {}
+      setLoading(false);
+    })();
+  }, []);
+
+  if (loading) return null;
+  if (!history.length) {
+    return (
+      <div className={`rounded-2xl border p-5 text-center text-sm ${dark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-500"}`}>
+        No historical snapshots yet. Run a quality sync to start capturing trend data.
+      </div>
+    );
+  }
+
+  const selectedAgencies = history.filter((a) => selected.includes(a.ccn));
+  const allDates = [...new Set(history.flatMap((a) => a.snapshots.map((s) => s.date)))].sort();
+  const chartData = allDates.map((date) => {
+    const point = { date: new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" }) };
+    for (const ag of selectedAgencies) {
+      const snap = ag.snapshots.find((s) => s.date === date || String(s.date).startsWith(String(date).slice(0, 10)));
+      point[ag.ccn] = snap?.star_rating ?? null;
+    }
+    return point;
+  });
+
+  const toggleCcn = (ccn) => {
+    setSelected((prev) => prev.includes(ccn) ? prev.filter((c) => c !== ccn) : [...prev, ccn]);
+  };
+
+  return (
+    <Card title="Star Rating Trend Over Time" eyebrow="Historical snapshots per sync — select agencies to compare">
+      <div className="flex flex-wrap gap-2 mb-4">
+        {history.map((ag, i) => {
+          const isAndwell = ag.ccn === ANDWELL_CCN;
+          const colorIdx = isAndwell ? 0 : history.filter((a) => a.ccn !== ANDWELL_CCN).indexOf(ag) + 1;
+          const color = AGENCY_COLORS[colorIdx % AGENCY_COLORS.length];
+          const active = selected.includes(ag.ccn);
+          return (
+            <button
+              key={ag.ccn}
+              onClick={() => toggleCcn(ag.ccn)}
+              className={`rounded-full px-2.5 py-1 text-[10px] font-black transition border ${active ? "opacity-100" : "opacity-40"}`}
+              style={{ borderColor: color, color: active ? color : undefined, backgroundColor: active ? `${color}18` : "transparent" }}
+            >
+              {isAndwell ? "★ " : ""}{(ag.provider_name || ag.ccn).replace("Home Care", "HC").replace("Health", "Hlth").slice(0, 22)}
+            </button>
+          );
+        })}
+      </div>
+      {chartData.length < 2 ? (
+        <div className={`text-center py-8 text-sm ${dark ? "text-slate-400" : "text-slate-500"}`}>
+          Only one snapshot recorded so far. Trend lines appear after two or more syncs on different days.
+        </div>
+      ) : (
+        <ChartContainer height="h-64">
+          <LineChart data={chartData} margin={{ left: 8, right: 16, top: 4, bottom: 4 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
+            <XAxis dataKey="date" tick={{ fontSize: 10, fill: dark ? "#94a3b8" : "#475569" }} />
+            <YAxis domain={[1, 5]} ticks={[1, 2, 3, 4, 5]} tick={{ fontSize: 10, fill: dark ? "#94a3b8" : "#475569" }} label={{ value: "Stars", angle: -90, position: "insideLeft", offset: 4, fontSize: 10, fill: dark ? "#64748b" : "#94a3b8" }} />
+            <Tooltip
+              contentStyle={dark ? { backgroundColor: "#1e293b", border: "1px solid #334155", color: "#f1f5f9", fontSize: 11 } : { fontSize: 11 }}
+              formatter={(val, name) => {
+                const ag = history.find((a) => a.ccn === name);
+                return [val != null ? `${parseFloat(val).toFixed(1)} ★` : "—", ag?.provider_name || name];
+              }}
+            />
+            {selectedAgencies.map((ag, i) => {
+              const isAndwell = ag.ccn === ANDWELL_CCN;
+              const colorIdx = isAndwell ? 0 : history.filter((a) => a.ccn !== ANDWELL_CCN).indexOf(ag) + 1;
+              const color = AGENCY_COLORS[colorIdx % AGENCY_COLORS.length];
+              return (
+                <Line
+                  key={ag.ccn}
+                  type="monotone"
+                  dataKey={ag.ccn}
+                  stroke={color}
+                  strokeWidth={isAndwell ? 3 : 1.5}
+                  dot={{ r: isAndwell ? 4 : 3, fill: color }}
+                  connectNulls
+                />
+              );
+            })}
+          </LineChart>
+        </ChartContainer>
+      )}
+      <p className={`mt-3 text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>
+        Each point = one sync run. Multiple syncs on the same calendar day update the same point.
+      </p>
+    </Card>
   );
 }
 
@@ -147,6 +283,7 @@ function QualityRatingsTab({ dark }) {
                 <th className="px-4 py-3">CCN</th>
                 <th className="px-4 py-3">City</th>
                 <th className="px-4 py-3">Star Rating</th>
+                <th className="px-4 py-3">Trend</th>
                 <th className="px-4 py-3 text-right">Timely Care %</th>
                 <th className="px-4 py-3 text-right">Walking Improve %</th>
                 <th className="px-4 py-3 text-right">Medicare Cost Index</th>
@@ -170,6 +307,9 @@ function QualityRatingsTab({ dark }) {
                     <td className={`px-4 py-3 font-mono text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{row.ccn}</td>
                     <td className={`px-4 py-3 ${dark ? "text-slate-300" : "text-slate-600"}`}>{row.city || "—"}</td>
                     <td className="px-4 py-3"><StarRating value={row.star_rating != null ? parseFloat(row.star_rating) : null} dark={dark} /></td>
+                    <td className="px-4 py-3">
+                      <TrendIcon direction={row.trend_direction} prev={row.prev_star_rating} current={row.star_rating} dark={dark} />
+                    </td>
                     <td className={`px-4 py-3 text-right ${dark ? "text-slate-300" : "text-slate-700"}`}>{row.timely_care_pct != null ? `${parseFloat(row.timely_care_pct).toFixed(1)}%` : "—"}</td>
                     <td className={`px-4 py-3 text-right ${dark ? "text-slate-300" : "text-slate-700"}`}>{row.walking_improve_pct != null ? `${parseFloat(row.walking_improve_pct).toFixed(1)}%` : "—"}</td>
                     <td className={`px-4 py-3 text-right font-black ${row.medicare_spend_ratio != null && parseFloat(row.medicare_spend_ratio) < 1.0 ? dark ? "text-emerald-400" : "text-emerald-600" : dark ? "text-slate-300" : "text-slate-700"}`}>
@@ -182,6 +322,7 @@ function QualityRatingsTab({ dark }) {
               <tr className={`font-semibold ${dark ? "bg-slate-700/30 text-slate-300" : "bg-slate-100 text-slate-600"}`}>
                 <td className="px-4 py-3" colSpan={4}>State average</td>
                 <td className="px-4 py-3"><span className={`font-black ${dark ? "text-slate-300" : "text-slate-700"}`}>{stateAvg.toFixed(2)} ★</span></td>
+                <td className="px-4 py-3">—</td>
                 <td className="px-4 py-3 text-right">—</td>
                 <td className="px-4 py-3 text-right">—</td>
                 <td className="px-4 py-3 text-right">—</td>
@@ -192,6 +333,8 @@ function QualityRatingsTab({ dark }) {
         </div>
         <p className={`mt-3 text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>Source: CMS Home Health Care Agencies dataset (6jpm-sxkc) · data.cms.gov/provider-data · Updated 2026-03-05</p>
       </Card>
+
+      <QualityTrendChart dark={dark} />
     </div>
   );
 }

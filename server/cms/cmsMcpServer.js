@@ -945,9 +945,33 @@ async function syncHHQualityMeasures() {
        ) AND q.star_rating IS NOT NULL`
     ).catch(() => {});
 
+    // Append time-series snapshots — one row per CCN per calendar day
+    let snapInserted = 0;
+    for (const row of rows) {
+      const ccn = findStr(row, ["cms_certification_number_ccn", "cms_certification_number", "ccn"]);
+      if (!ccn) continue;
+      const providerName = findStr(row, ["provider_name", "organization_name"]) || "";
+      const starRating = findNum(row, ["quality_of_patient_care_star_rating", "star_rating"]);
+      const ppr = findNum(row, ["ppr_riskstandardized_rate", "ppr_risk", "ppr"]);
+      try {
+        await query(
+          `INSERT INTO cms_hh_quality_history (ccn, provider_name, star_rating, ppr_rate, measure_date, synced_at)
+           VALUES ($1, $2, $3, $4, CURRENT_DATE, NOW())
+           ON CONFLICT (ccn, measure_date) DO UPDATE SET
+             star_rating = EXCLUDED.star_rating,
+             ppr_rate = EXCLUDED.ppr_rate,
+             provider_name = EXCLUDED.provider_name,
+             synced_at = NOW()`,
+          [ccn, providerName, starRating, ppr]
+        );
+        snapInserted++;
+      } catch (_) {}
+    }
+    console.log(`[MCP] syncHHQualityMeasures: inserted/updated ${snapInserted} history snapshots`);
+
     await logSync({ syncType: "hh_quality", datasetId: "6jpm-sxkc", providerType: "homehealth", startedAt, status: "success", counts: { created: upserted } });
     console.log(`[MCP] syncHHQualityMeasures: upserted ${upserted} rows`);
-    return { upserted, datasetId: "6jpm-sxkc" };
+    return { upserted, snapshots: snapInserted, datasetId: "6jpm-sxkc" };
   } catch (err) {
     console.error("[MCP] syncHHQualityMeasures error:", err.message);
     await logSync({ syncType: "hh_quality", datasetId: "6jpm-sxkc", providerType: "homehealth", startedAt, status: "error", error: err.message });

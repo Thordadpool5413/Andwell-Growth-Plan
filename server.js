@@ -502,15 +502,57 @@ app.get("/api/cms/hh-quality", strictOriginCheck, tokenCheck, async (req, res) =
   try {
     const { query: dbQuery } = await import("./server/cms/db.js");
     const result = await dbQuery(
-      `SELECT q.*, cs.name AS seed_name
+      `SELECT q.*,
+              cs.name AS seed_name,
+              trend.trend_direction,
+              trend.prev_star_rating
        FROM cms_hh_quality q
        LEFT JOIN cms_provider_records cpr ON cpr.cms_certification_number = q.ccn AND cpr.state = 'ME'
        LEFT JOIN competitor_cms_matches ccm ON ccm.cms_provider_record_id = cpr.id
        LEFT JOIN competitor_seeds cs ON cs.id = ccm.competitor_seed_id
+       LEFT JOIN LATERAL (
+         SELECT
+           CASE
+             WHEN COUNT(*) < 2 THEN 'flat'
+             WHEN (array_agg(star_rating ORDER BY measure_date DESC))[1] >
+                  (array_agg(star_rating ORDER BY measure_date DESC))[2] THEN 'up'
+             WHEN (array_agg(star_rating ORDER BY measure_date DESC))[1] <
+                  (array_agg(star_rating ORDER BY measure_date DESC))[2] THEN 'down'
+             ELSE 'flat'
+           END AS trend_direction,
+           (array_agg(star_rating ORDER BY measure_date DESC))[2] AS prev_star_rating
+         FROM cms_hh_quality_history
+         WHERE ccn = q.ccn AND star_rating IS NOT NULL
+       ) trend ON true
        WHERE q.state = 'ME'
        ORDER BY q.star_rating DESC NULLS LAST, q.provider_name`
     );
     res.json({ rows: result.rows, count: result.rows.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/cms/hh-quality-history", strictOriginCheck, tokenCheck, async (req, res) => {
+  try {
+    const { query: dbQuery } = await import("./server/cms/db.js");
+    const result = await dbQuery(
+      `SELECT ccn, provider_name, star_rating, ppr_rate, measure_date, synced_at
+       FROM cms_hh_quality_history
+       WHERE star_rating IS NOT NULL
+       ORDER BY ccn, measure_date ASC`
+    );
+    const byccn = {};
+    for (const row of result.rows) {
+      if (!byccn[row.ccn]) byccn[row.ccn] = { ccn: row.ccn, provider_name: row.provider_name, snapshots: [] };
+      byccn[row.ccn].snapshots.push({
+        date: row.measure_date,
+        star_rating: row.star_rating != null ? parseFloat(row.star_rating) : null,
+        ppr_rate: row.ppr_rate != null ? parseFloat(row.ppr_rate) : null,
+        synced_at: row.synced_at,
+      });
+    }
+    res.json({ agencies: Object.values(byccn), count: Object.keys(byccn).length });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

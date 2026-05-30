@@ -239,6 +239,26 @@ async function migrate() {
     `);
 
     await client.query(`
+      CREATE TABLE IF NOT EXISTS cms_hh_quality_history (
+        id SERIAL PRIMARY KEY,
+        ccn TEXT NOT NULL,
+        provider_name TEXT,
+        star_rating NUMERIC,
+        ppr_rate NUMERIC,
+        measure_date DATE NOT NULL DEFAULT CURRENT_DATE,
+        synced_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS cms_hh_quality_history_ccn_date_idx
+      ON cms_hh_quality_history (ccn, measure_date);
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS cms_hh_quality_history_ccn_idx
+      ON cms_hh_quality_history (ccn, synced_at DESC);
+    `);
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS cms_hh_quality (
         ccn TEXT PRIMARY KEY,
         provider_name TEXT,
