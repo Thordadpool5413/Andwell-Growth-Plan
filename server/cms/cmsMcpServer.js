@@ -273,7 +273,8 @@ export async function callTool(toolName, args) {
       }
       await matchAllSeededCompetitors();
       for (const pt of types) {
-        try { await syncQualitySnapshots(pt); } catch (_) {}
+        // syncQualitySnapshots is intentionally omitted here — quality measures
+        // must come from dedicated CMS quality datasets, not derived from match confidence
       }
       return { results, matchingTriggered: true };
     }

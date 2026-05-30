@@ -81,16 +81,17 @@ export async function getDatasetMetadata(datasetId) {
   try {
     const url = `${BASE_URL}/metastore/schemas/dataset/items/${datasetId}`;
     const meta = await fetchWithRetry(url);
-    const colUrl = `${DATA_API_BASE}/datastore/query/${datasetId}?limit=1`;
+    // CMS DKAN endpoint: /datastore/query/{uuid}/0  (resource index suffix is required)
+    const colUrl = `${DATA_API_BASE}/datastore/query/${datasetId}/0?limit=1`;
     let columns = [];
     try {
       const sample = await fetchWithRetry(colUrl);
-      if (sample?.schema?.[datasetId]?.fields) {
-        columns = sample.schema[datasetId].fields.map((f) => ({
-          name: f.name,
-          type: f.type,
-          description: f.description,
-        }));
+      // DKAN 2.x schema shape: { schema: { fields: [...] } }
+      const fields = sample?.schema?.fields || sample?.schema?.[datasetId]?.fields;
+      if (Array.isArray(fields)) {
+        columns = fields.map((f) => ({ name: f.name, type: f.type, description: f.description }));
+      } else if (sample?.results?.[0]) {
+        columns = Object.keys(sample.results[0]).map((k) => ({ name: k, type: "text" }));
       } else if (sample?.data?.[0]) {
         columns = Object.keys(sample.data[0]).map((k) => ({ name: k, type: "text" }));
       }
@@ -102,7 +103,7 @@ export async function getDatasetMetadata(datasetId) {
       modified: meta.modified,
       released: meta.issued,
       columns,
-      apiRef: `${DATA_API_BASE}/datastore/query/${datasetId}`,
+      apiRef: `${DATA_API_BASE}/datastore/query/${datasetId}/0`,
     };
   } catch (err) {
     console.error("[CMS] getDatasetMetadata error:", err.message);
@@ -124,18 +125,21 @@ export async function queryCmsDataset({ datasetId, filters = {}, columns = [], l
     if (sortField) body.sort = { property: sortField, order: sortDir };
     if (columns.length) body.properties = columns;
 
-    const url = `${DATA_API_BASE}/datastore/query/${datasetId}`;
+    // CMS DKAN requires /0 resource-index suffix; POST with JSON body
+    const url = `${DATA_API_BASE}/datastore/query/${datasetId}/0`;
     const result = await fetchWithRetry(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
 
-    if (LOG_RAW) console.log("[CMS] raw sample:", JSON.stringify(result?.data?.[0]).slice(0, 300));
+    // DKAN 2.x returns { count, results, schema, query } — NOT { data }
+    const rows = result?.results ?? result?.data ?? [];
+    if (LOG_RAW) console.log("[CMS] raw sample:", JSON.stringify(rows[0]).slice(0, 300));
 
     return {
-      rows: result?.data || [],
-      total: result?.count || result?.data?.length || 0,
+      rows,
+      total: result?.count ?? rows.length,
       offset,
       limit,
       sourceRef: `CMS Dataset ${datasetId}`,
@@ -150,11 +154,15 @@ const STATE_COL_CANDIDATES = ["state", "provider_state", "state_cd", "hhcahps_st
 
 async function discoverStateColumn(datasetId) {
   try {
-    const url = `${DATA_API_BASE}/datastore/query/${datasetId}?limit=1`;
+    // CMS DKAN endpoint requires /0 suffix
+    const url = `${DATA_API_BASE}/datastore/query/${datasetId}/0?limit=1`;
     const sample = await fetchWithRetry(url);
-    const rowKeys = sample?.data?.[0]
-      ? Object.keys(sample.data[0]).map((k) => k.toLowerCase())
-      : (sample?.schema?.[datasetId]?.fields || []).map((f) => f.name.toLowerCase());
+    // DKAN 2.x: results array; schema.fields array
+    const firstRow = sample?.results?.[0] ?? sample?.data?.[0];
+    const schemaFields = sample?.schema?.fields ?? sample?.schema?.[datasetId]?.fields ?? [];
+    const rowKeys = firstRow
+      ? Object.keys(firstRow).map((k) => k.toLowerCase())
+      : schemaFields.map((f) => f.name.toLowerCase());
     const found = STATE_COL_CANDIDATES.find((c) => rowKeys.includes(c));
     if (!found) console.warn(`[CMS] No state column found in dataset ${datasetId} — state filter skipped`);
     return found || null;
@@ -285,10 +293,21 @@ function deduplicateProviders(rows) {
 
 async function getCachedDatasets(providerType) {
   try {
+    // Broad keyword matching to handle CMS topic tagging inconsistencies
+    const kw = providerType === "hospice" ? "hospice" : "home health";
     const r = await query(
-      "SELECT * FROM cms_datasets WHERE active_status = true AND (topic ILIKE $1 OR title ILIKE $2) ORDER BY last_synced_at DESC NULLS LAST LIMIT 5",
-      [`%${providerType}%`, `%${providerType}%`]
+      `SELECT * FROM cms_datasets WHERE active_status = true
+       AND (topic ILIKE $1 OR title ILIKE $1 OR title ILIKE $2 OR topic ILIKE $2)
+       ORDER BY last_synced_at DESC NULLS LAST LIMIT 5`,
+      [`%${kw}%`, `%${providerType}%`]
     );
+    // Fallback: any active dataset if keyword match returns nothing
+    if (!r.rows.length) {
+      const fallback = await query(
+        "SELECT * FROM cms_datasets WHERE active_status = true ORDER BY last_discovered_at DESC LIMIT 5"
+      );
+      return fallback.rows;
+    }
     return r.rows;
   } catch {
     return [];
