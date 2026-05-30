@@ -4,24 +4,30 @@ import cmsMeta from "../data/cmsMeta.js";
 
 export default function DataSourceBanner() {
   const { dark } = useDarkMode();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
 
   return (
-    <div className={`mx-auto mb-4 max-w-7xl rounded-2xl border px-5 transition-colors duration-300 ${
+    <div className={`mx-auto mb-4 max-w-7xl rounded-xl border px-4 transition-colors duration-300 ${
       dark
-        ? "border-blue-900 bg-blue-950/40"
-        : "border-blue-100 bg-blue-50"
-    } ${collapsed ? "py-3" : "py-4"}`}>
+        ? "border-slate-700 bg-slate-900/60"
+        : "border-slate-200 bg-slate-50"
+    } ${collapsed ? "py-2.5" : "py-4"}`}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3 min-w-0">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-            className={`mt-0.5 h-4 w-4 shrink-0 ${dark ? "text-blue-400" : "text-blue-600"}`}>
+            className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${dark ? "text-slate-500" : "text-slate-400"}`}>
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
           </svg>
           {collapsed ? (
-            <p className={`text-xs font-semibold ${dark ? "text-blue-300" : "text-blue-700"}`}>
-              Data sources: CMS {cmsMeta.datasetYear} Home Health &amp; Hospice PUF · Medicare Provider of Service File · Modeled projections · <span className="font-black">Model as of {cmsMeta.modelDate}</span>
-            </p>
+            <button
+              onClick={() => setCollapsed(false)}
+              className={`text-xs font-semibold hover:underline transition-colors ${dark ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-700"}`}
+            >
+              Data sources &amp; methodology
+              <span className={`ml-2 text-[10px] font-black rounded-full px-1.5 py-0.5 ${dark ? "bg-slate-800 text-slate-500" : "bg-slate-200 text-slate-400"}`}>
+                Model {cmsMeta.modelDate}
+              </span>
+            </button>
           ) : (
             <div className="min-w-0">
               <div className="flex items-center gap-4">
@@ -46,17 +52,19 @@ export default function DataSourceBanner() {
             </div>
           )}
         </div>
-        <button
-          onClick={() => setCollapsed((p) => !p)}
-          className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-black transition ${
-            dark
-              ? "text-blue-400 hover:bg-blue-900/50"
-              : "text-blue-600 hover:bg-blue-100"
-          }`}
-          aria-label={collapsed ? "Expand data sources" : "Collapse data sources"}
-        >
-          {collapsed ? "Show details" : "Collapse"}
-        </button>
+        {!collapsed && (
+          <button
+            onClick={() => setCollapsed(true)}
+            className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-black transition ${
+              dark
+                ? "text-blue-400 hover:bg-blue-900/50"
+                : "text-blue-600 hover:bg-blue-100"
+            }`}
+            aria-label="Collapse data sources"
+          >
+            Collapse
+          </button>
+        )}
       </div>
     </div>
   );

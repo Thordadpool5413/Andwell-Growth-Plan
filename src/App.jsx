@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { TABS, DEFAULT_SCENARIO } from "./data/constants.js";
+import { DEFAULT_SCENARIO } from "./data/constants.js";
 import DataSourceBanner from "./components/DataSourceBanner.jsx";
 import { buildRows } from "./utils/calculations.js";
 import { DarkModeProvider, useDarkMode } from "./components/DarkModeContext.jsx";
@@ -20,6 +20,13 @@ import LaunchTimeline from "./views/LaunchTimeline.jsx";
 import BoardReport from "./views/BoardReport.jsx";
 import LaunchChecklist from "./views/LaunchChecklist.jsx";
 import AskPanel from "./components/AskPanel.jsx";
+
+const TAB_GROUPS = [
+  { label: "Planning", tabs: ["Executive View", "County Plan", "Referral Plan", "Opportunity Score"] },
+  { label: "Competitive", tabs: ["Competitive View", "Service Lines", "CMS Data"] },
+  { label: "Financial", tabs: ["Financial Model", "Sensitivity"] },
+  { label: "Operations", tabs: ["Staffing Model", "Launch Timeline", "Board Report", "Launch Checklist"] },
+];
 
 function Dashboard() {
   const { dark, toggle } = useDarkMode();
@@ -49,16 +56,16 @@ function Dashboard() {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${dark ? "bg-slate-950 text-slate-100" : "bg-gradient-to-b from-slate-50 to-white text-slate-900"}`}>
-      <div className="px-4 py-10 sm:px-6 lg:px-10">
-        <header className={`mx-auto mb-8 max-w-7xl rounded-3xl px-8 py-12 shadow-xl transition-colors duration-300 print:hidden ${dark ? "bg-gradient-to-br from-blue-950 via-slate-900 to-slate-950 border border-slate-800" : "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"}`}>
-          <div className="flex items-start justify-between">
-            <div>
+      <div className="px-4 py-6 sm:px-6 lg:px-10">
+        <header className={`mx-auto mb-6 max-w-7xl rounded-2xl px-6 py-6 shadow-xl transition-colors duration-300 print:hidden ${dark ? "bg-gradient-to-br from-blue-950 via-slate-900 to-slate-950 border border-slate-700" : "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"}`}>
+          <div className="flex items-center justify-between gap-6">
+            <div className="min-w-0">
               <p className="text-xs font-black uppercase tracking-[0.3em] text-blue-300">Andwell Maine Innovation and Growth Plan</p>
-              <h1 className="mt-4 text-4xl font-black leading-tight tracking-tight text-white md:text-5xl">
+              <h1 className="mt-2 text-2xl font-black leading-tight tracking-tight text-white md:text-3xl">
                 Innovation and growth vision with competitor intelligence.
               </h1>
-              <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-300">
-                A leadership ready dashboard connecting county opportunity, referral requirements, CMS market data, named competitors, provider file share, financial upside, and launch validation.
+              <p className="mt-1.5 text-sm text-slate-400">
+                County opportunity · referral requirements · CMS market data · competitor intelligence · financial upside · launch validation
               </p>
             </div>
             <button
@@ -81,23 +88,48 @@ function Dashboard() {
         </header>
 
         <div className="print:hidden"><DataSourceBanner /></div>
+
         <div className="mx-auto max-w-7xl space-y-6">
-          <div className="space-y-3 print:hidden">
-            <div className="flex flex-wrap items-center gap-2">
-              {TABS.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`rounded-full px-5 py-2.5 text-sm font-black transition-all duration-200 ${
-                    activeTab === tab
-                      ? dark ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25" : "bg-slate-900 text-white shadow-md"
-                      : dark ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
+          <div className="print:hidden space-y-3">
+            <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"} shadow-sm`}>
+              <div className="flex items-stretch min-w-max px-2 py-1.5 gap-0">
+                {TAB_GROUPS.map((group, gi) => (
+                  <React.Fragment key={group.label}>
+                    {gi > 0 && (
+                      <div className={`mx-2 my-2 w-px self-stretch ${dark ? "bg-slate-700" : "bg-slate-200"}`} />
+                    )}
+                    <div className="flex flex-col">
+                      <span className={`px-3 pt-1 pb-0.5 text-[10px] font-black uppercase tracking-widest ${dark ? "text-slate-600" : "text-slate-400"}`}>
+                        {group.label}
+                      </span>
+                      <div className="flex items-center gap-0.5">
+                        {group.tabs.map((tab) => (
+                          <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={`relative rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-150 whitespace-nowrap ${
+                              activeTab === tab
+                                ? dark
+                                  ? "text-blue-400 bg-blue-950/50"
+                                  : "text-blue-700 bg-blue-50"
+                                : dark
+                                  ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                            }`}
+                          >
+                            {tab}
+                            {activeTab === tab && (
+                              <span className={`absolute bottom-0 left-3 right-3 h-0.5 rounded-full ${dark ? "bg-blue-400" : "bg-blue-600"}`} />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </React.Fragment>
+                ))}
+              </div>
             </div>
+
             <div className={`flex flex-wrap items-center gap-2 border-t pt-3 ${dark ? "border-slate-800" : "border-slate-100"}`}>
               <span className={`text-xs font-black uppercase tracking-wide ${dark ? "text-slate-600" : "text-slate-400"}`}>Tools:</span>
               <button
@@ -122,19 +154,21 @@ function Dashboard() {
           {showCompare && <div className="print:hidden"><ScenarioCompare currentScenario={scenario} /></div>}
 
           <div id="tab-content">
-            {activeTab === "Executive View" && <ExecutiveView rows={rows} totals={totals} />}
-            {activeTab === "County Plan" && <CountyPlan rows={rows} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} competitorProviderType={competitorProviderType} setCompetitorProviderType={setCompetitorProviderType} />}
-            {activeTab === "Referral Plan" && <ReferralPlan rows={rows} />}
-            {activeTab === "Competitive View" && <CompetitiveView selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} competitorProviderType={competitorProviderType} setCompetitorProviderType={setCompetitorProviderType} />}
-            {activeTab === "Service Lines" && <ServiceLines />}
-            {activeTab === "CMS Data" && <CmsData />}
-            {activeTab === "Financial Model" && <FinancialModel rows={rows} />}
-            {activeTab === "Staffing Model" && <StaffingModel rows={rows} />}
-            {activeTab === "Sensitivity" && <SensitivityAnalysis rows={rows} />}
-            {activeTab === "Opportunity Score" && <OpportunityScore rows={rows} />}
-            {activeTab === "Launch Timeline" && <LaunchTimeline rows={rows} />}
-            {activeTab === "Board Report" && <BoardReport rows={rows} totals={totals} />}
-            {activeTab === "Launch Checklist" && <LaunchChecklist />}
+            <div key={activeTab} className="tab-fade-in">
+              {activeTab === "Executive View" && <ExecutiveView rows={rows} totals={totals} />}
+              {activeTab === "County Plan" && <CountyPlan rows={rows} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} competitorProviderType={competitorProviderType} setCompetitorProviderType={setCompetitorProviderType} />}
+              {activeTab === "Referral Plan" && <ReferralPlan rows={rows} />}
+              {activeTab === "Competitive View" && <CompetitiveView selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} competitorProviderType={competitorProviderType} setCompetitorProviderType={setCompetitorProviderType} />}
+              {activeTab === "Service Lines" && <ServiceLines />}
+              {activeTab === "CMS Data" && <CmsData />}
+              {activeTab === "Financial Model" && <FinancialModel rows={rows} />}
+              {activeTab === "Staffing Model" && <StaffingModel rows={rows} />}
+              {activeTab === "Sensitivity" && <SensitivityAnalysis rows={rows} />}
+              {activeTab === "Opportunity Score" && <OpportunityScore rows={rows} />}
+              {activeTab === "Launch Timeline" && <LaunchTimeline rows={rows} />}
+              {activeTab === "Board Report" && <BoardReport rows={rows} totals={totals} />}
+              {activeTab === "Launch Checklist" && <LaunchChecklist />}
+            </div>
           </div>
         </div>
       </div>

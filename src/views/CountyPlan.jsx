@@ -107,6 +107,7 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
               detail={selected.meta.unit}
               sparkData={selected.starts}
               sparkColor="#2563eb"
+              color="emerald"
             />
             <Metric
               label="Year 1 referrals"
@@ -114,6 +115,7 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
               detail="At 75 percent modeled conversion."
               sparkData={selected.referrals}
               sparkColor="#f59e0b"
+              color="amber"
             />
             <Metric
               label="Year 1 revenue"
@@ -121,6 +123,7 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
               detail={<span className="flex items-center gap-1.5 flex-wrap"><SourceBadge basis={selected.basis} /><span>{selected.basis}</span></span>}
               sparkData={selected.revenue}
               sparkColor="#16a34a"
+              color="indigo"
             />
           </div>
           <div className="mt-5 space-y-4">

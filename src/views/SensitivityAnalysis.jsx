@@ -70,10 +70,10 @@ export default function SensitivityAnalysis({ rows }) {
       </SectionHeader>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <Metric label="Baseline Y1 revenue" value={currency(baseRevenue)} detail="Revenue at default scenario assumptions." />
-        <Metric label="Most sensitive lever" value={topLever?.label || "—"} detail={`Revenue range: ${currency(topLever?.range || 0)}`} />
-        <Metric label="Worst-case total" value={currency(baseRevenue + worstCase)} detail={`All variables at low: ${currency(worstCase)}`} />
-        <Metric label="Best-case total" value={currency(baseRevenue + bestCase)} detail={`All variables at high: +${currency(bestCase)}`} />
+        <Metric label="Baseline Y1 revenue" value={currency(baseRevenue)} detail="Revenue at default scenario assumptions." color="indigo" />
+        <Metric label="Most sensitive lever" value={topLever?.label || "—"} detail={`Revenue range: ${currency(topLever?.range || 0)}`} color="amber" />
+        <Metric label="Worst-case total" value={currency(baseRevenue + worstCase)} detail={`All variables at low: ${currency(worstCase)}`} color="amber" />
+        <Metric label="Best-case total" value={currency(baseRevenue + bestCase)} detail={`All variables at high: +${currency(bestCase)}`} color="emerald" />
       </div>
 
       <Card title="Revenue sensitivity tornado" eyebrow="Ranked by impact range">
