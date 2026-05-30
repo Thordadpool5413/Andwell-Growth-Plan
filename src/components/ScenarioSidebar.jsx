@@ -33,7 +33,31 @@ function SliderGroup({ title, dark, children }) {
   );
 }
 
-export default function ScenarioSidebar({ scenario, setScenario, open, onClose, wasRestored, onRestoredDismiss }) {
+function fmt(value) {
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
+  return `$${value.toFixed(0)}`;
+}
+
+function RevenueDelta({ current, baseline, dark }) {
+  const delta = current - baseline;
+  const isZero = Math.abs(delta) < 1;
+  const isUp = delta > 0;
+  const color = isZero
+    ? dark ? "text-slate-500" : "text-slate-400"
+    : isUp
+      ? dark ? "text-emerald-400" : "text-emerald-600"
+      : dark ? "text-rose-400" : "text-rose-600";
+
+  if (isZero) return null;
+  return (
+    <span className={`text-[10px] font-bold tabular-nums ${color}`}>
+      {isUp ? "↑" : "↓"} {fmt(Math.abs(delta))}
+    </span>
+  );
+}
+
+export default function ScenarioSidebar({ scenario, setScenario, open, onClose, wasRestored, onRestoredDismiss, totals, defaultTotals }) {
   const { dark } = useDarkMode();
   const pct = (v) => `${(v * 100).toFixed(0)}%`;
   const [showRestoredBanner, setShowRestoredBanner] = useState(false);
@@ -225,6 +249,32 @@ export default function ScenarioSidebar({ scenario, setScenario, open, onClose, 
             <p>Wound/Therapy: Andwell planning assumptions</p>
           </div>
         </div>
+
+        {totals && defaultTotals && (
+          <div className={`shrink-0 border-t px-4 py-3 ${dark ? "border-slate-700 bg-slate-900" : "border-slate-100 bg-white"}`}>
+            <p className={`mb-2 text-[10px] font-black uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>
+              Revenue Impact
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: "Year 1", current: totals.y1Revenue, baseline: defaultTotals.y1Revenue },
+                { label: "Year 2", current: totals.y2Revenue, baseline: defaultTotals.y2Revenue },
+                { label: "Year 3", current: totals.y3Revenue, baseline: defaultTotals.y3Revenue },
+              ].map(({ label, current, baseline }) => (
+                <div
+                  key={label}
+                  className={`rounded-lg px-2 py-2 text-center ${dark ? "bg-slate-800" : "bg-slate-50"}`}
+                >
+                  <p className={`text-[10px] font-semibold mb-0.5 ${dark ? "text-slate-500" : "text-slate-400"}`}>{label}</p>
+                  <p className={`text-sm font-black tabular-nums leading-tight ${dark ? "text-white" : "text-slate-900"}`}>{fmt(current)}</p>
+                  <div className="mt-0.5 h-3 flex items-center justify-center">
+                    <RevenueDelta current={current} baseline={baseline} dark={dark} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {!isDefault && (
           <div className={`shrink-0 border-t px-4 py-3 ${dark ? "border-slate-700 bg-slate-900" : "border-slate-100 bg-white"}`}>
