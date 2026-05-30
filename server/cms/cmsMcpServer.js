@@ -1,6 +1,7 @@
 import {
   searchCmsDatasets, getDatasetMetadata, queryCmsDataset,
   fetchMaineProviders, normalizeProviderName, syncToDatabase, logSync, geocodeAddress,
+  backfillMissingCounties,
 } from "./cmsApiClient.js";
 import { crawlCompetitorWebsite, crawlAllCompetitors } from "./competitorCrawler.js";
 import { query } from "./db.js";
@@ -271,6 +272,7 @@ export async function callTool(toolName, args) {
           results[pt] = { status: "error", error: err.message };
         }
       }
+      const countiesBackfilled = await backfillMissingCounties();
       await matchAllSeededCompetitors();
       const qualityResults = {};
       for (const pt of types) {
@@ -283,7 +285,7 @@ export async function callTool(toolName, args) {
           }
         }
       }
-      return { results, matchingTriggered: true, qualitySnapshots: qualityResults };
+      return { results, matchingTriggered: true, countiesBackfilled, qualitySnapshots: qualityResults };
     }
 
     case "get_provider_quality_snapshot": {
