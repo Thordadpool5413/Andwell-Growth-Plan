@@ -416,7 +416,7 @@ function CompetitorMarkers({ visible, dark, competitors }) {
     .flatMap((c, idx) => {
       if (c.geocoded_lat && c.geocoded_lng) {
         const coords = placedPin(c, idx, 0);
-        if (coords) return [{ ...c, ...coords }];
+        if (coords) return [{ ...c, county: c.county || resolveCounties(c)[0] || null, ...coords }];
       }
       const counties = resolveCounties(c);
       return counties.slice(0, 2).map((county, ci) => {
@@ -465,7 +465,16 @@ function CompetitorMarkers({ visible, dark, competitors }) {
                 <div style={{ fontFamily: "system-ui, sans-serif", minWidth: 190, maxWidth: 250, padding: "2px 0" }}>
                   <p style={{ margin: 0, fontWeight: 800, fontSize: 13, color: "#0f172a", lineHeight: 1.3 }}>{comp.name}</p>
                   {comp.parent_company && <p style={{ margin: "2px 0 0", fontSize: 11, color: "#475569" }}>{comp.parent_company}</p>}
-                  {comp.county && <p style={{ margin: "4px 0 0", fontSize: 11, color: "#475569" }}><span style={{ fontWeight: 700 }}>County:</span> {comp.county}</p>}
+                  {(() => {
+                    const allCounties = resolveCounties(comp);
+                    const label = allCounties.length > 1 ? "Counties" : "County";
+                    const display = allCounties.length > 0 ? allCounties.join(", ") : comp.county;
+                    return display ? (
+                      <p style={{ margin: "5px 0 0", fontSize: 12, color: "#1e3a5f", fontWeight: 700, letterSpacing: 0 }}>
+                        {label}: <span style={{ fontWeight: 600 }}>{display}</span>
+                      </p>
+                    ) : null;
+                  })()}
                   {comp.provider_type && <p style={{ margin: "2px 0 0", fontSize: 11, color: "#475569" }}><span style={{ fontWeight: 700 }}>Type:</span> {comp.provider_type}</p>}
                   {comp.address && <p style={{ margin: "2px 0 0", fontSize: 10, color: "#64748b" }}>{comp.address}{comp.city ? `, ${comp.city}` : ""}</p>}
                   {comp.match_status && (
