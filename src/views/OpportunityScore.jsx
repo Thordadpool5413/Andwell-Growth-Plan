@@ -109,6 +109,15 @@ export default function OpportunityScore({ rows }) {
   const primeCount = scores.filter((s) => s.tier === "Prime").length;
   const topCounty = scores[0];
 
+  const filterSummary = useMemo(() => {
+    if (visibleScores.length === 0) return null;
+    const totalY1 = visibleScores.reduce((s, c) => s + (c.y1Revenue || 0), 0);
+    const totalY3 = visibleScores.reduce((s, c) => s + (c.y3Revenue || 0), 0);
+    const avgFiltered = Math.round(visibleScores.reduce((s, c) => s + c.score, 0) / visibleScores.length);
+    const primeFiltered = visibleScores.filter((c) => c.tier === "Prime").length;
+    return { totalY1, totalY3, avgFiltered, primeFiltered, count: visibleScores.length };
+  }, [visibleScores]);
+
   return (
     <div className="space-y-6">
       <SectionHeader eyebrow="Opportunity scoring" icon="🏆" title="County opportunity ranking with factor analysis">
@@ -200,6 +209,40 @@ export default function OpportunityScore({ rows }) {
             <p className={`text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>
               Showing <span className={`font-black ${dark ? "text-slate-300" : "text-slate-700"}`}>{visibleScores.length}</span> of <span className="font-black">{scoredWithGroup.length}</span> counties
             </p>
+
+            {filterSummary && (
+              <div className={`mt-1 rounded-xl border p-3 transition-all ${dark ? "border-blue-800/60 bg-blue-950/30" : "border-blue-100 bg-blue-50"}`}>
+                <p className={`mb-2 text-[10px] font-black uppercase tracking-widest ${dark ? "text-blue-400" : "text-blue-600"}`}>
+                  Selected group opportunity
+                </p>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <div>
+                    <p className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>Total Y1 revenue</p>
+                    <p className={`text-base font-black ${dark ? "text-blue-300" : "text-blue-700"}`}>{currency(filterSummary.totalY1)}</p>
+                  </div>
+                  <div>
+                    <p className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>Total Y3 revenue</p>
+                    <p className={`text-base font-black ${dark ? "text-emerald-300" : "text-emerald-700"}`}>{currency(filterSummary.totalY3)}</p>
+                  </div>
+                  <div>
+                    <p className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>Avg opportunity score</p>
+                    <p className={`text-base font-black ${dark ? "text-white" : "text-slate-900"}`}>{filterSummary.avgFiltered}<span className={`text-xs font-semibold ${dark ? "text-slate-500" : "text-slate-400"}`}>/100</span></p>
+                  </div>
+                  <div>
+                    <p className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>Prime counties</p>
+                    <p className={`text-base font-black ${dark ? "text-emerald-400" : "text-emerald-600"}`}>
+                      {filterSummary.primeFiltered}
+                      <span className={`text-xs font-semibold ${dark ? "text-slate-500" : "text-slate-400"}`}> of {filterSummary.count}</span>
+                    </p>
+                  </div>
+                </div>
+                {filterSummary.totalY3 > filterSummary.totalY1 && filterSummary.totalY1 > 0 && (
+                  <p className={`mt-2 text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>
+                    Y1→Y3 growth: <span className="font-black text-emerald-500">+{Math.round((filterSummary.totalY3 - filterSummary.totalY1) / filterSummary.totalY1 * 100)}%</span> across this group
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {visibleScores.length === 0 ? (
