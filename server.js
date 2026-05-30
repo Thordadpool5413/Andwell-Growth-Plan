@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import path from "path";
 import crypto from "crypto";
 import { runMigrations } from "./scripts/db-migrate.js";
+import { query as dbQuery } from "./server/cms/db.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isDev = process.env.NODE_ENV !== "production";
@@ -749,3 +750,28 @@ async function setupCron() {
 }
 
 setupCron();
+
+// ──────────────────────────────────────────────
+// Startup sync — runs once on boot if CMS quality
+// tables are empty, so data is ready before any
+// user visits the dashboard.
+// ──────────────────────────────────────────────
+async function runStartupSyncIfNeeded() {
+  if (process.env.CMS_SYNC_ENABLED === "false") return;
+  try {
+    const { rows } = await dbQuery("SELECT 1 FROM cms_hh_quality LIMIT 1");
+    if (rows.length > 0) {
+      console.log("[CMS Startup] Quality data already present — skipping initial sync.");
+      return;
+    }
+    console.log("[CMS Startup] No CMS quality data found — running initial sync now...");
+    const mod = await loadCms();
+    if (!mod) { console.error("[CMS Startup] CMS module unavailable — sync skipped."); return; }
+    await mod.callTool("sync_cms_provider_data", { provider_type: "both" });
+    console.log("[CMS Startup] Initial sync complete.");
+  } catch (err) {
+    console.error("[CMS Startup] Sync error:", err.message);
+  }
+}
+
+runStartupSyncIfNeeded();
