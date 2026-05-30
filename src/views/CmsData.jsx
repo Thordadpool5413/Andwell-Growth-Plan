@@ -14,6 +14,9 @@ import cmsCountyMarket from "../data/cmsCountyMarket.js";
 import { number, currency } from "../utils/formatters.js";
 import { exportCmsCSV } from "../utils/csvExport.js";
 import CmsDataPanel from "../components/CmsDataPanel.jsx";
+import FreshnessChip from "../components/FreshnessChip.jsx";
+
+const CMS_LAST_SYNCED = "2026-05-01";
 
 export default function CmsData() {
   const { dark } = useDarkMode();
@@ -39,6 +42,10 @@ export default function CmsData() {
       <SectionHeader eyebrow="CMS data" title="County-level Medicare market data + live catalog">
         Market data from the CMS 2022 Home Health and Hospice <Abbr term="PUF">Public Use File (PUF)</Abbr>. The CMS Data Connection tab links to the live CMS Provider Data Catalog API for real-time competitor verification and quality benchmarks.
       </SectionHeader>
+
+      <div className="flex items-center gap-2 flex-wrap">
+        <FreshnessChip lastSynced={CMS_LAST_SYNCED} label="CMS data" syncType="PUF 2022" />
+      </div>
 
       <div className="flex flex-wrap gap-2">
         {tabs.map((t) => (

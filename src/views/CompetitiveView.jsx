@@ -9,6 +9,8 @@ import Metric from "../components/Metric.jsx";
 import Badge from "../components/Badge.jsx";
 import Abbr from "../components/Abbr.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
+import FreshnessChip from "../components/FreshnessChip.jsx";
+import MethodologyCallout from "../components/MethodologyCallout.jsx";
 import VerificationBadge from "../components/VerificationBadge.jsx";
 import CmsEvidenceCard from "../components/CmsEvidenceCard.jsx";
 import CompetitorGrid from "./CompetitorGrid.jsx";
@@ -19,6 +21,8 @@ import { namedProviderRows, marketShareBuildRows, marketShareFormulaRows } from 
 import { getProviderSummary, getCompetitiveThreatScore } from "../utils/calculations.js";
 import { currency, number, percent, badgeTone } from "../utils/formatters.js";
 import { exportCompetitiveCSV } from "../utils/csvExport.js";
+
+const CMS_LAST_SYNCED = "2026-05-01";
 
 const NATIONAL_CHAINS = [
   "amedisys", "centerwell", "gentiva", "kindred", "compassus",
@@ -84,11 +88,40 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
         Provider file share, CMS-verified competitor matching, and the Andwell comparison grid. Use the comparison grid tab to see each competitor cross-referenced with CMS certification data and website intelligence.
       </SectionHeader>
 
+      <div className="flex items-center gap-2 flex-wrap">
+        <FreshnessChip lastSynced={CMS_LAST_SYNCED} label="CMS data" />
+      </div>
+
+      <MethodologyCallout title="How is the competitive threat score calculated?">
+        <p className={`mb-3 ${dark ? "text-slate-300" : "text-slate-700"}`}>
+          The Competitive Threat Score (0–100) measures how hard it will be for Andwell to enter a given county. It combines four factors:
+        </p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {[
+            { name: "Competitor count", weight: "30%", desc: "Number of active named providers in the county. More competitors = higher threat." },
+            { name: "Competitor share concentration", weight: "30%", desc: "Combined provider file share held by competitors. High concentration signals entrenched incumbents." },
+            { name: "National chain presence", weight: "20%", desc: "Whether a national chain (Amedisys, Gentiva, LHC Group, etc.) operates locally. National chains have significant scale advantages." },
+            { name: "Provider density", weight: "20%", desc: "Providers per 10,000 FFS beneficiaries. High density indicates a crowded market." },
+          ].map((f) => (
+            <div key={f.name} className={`rounded-xl border p-3 ${dark ? "border-slate-700 bg-slate-800/60" : "border-slate-200 bg-white"}`}>
+              <div className="flex items-center justify-between gap-2">
+                <p className={`text-xs font-black ${dark ? "text-white" : "text-slate-900"}`}>{f.name}</p>
+                <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-black ${dark ? "bg-blue-900/50 text-blue-300" : "bg-blue-100 text-blue-700"}`}>{f.weight}</span>
+              </div>
+              <p className={`mt-1 text-[11px] leading-4 ${dark ? "text-slate-400" : "text-slate-500"}`}>{f.desc}</p>
+            </div>
+          ))}
+        </div>
+        <p className={`mt-3 text-[11px] ${dark ? "text-slate-500" : "text-slate-400"}`}>
+          Levels: Fortress ≥ 70 · High 50–69 · Moderate 30–49 · Low &lt; 30. Source: CMS provider file — provider file share ≠ county market share.
+        </p>
+      </MethodologyCallout>
+
       <div className="grid gap-4 md:grid-cols-4">
-        <Metric label={`${service} providers`} value={summary.providers} detail="Named Maine provider rows loaded." color="blue" />
-        <Metric label="Total beneficiaries" value={number(summary.beneficiaries)} detail="Provider file beneficiary volume." color="blue" />
-        <Metric label="Andwell rank" value={summary.andwellRank ? `#${summary.andwellRank}` : "N/A"} detail="Ranked by beneficiary volume in the provider file." color="emerald" />
-        <Metric label="Andwell provider file share" value={percent(summary.andwellShare)} detail={<span>Not county market share. This is <Abbr term="Provider File Share">provider file share</Abbr>.</span>} color="violet" />
+        <Metric label={`${service} providers`} value={summary.providers} detail="Named Maine provider rows loaded." color="blue" sourceType="cms" />
+        <Metric label="Total beneficiaries" value={number(summary.beneficiaries)} detail="Provider file beneficiary volume." color="blue" sourceType="cms" />
+        <Metric label="Andwell rank" value={summary.andwellRank ? `#${summary.andwellRank}` : "N/A"} detail="Ranked by beneficiary volume in the provider file." color="emerald" sourceType="cms" />
+        <Metric label="Andwell provider file share" value={percent(summary.andwellShare)} detail={<span>Not county market share. This is <Abbr term="Provider File Share">provider file share</Abbr>.</span>} color="violet" sourceType="cms" />
       </div>
 
       {threat && (

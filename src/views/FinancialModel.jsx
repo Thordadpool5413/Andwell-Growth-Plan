@@ -43,6 +43,7 @@ export default function FinancialModel({ rows }) {
           sparkData={yearRows.map((y) => y.revenue)}
           sparkColor={COLORS.blue}
           color="indigo"
+          sourceType="modeled"
         />
         <Metric
           label="3-year contribution"
@@ -51,18 +52,21 @@ export default function FinancialModel({ rows }) {
           sparkData={yearRows.map((y) => y.contribution)}
           sparkColor={COLORS.green}
           color="emerald"
+          sourceType="modeled"
         />
         <Metric
           label="Y1→Y3 revenue growth"
           value={`+${Math.round(revenueGrowth)}%`}
           detail={`From ${currency(yearRows[0].revenue)} to ${currency(yearRows[2].revenue)}.`}
           color="emerald"
+          sourceType="derived"
         />
         <Metric
           label="Avg contribution margin"
           value={totalRevenue > 0 ? `${((totalContribution / totalRevenue) * 100).toFixed(1)}%` : "—"}
           detail="Blended margin across all service lines and years."
           color="indigo"
+          sourceType="modeled"
         />
       </div>
 

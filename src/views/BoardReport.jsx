@@ -11,11 +11,57 @@ import { rollupByService, getOpportunityScore, getCompetitiveThreatScore, getMar
 import { streamChat, buildBoardNarrativePrompt, AI_AVAILABLE } from "../utils/ai.js";
 import { currency, number, percent } from "../utils/formatters.js";
 
+const CMS_LAST_SYNCED = "2026-05-01";
+const CMS_DISPLAY_DATE = "May 2026";
+
 const trafficLight = (value, thresholds) => {
   if (value >= thresholds.green) return { color: "bg-emerald-500", label: "On track", tone: "green" };
   if (value >= thresholds.amber) return { color: "bg-amber-500", label: "Watch", tone: "amber" };
   return { color: "bg-red-500", label: "At risk", tone: "red" };
 };
+
+const CONFIDENCE_INPUTS = [
+  {
+    name: "Market beneficiary volumes",
+    type: "CMS verified",
+    typeClass: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
+    dot: "bg-emerald-500",
+    description: "CMS Provider File 2022 — FFS beneficiary counts by county and service type.",
+    lastUpdated: CMS_DISPLAY_DATE,
+  },
+  {
+    name: "Named competitor data",
+    type: "CMS verified",
+    typeClass: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
+    dot: "bg-emerald-500",
+    description: "CMS provider file beneficiary volume, episodes, and payment data for named competitors.",
+    lastUpdated: CMS_DISPLAY_DATE,
+  },
+  {
+    name: "Revenue projections (Y1–Y3)",
+    type: "Modeled assumption",
+    typeClass: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
+    dot: "bg-amber-400",
+    description: "CMS volumes × internal capture rate × Medicare reimbursement rates. Adjust via Scenario Model.",
+    lastUpdated: "Internal — current model version",
+  },
+  {
+    name: "Referral conversion rate",
+    type: "Industry benchmark",
+    typeClass: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
+    dot: "bg-blue-400",
+    description: "75% referral-to-start rate — NAHC 2023 median for home health and hospice providers.",
+    lastUpdated: "NAHC 2023",
+  },
+  {
+    name: "Contribution margin rates",
+    type: "Modeled assumption",
+    typeClass: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
+    dot: "bg-amber-400",
+    description: "Service-line margins applied to modeled gross revenue — internal planning assumptions, not audited financials.",
+    lastUpdated: "Internal — current model version",
+  },
+];
 
 export default function BoardReport({ rows, totals }) {
   const { dark } = useDarkMode();
@@ -325,6 +371,46 @@ export default function BoardReport({ rows, totals }) {
                 {currency(totals.y1Revenue + totals.y2Revenue + totals.y3Revenue)}
               </p>
             </div>
+          </div>
+        </Card>
+
+        <Card title="Data confidence summary" eyebrow="Source transparency for board review">
+          <p className={`mb-4 text-sm leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>
+            Before acting on the numbers above, board members should understand which inputs are independently verified versus modeled planning assumptions. The table below summarizes the confidence level and provenance for each key input.
+          </p>
+          <div className="space-y-2">
+            {CONFIDENCE_INPUTS.map((input) => (
+              <div key={input.name} className={`flex items-start gap-4 rounded-xl border p-4 ${dark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
+                <div className="mt-0.5 flex-shrink-0">
+                  <span className={`h-2.5 w-2.5 rounded-full block ${input.dot}`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className={`text-sm font-black ${dark ? "text-white" : "text-slate-900"}`}>{input.name}</p>
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black ${input.typeClass}`}>
+                      {input.type}
+                    </span>
+                  </div>
+                  <p className={`mt-0.5 text-xs leading-5 ${dark ? "text-slate-400" : "text-slate-600"}`}>{input.description}</p>
+                </div>
+                <div className="flex-shrink-0 text-right">
+                  <p className={`text-[10px] font-semibold ${dark ? "text-slate-500" : "text-slate-400"}`}>{input.lastUpdated}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className={`mt-4 flex flex-wrap items-center gap-4 rounded-xl border px-4 py-3 text-xs ${dark ? "border-slate-700 bg-slate-800/40 text-slate-400" : "border-slate-200 bg-white text-slate-500"}`}>
+            <span className="font-black">Legend:</span>
+            {[
+              { dot: "bg-emerald-500", label: "CMS verified — sourced directly from CMS certification or provider files" },
+              { dot: "bg-amber-400", label: "Modeled assumption — internal planning figure, not externally verified" },
+              { dot: "bg-blue-400", label: "Industry benchmark — published third-party standard" },
+            ].map(({ dot, label }) => (
+              <span key={label} className="flex items-center gap-1.5">
+                <span className={`h-2 w-2 rounded-full flex-shrink-0 ${dot}`} />
+                {label}
+              </span>
+            ))}
           </div>
         </Card>
 
