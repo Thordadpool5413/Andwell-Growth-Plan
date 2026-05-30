@@ -93,6 +93,15 @@ function Dashboard() {
     }),
     [rows],
   );
+  const defaultRows = useMemo(() => buildRows(DEFAULT_SCENARIO), []);
+  const defaultTotals = useMemo(
+    () => ({
+      y1Revenue: defaultRows.reduce((sum, row) => sum + row.revenue[0], 0),
+      y2Revenue: defaultRows.reduce((sum, row) => sum + row.revenue[1], 0),
+      y3Revenue: defaultRows.reduce((sum, row) => sum + row.revenue[2], 0),
+    }),
+    [defaultRows],
+  );
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${dark ? "bg-slate-950 text-slate-100" : "bg-gradient-to-b from-slate-50 to-white text-slate-900"}`}>
@@ -249,6 +258,8 @@ function Dashboard() {
         onClose={() => setShowScenarioSidebar(false)}
         wasRestored={scenarioRestored}
         onRestoredDismiss={() => setScenarioRestored(false)}
+        totals={totals}
+        defaultTotals={defaultTotals}
       />
     </div>
   );
