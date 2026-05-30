@@ -272,11 +272,18 @@ export async function callTool(toolName, args) {
         }
       }
       await matchAllSeededCompetitors();
+      const qualityResults = {};
       for (const pt of types) {
-        // syncQualitySnapshots is intentionally omitted here — quality measures
-        // must come from dedicated CMS quality datasets, not derived from match confidence
+        if (results[pt]?.status === "success") {
+          try {
+            qualityResults[pt] = await syncQualitySnapshots(pt);
+          } catch (err) {
+            console.error(`[MCP] syncQualitySnapshots(${pt}) failed:`, err.message);
+            qualityResults[pt] = { error: err.message };
+          }
+        }
       }
-      return { results, matchingTriggered: true };
+      return { results, matchingTriggered: true, qualitySnapshots: qualityResults };
     }
 
     case "get_provider_quality_snapshot": {
