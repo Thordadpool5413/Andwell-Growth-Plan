@@ -11,11 +11,57 @@ import { rollupByService, getOpportunityScore, getCompetitiveThreatScore, getMar
 import { streamChat, buildBoardNarrativePrompt, AI_AVAILABLE } from "../utils/ai.js";
 import { currency, number, percent } from "../utils/formatters.js";
 
+const CMS_LAST_SYNCED = "2026-05-01";
+const CMS_DISPLAY_DATE = "May 2026";
+
 const trafficLight = (value, thresholds) => {
   if (value >= thresholds.green) return { color: "bg-emerald-500", label: "On track", tone: "green" };
   if (value >= thresholds.amber) return { color: "bg-amber-500", label: "Watch", tone: "amber" };
   return { color: "bg-red-500", label: "At risk", tone: "red" };
 };
+
+const CONFIDENCE_INPUTS = [
+  {
+    name: "Market beneficiary volumes",
+    type: "CMS verified",
+    typeClass: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
+    dot: "bg-emerald-500",
+    description: "CMS Provider File 2022 — FFS beneficiary counts by county and service type.",
+    lastUpdated: CMS_DISPLAY_DATE,
+  },
+  {
+    name: "Named competitor data",
+    type: "CMS verified",
+    typeClass: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
+    dot: "bg-emerald-500",
+    description: "CMS provider file beneficiary volume, episodes, and payment data for named competitors.",
+    lastUpdated: CMS_DISPLAY_DATE,
+  },
+  {
+    name: "Revenue projections (Y1–Y3)",
+    type: "Modeled assumption",
+    typeClass: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
+    dot: "bg-amber-400",
+    description: "CMS volumes × internal capture rate × Medicare reimbursement rates. Adjust via Scenario Model.",
+    lastUpdated: "Internal — current model version",
+  },
+  {
+    name: "Referral conversion rate",
+    type: "Industry benchmark",
+    typeClass: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
+    dot: "bg-blue-400",
+    description: "75% referral-to-start rate — NAHC 2023 median for home health and hospice providers.",
+    lastUpdated: "NAHC 2023",
+  },
+  {
+    name: "Contribution margin rates",
+    type: "Modeled assumption",
+    typeClass: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
+    dot: "bg-amber-400",
+    description: "Service-line margins applied to modeled gross revenue — internal planning assumptions, not audited financials.",
+    lastUpdated: "Internal — current model version",
+  },
+];
 
 export default function BoardReport({ rows, totals }) {
   const { dark } = useDarkMode();
@@ -181,7 +227,7 @@ export default function BoardReport({ rows, totals }) {
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr] print:break-after-page">
           <Card title="County status matrix" eyebrow="Traffic light indicators">
             <div className={`mb-3 rounded-xl border px-4 py-2.5 ${dark ? "border-slate-700 bg-slate-800/60" : "border-slate-100 bg-slate-50"}`}>
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
@@ -197,19 +243,6 @@ export default function BoardReport({ rows, totals }) {
                     <span className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>{sub}</span>
                   </div>
                 ))}
-                <div className={`border-l pl-4 ${dark ? "border-slate-700" : "border-slate-200"}`}>
-                  <span className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>Penetration dot: </span>
-                  {[
-                    { color: "bg-emerald-500", label: "On track ≥5%" },
-                    { color: "bg-amber-500", label: "Watch 2–5%" },
-                    { color: "bg-red-500", label: "At risk <2%" },
-                  ].map(({ color, label }) => (
-                    <span key={label} className="inline-flex items-center gap-1 ml-2">
-                      <span className={`inline-block h-2 w-2 rounded-full ${color}`} />
-                      <span className={`text-[10px] ${dark ? "text-slate-400" : "text-slate-500"}`}>{label}</span>
-                    </span>
-                  ))}
-                </div>
               </div>
             </div>
             <div className={`mb-3 flex items-start gap-2 rounded-xl border px-3 py-2.5 text-xs ${dark ? "border-amber-900/40 bg-amber-950/30 text-amber-300" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
@@ -229,8 +262,8 @@ export default function BoardReport({ rows, totals }) {
                   </tr>
                 </thead>
                 <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-slate-100"}`}>
-                  {countyStatus.map((c) => (
-                    <tr key={c.county} className={dark ? "hover:bg-slate-700/50" : "hover:bg-slate-50"}>
+                  {countyStatus.map((c, i) => (
+                    <tr key={c.county} className={dark ? i % 2 === 1 ? "bg-slate-800/60 hover:bg-slate-700/50" : "hover:bg-slate-700/50" : i % 2 === 1 ? "bg-slate-50/60 hover:bg-slate-50" : "hover:bg-slate-50"}>
                       <td className={`px-4 py-3 font-black ${dark ? "text-white" : ""}`}>{c.county}</td>
                       <td className="px-4 py-3">
                         <Badge tone={c.launchGroup.includes("1") ? "green" : c.launchGroup.includes("2") ? "blue" : "amber"}>
@@ -265,18 +298,18 @@ export default function BoardReport({ rows, totals }) {
           <div className="space-y-6">
             <Card title="Y1 service mix" eyebrow="Revenue breakdown">
               <ChartContainer height="h-52">
-                  <PieChart>
-                    <Pie data={serviceMix} dataKey="revenue" nameKey="service" cx="50%" cy="50%" outerRadius={80} label={({ service, revenue }) => `${service}: ${currency(revenue)}`}>
-                      {serviceMix.map((entry) => (
-                        <Cell key={entry.service} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
+                <PieChart>
+                  <Pie data={serviceMix} dataKey="revenue" nameKey="service" cx="50%" cy="50%" outerRadius={80} label={({ service, revenue }) => `${service}: ${currency(revenue)}`}>
+                    {serviceMix.map((entry) => (
+                      <Cell key={entry.service} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
               </ChartContainer>
             </Card>
 
             {riskCounties.length > 0 && (
-              <Card title="Risk flags" eyebrow="Requires attention">
+              <Card title="Risk flags" eyebrow="Requires attention" accent="red">
                 <div className="space-y-2">
                   {riskCounties.map((c) => (
                     <div key={c.county} className={`rounded-xl border p-3 ${dark ? "border-red-900 bg-red-950/30" : "border-red-200 bg-red-50"}`}>
@@ -293,14 +326,14 @@ export default function BoardReport({ rows, totals }) {
           </div>
         </div>
 
-        <Card title="Financial trajectory" eyebrow="3-year revenue projection">
+        <Card title="Financial trajectory" eyebrow="3-year revenue projection" className="print:break-before-page">
           <div className="grid gap-4 md:grid-cols-3">
             {[
-              { label: "Year 1", value: totals.y1Revenue, color: dark ? "text-blue-400" : "text-blue-700" },
-              { label: "Year 2", value: totals.y2Revenue, color: dark ? "text-purple-400" : "text-purple-600" },
-              { label: "Year 3", value: totals.y3Revenue, color: dark ? "text-emerald-400" : "text-emerald-600" },
+              { label: "Year 1", value: totals.y1Revenue, color: dark ? "text-blue-400" : "text-blue-700", accent: "border-l-4 border-l-blue-500" },
+              { label: "Year 2", value: totals.y2Revenue, color: dark ? "text-purple-400" : "text-purple-600", accent: "border-l-4 border-l-purple-500" },
+              { label: "Year 3", value: totals.y3Revenue, color: dark ? "text-emerald-400" : "text-emerald-600", accent: "border-l-4 border-l-emerald-500" },
             ].map((yr) => (
-              <div key={yr.label} className={`rounded-2xl border p-5 text-center ${dark ? "border-slate-700 bg-slate-700/30" : "border-slate-100 bg-slate-50"}`}>
+              <div key={yr.label} className={`rounded-2xl border p-5 text-center ${yr.accent} ${dark ? "border-slate-700 bg-slate-700/30" : "border-slate-100 bg-slate-50"}`}>
                 <p className={`text-sm font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>{yr.label}</p>
                 <p className={`mt-2 text-3xl font-black ${yr.color}`}>{currency(yr.value)}</p>
               </div>
@@ -309,13 +342,13 @@ export default function BoardReport({ rows, totals }) {
           <div className="mt-4 grid gap-4 md:grid-cols-3">
             <div className={`rounded-2xl border p-4 text-center ${dark ? "border-slate-700 bg-slate-700/30" : "border-slate-100 bg-slate-50"}`}>
               <p className={`text-sm ${dark ? "text-slate-400" : "text-slate-500"}`}>Y1→Y2 growth</p>
-              <p className={`mt-1 text-xl font-black text-emerald-600`}>
+              <p className="mt-1 text-xl font-black text-emerald-600">
                 +{totals.y1Revenue > 0 ? Math.round((totals.y2Revenue - totals.y1Revenue) / totals.y1Revenue * 100) : 0}%
               </p>
             </div>
             <div className={`rounded-2xl border p-4 text-center ${dark ? "border-slate-700 bg-slate-700/30" : "border-slate-100 bg-slate-50"}`}>
               <p className={`text-sm ${dark ? "text-slate-400" : "text-slate-500"}`}>Y2→Y3 growth</p>
-              <p className={`mt-1 text-xl font-black text-emerald-600`}>
+              <p className="mt-1 text-xl font-black text-emerald-600">
                 +{totals.y2Revenue > 0 ? Math.round((totals.y3Revenue - totals.y2Revenue) / totals.y2Revenue * 100) : 0}%
               </p>
             </div>
@@ -328,7 +361,57 @@ export default function BoardReport({ rows, totals }) {
           </div>
         </Card>
 
-        <div className={`text-center text-xs ${dark ? "text-slate-600" : "text-slate-400"} print:mt-8`}>
+        <Card title="Data confidence summary" eyebrow="Source transparency for board review" className="print:break-before-page">
+          <p className={`mb-4 text-sm leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>
+            Before acting on the numbers above, board members should understand which inputs are independently verified versus modeled planning assumptions. The table below summarizes the confidence level and provenance for each key input.
+          </p>
+          <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-200"}`}>
+            <table className="w-full text-left text-sm">
+              <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
+                <tr>
+                  <th className="px-4 py-3">Input</th>
+                  <th className="px-4 py-3">Type</th>
+                  <th className="px-4 py-3">Description</th>
+                  <th className="px-4 py-3 text-right">Last updated</th>
+                </tr>
+              </thead>
+              <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-slate-100"}`}>
+                {CONFIDENCE_INPUTS.map((input, i) => (
+                  <tr key={input.name} className={dark ? i % 2 === 1 ? "bg-slate-800/60" : "" : i % 2 === 1 ? "bg-slate-50/60" : ""}>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <span className={`h-2.5 w-2.5 flex-shrink-0 rounded-full ${input.dot}`} />
+                        <span className={`font-black text-sm ${dark ? "text-white" : "text-slate-900"}`}>{input.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black ${input.typeClass}`}>
+                        {input.type}
+                      </span>
+                    </td>
+                    <td className={`px-4 py-3 text-xs leading-5 ${dark ? "text-slate-400" : "text-slate-600"}`}>{input.description}</td>
+                    <td className={`px-4 py-3 text-right text-[10px] font-semibold ${dark ? "text-slate-500" : "text-slate-400"}`}>{input.lastUpdated}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className={`mt-4 flex flex-wrap items-center gap-4 rounded-xl border px-4 py-3 text-xs ${dark ? "border-slate-700 bg-slate-800/40 text-slate-400" : "border-slate-200 bg-white text-slate-500"}`}>
+            <span className="font-black">Legend:</span>
+            {[
+              { dot: "bg-emerald-500", label: "CMS verified — sourced directly from CMS certification or provider files" },
+              { dot: "bg-amber-400", label: "Modeled assumption — internal planning figure, not externally verified" },
+              { dot: "bg-blue-400", label: "Industry benchmark — published third-party standard" },
+            ].map(({ dot, label }) => (
+              <span key={label} className="flex items-center gap-1.5">
+                <span className={`h-2 w-2 rounded-full flex-shrink-0 ${dot}`} />
+                {label}
+              </span>
+            ))}
+          </div>
+        </Card>
+
+        <div className={`text-center text-xs print:mt-8 ${dark ? "text-slate-600" : "text-slate-400"}`}>
           <p>Andwell Maine Innovation and Growth Plan — Board Report</p>
           <p>Generated {today} | Data sources: CMS Provider Files, County Market Data, Modeled Projections</p>
           <p className="mt-1">Key assumptions: 75% <Abbr term="Conversion Rate">conversion rate</Abbr>, Priority 1–3 phased launch, <Abbr term="CMS">CMS</Abbr> reimbursement rates</p>

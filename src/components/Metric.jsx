@@ -2,6 +2,32 @@ import React from "react";
 import { useDarkMode } from "./DarkModeContext.jsx";
 import Sparkline from "./Sparkline.jsx";
 
+const ACCENT_CLASSES = {
+  emerald: "border-t-emerald-500",
+  amber: "border-t-amber-500",
+  indigo: "border-t-indigo-500",
+  violet: "border-t-violet-500",
+  blue: "border-t-blue-500",
+};
+
+const SOURCE_CONFIG = {
+  cms: {
+    dot: "bg-emerald-500",
+    label: "CMS verified",
+    labelClass: "text-emerald-700 dark:text-emerald-400",
+  },
+  modeled: {
+    dot: "bg-amber-400",
+    label: "Modeled",
+    labelClass: "text-amber-600 dark:text-amber-400",
+  },
+  derived: {
+    dot: "bg-blue-400",
+    label: "Derived",
+    labelClass: "text-blue-600 dark:text-blue-400",
+  },
+};
+
 function TrendArrow({ sparkData, dark }) {
   if (!sparkData || sparkData.length < 2) return null;
   const first = sparkData[0];
@@ -28,10 +54,18 @@ function TrendArrow({ sparkData, dark }) {
   );
 }
 
-export default function Metric({ label, value, detail, sparkData, sparkColor }) {
+export default function Metric({ label, value, detail, sparkData, sparkColor, color, sourceType }) {
   const { dark } = useDarkMode();
+  const accentClass = color ? ACCENT_CLASSES[color] : null;
+  const src = sourceType ? SOURCE_CONFIG[sourceType] : null;
+
   return (
-    <div className={`rounded-3xl border p-5 shadow-sm transition-colors duration-300 ${dark ? "border-slate-700 bg-slate-800 shadow-slate-900/30" : "border-slate-200 bg-white"}`}>
+    <div className={`rounded-3xl border p-5 shadow-sm transition-all duration-150 cursor-default
+      hover:-translate-y-0.5 hover:shadow-md
+      ${dark
+        ? `border-slate-600 bg-slate-800 shadow-slate-900/30 ${accentClass ? `border-t-2 ${accentClass}` : ""}`
+        : `border-slate-200 bg-white ${accentClass ? `border-t-2 ${accentClass}` : ""}`
+      }`}>
       <div className="flex items-start justify-between">
         <p className={`text-sm font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>{label}</p>
         {sparkData && <Sparkline data={sparkData} color={sparkColor} />}
@@ -41,6 +75,12 @@ export default function Metric({ label, value, detail, sparkData, sparkColor }) 
         <TrendArrow sparkData={sparkData} dark={dark} />
       </div>
       <p className={`mt-2 text-sm leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>{detail}</p>
+      {src && (
+        <p className={`mt-1.5 flex items-center gap-1 text-[11px] italic ${src.labelClass}`}>
+          <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${src.dot}`} />
+          {src.label}
+        </p>
+      )}
     </div>
   );
 }

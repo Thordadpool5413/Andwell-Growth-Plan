@@ -375,8 +375,14 @@ function isNationalChainComp(c) {
   const hay = `${c.name || ""} ${c.parent_company || ""}`.toLowerCase();
   return NATIONAL_CHAIN_NAMES.some((ch) => hay.includes(ch));
 }
+function resolveCounties(c) {
+  if (c.counties_raw?.length) return c.counties_raw;
+  if (c.known_counties?.length) return c.known_counties;
+  if (c.county) return [c.county];
+  return [];
+}
 function competitorOverlapsAndwell(c) {
-  const counties = c.known_counties?.length ? c.known_counties : c.county ? [c.county] : [];
+  const counties = resolveCounties(c);
   return counties.some((cn) => ANDWELL_COUNTIES.has(cn));
 }
 
@@ -394,7 +400,7 @@ function placedPin(c, idx, ci) {
     const lng = parseFloat(c.geocoded_lng);
     if (!isNaN(lat) && !isNaN(lng)) return { lat, lng, geocoded: true };
   }
-  const counties = c.known_counties?.length ? c.known_counties : c.county ? [c.county] : [];
+  const counties = resolveCounties(c);
   const county = counties[ci] || counties[0];
   const base = COUNTY_COORDS[county];
   if (!base) return null;
@@ -410,10 +416,10 @@ function CompetitorMarkers({ visible, dark, competitors }) {
     .flatMap((c, idx) => {
       if (c.geocoded_lat && c.geocoded_lng) {
         const coords = placedPin(c, idx, 0);
-        if (coords) return [{ ...c, ...coords }];
+        if (coords) return [{ ...c, county: c.county || resolveCounties(c)[0] || null, ...coords }];
       }
-      const counties = c.known_counties?.length ? c.known_counties : c.county ? [c.county] : [];
-      return counties.slice(0, 2).map((county, ci) => {
+      const counties = resolveCounties(c);
+      return counties.map((county, ci) => {
         const coords = placedPin({ ...c, county }, idx, ci);
         if (!coords) return null;
         return { ...c, county, ...coords };
@@ -459,7 +465,16 @@ function CompetitorMarkers({ visible, dark, competitors }) {
                 <div style={{ fontFamily: "system-ui, sans-serif", minWidth: 190, maxWidth: 250, padding: "2px 0" }}>
                   <p style={{ margin: 0, fontWeight: 800, fontSize: 13, color: "#0f172a", lineHeight: 1.3 }}>{comp.name}</p>
                   {comp.parent_company && <p style={{ margin: "2px 0 0", fontSize: 11, color: "#475569" }}>{comp.parent_company}</p>}
-                  {comp.county && <p style={{ margin: "4px 0 0", fontSize: 11, color: "#475569" }}><span style={{ fontWeight: 700 }}>County:</span> {comp.county}</p>}
+                  {(() => {
+                    const allCounties = resolveCounties(comp);
+                    const label = allCounties.length > 1 ? "Counties" : "County";
+                    const display = allCounties.length > 0 ? allCounties.join(", ") : comp.county;
+                    return display ? (
+                      <p style={{ margin: "5px 0 0", fontSize: 12, color: "#1e3a5f", fontWeight: 700, letterSpacing: 0 }}>
+                        {label}: <span style={{ fontWeight: 600 }}>{display}</span>
+                      </p>
+                    ) : null;
+                  })()}
                   {comp.provider_type && <p style={{ margin: "2px 0 0", fontSize: 11, color: "#475569" }}><span style={{ fontWeight: 700 }}>Type:</span> {comp.provider_type}</p>}
                   {comp.address && <p style={{ margin: "2px 0 0", fontSize: 10, color: "#64748b" }}>{comp.address}{comp.city ? `, ${comp.city}` : ""}</p>}
                   {comp.match_status && (
@@ -470,7 +485,14 @@ function CompetitorMarkers({ visible, dark, competitors }) {
                   )}
                   {comp.geocode_source === "cms_address" && <p style={{ margin: "3px 0 0", fontSize: 9, color: "#94a3b8" }}>📍 CMS address geocoded</p>}
                   {national && <p style={{ margin: "4px 0 0", fontSize: 10, color: "#dc2626", fontWeight: 700 }}>⚠ National chain</p>}
-                  {overlaps && <p style={{ margin: "2px 0 0", fontSize: 10, color: "#d97706", fontWeight: 700 }}>⚡ Andwell overlap county</p>}
+                  {overlaps && (() => {
+                    const overlapCounties = resolveCounties(comp).filter(cn => ANDWELL_COUNTIES.has(cn));
+                    return (
+                      <p style={{ margin: "2px 0 0", fontSize: 10, color: "#d97706", fontWeight: 700 }}>
+                        ⚡ Andwell overlap{overlapCounties.length > 0 ? `: ${overlapCounties.join(", ")}` : " county"}
+                      </p>
+                    );
+                  })()}
                 </div>
               </InfoWindow>
             )}
@@ -511,14 +533,17 @@ function MapInner({ heatmapMode, rows, selectedCounty, onSelectCounty, dark, sho
   );
 }
 
-export default function MaineMap({ rows, selectedCounty, onSelectCounty }) {
+export default function MaineMap({ rows, selectedCounty, onSelectCounty, providerTypeFilter, onProviderTypeFilterChange }) {
   const { dark } = useDarkMode();
   const [heatmapMode, setHeatmapMode] = useState("priority");
   const [showHospitals, setShowHospitals] = useState(false);
   const [showRings, setShowRings] = useState(false);
   const [showCompetitors, setShowCompetitors] = useState(false);
   const [competitors, setCompetitors] = useState([]);
-  const [compFilter, setCompFilter] = useState({ providerType: "all", cmsStatus: "all", nationalOnly: false, overlapOnly: false, parentSearch: "", countyFilter: "all", healthSystemOnly: false, seededOnly: false });
+  const [compFilter, setCompFilter] = useState({ cmsStatus: "all", nationalOnly: false, overlapOnly: false, parentSearch: "", countyFilter: "all", healthSystemOnly: false, seededOnly: false });
+
+  const providerType = providerTypeFilter !== undefined ? providerTypeFilter : "all";
+  const setProviderType = onProviderTypeFilterChange || (() => {});
 
   React.useEffect(() => {
     if (showCompetitors && competitors.length === 0) {
@@ -542,7 +567,7 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty }) {
 
   const filteredCompetitors = React.useMemo(() => {
     return competitors.filter((c) => {
-      if (compFilter.providerType !== "all" && c.provider_type !== compFilter.providerType) return false;
+      if (providerType !== "all" && c.provider_type !== providerType) return false;
       if (compFilter.cmsStatus !== "all" && c.match_status !== compFilter.cmsStatus) return false;
       if (compFilter.nationalOnly && !isNationalChainComp(c)) return false;
       if (compFilter.overlapOnly && !competitorOverlapsAndwell(c)) return false;
@@ -559,7 +584,7 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty }) {
       }
       return true;
     });
-  }, [competitors, compFilter]);
+  }, [competitors, compFilter, providerType]);
 
   const rowMap = {};
   if (rows) rows.forEach((row) => { rowMap[row.county] = row; });
@@ -627,6 +652,32 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty }) {
         {toggleBtn("🏥 Hospitals", showHospitals, () => setShowHospitals((p) => !p), "bg-red-600")}
         {toggleBtn("⏱ Drive-time rings", showRings, () => setShowRings((p) => !p), "bg-emerald-600")}
         {toggleBtn("🟣 Competitors", showCompetitors, () => setShowCompetitors((p) => !p), "bg-purple-600")}
+        {showCompetitors && (
+          <>
+            <span className={`ml-2 text-[10px] font-black uppercase tracking-widest ${dark ? "text-slate-600" : "text-slate-400"}`}>|</span>
+            <span className={`ml-1 text-[10px] font-black uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>Type:</span>
+            {[
+              { value: "all", label: "All" },
+              { value: "homehealth", label: "Home Health" },
+              { value: "hospice", label: "Hospice" },
+              { value: "both", label: "Both" },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setProviderType(opt.value)}
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-black transition ${
+                  providerType === opt.value
+                    ? "bg-purple-600 text-white"
+                    : dark
+                      ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700"
+                      : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </>
+        )}
       </div>
 
       <APIProvider apiKey={API_KEY}>
@@ -675,16 +726,6 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty }) {
         <div className="space-y-2">
           <div className={`flex flex-wrap items-center gap-2 rounded-xl border px-3 py-2 ${dark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
             <span className={`text-[10px] font-black uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>Filter:</span>
-            <select
-              value={compFilter.providerType}
-              onChange={(e) => setCompFilter((f) => ({ ...f, providerType: e.target.value }))}
-              className={`rounded-lg border px-2 py-1 text-xs font-semibold ${dark ? "border-slate-600 bg-slate-700 text-slate-200" : "border-slate-200 bg-white text-slate-700"}`}
-            >
-              <option value="all">All types</option>
-              <option value="hospice">Hospice</option>
-              <option value="homehealth">Home health</option>
-              <option value="both">Both</option>
-            </select>
             <select
               value={compFilter.cmsStatus}
               onChange={(e) => setCompFilter((f) => ({ ...f, cmsStatus: e.target.value }))}

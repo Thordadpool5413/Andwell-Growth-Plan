@@ -1,4 +1,5 @@
 import { query } from "./db.js";
+import { countyFromZip } from "./maineZipCounty.js";
 
 const BASE_URL = process.env.CMS_PROVIDER_DATA_BASE_URL || "https://data.cms.gov/provider-data/api/1";
 const DATA_API_BASE = process.env.CMS_DATA_API_BASE_URL || "https://data.cms.gov/provider-data/api/1";
@@ -228,14 +229,20 @@ export async function fetchMaineProviders(providerType, filters = {}) {
 function normalizeProviderRow(row, providerType, datasetId) {
   const nameField = findField(row, ["provider_name", "organization_name", "facility_name", "name", "providerName"]);
   const stateField = findField(row, ["state", "provider_state", "state_cd"]);
-  const cityField = findField(row, ["city", "provider_city", "city_town"]);
+  const cityField = findField(row, ["citytown", "city", "provider_city", "city_town"]);
   const zipField = findField(row, ["zip_code", "zip", "provider_zip", "postal_code"]);
-  const addrField = findField(row, ["address", "provider_address", "street_address", "address_line_1"]);
-  const ccnField = findField(row, ["cms_certification_number", "ccn", "provider_id", "cms_provider_number"]);
-  const phoneField = findField(row, ["phone_number", "phone", "provider_phone"]);
+  const addrField = findField(row, ["address", "address_line_1", "provider_address", "street_address"]);
+  const ccnField = findField(row, ["cms_certification_number_ccn", "cms_certification_number", "ccn", "provider_id", "cms_provider_number"]);
+  const phoneField = findField(row, ["telephone_number", "phone_number", "phone", "provider_phone"]);
   const npiField = findField(row, ["npi", "national_provider_identifier"]);
+  const countyField = findField(row, ["countyparish", "county_name", "county"]);
+  const certDateField = findField(row, ["certification_date", "date_certified", "initial_date"]);
+  const qualityStarField = findField(row, ["quality_of_patient_care_star_rating", "star_rating", "overall_rating"]);
 
   const rawName = row[nameField] || "";
+  const zip = row[zipField] || null;
+  const countyRaw = row[countyField] || null;
+  const county = countyRaw || countyFromZip(zip);
   return {
     provider_name_raw: rawName,
     provider_name_normalized: normalizeProviderName(rawName),
@@ -246,11 +253,13 @@ function normalizeProviderRow(row, providerType, datasetId) {
     address: row[addrField] || null,
     city: row[cityField] || null,
     state: row[stateField] || "ME",
-    zip_code: row[zipField] || null,
+    zip_code: zip,
     phone: row[phoneField] || null,
-    county: row.county_name || row.county || null,
+    county,
+    certification_date: row[certDateField] || null,
+    quality_star_rating: row[qualityStarField] != null ? parseFloat(row[qualityStarField]) || null : null,
     source_row_json: row,
-    source_evidence_text: buildEvidenceText(row, rawName, providerType, datasetId),
+    source_evidence_text: buildEvidenceText(row, rawName, providerType, datasetId, row[ccnField], row[cityField]),
   };
 }
 
@@ -274,11 +283,9 @@ export function normalizeProviderName(name) {
     .trim();
 }
 
-function buildEvidenceText(row, name, type, datasetId) {
-  const city = findField(row, ["city", "provider_city"]);
-  const state = findField(row, ["state", "provider_state"]);
-  const ccn = findField(row, ["cms_certification_number", "ccn"]);
-  return `CMS ${type} provider: ${name}. Location: ${row[city] || ""}, ${row[state] || "ME"}. CCN: ${row[ccn] || "N/A"}. Source: CMS dataset ${datasetId}.`;
+function buildEvidenceText(row, name, type, datasetId, ccnValue, cityValue) {
+  const state = findField(row, ["state", "provider_state", "state_cd"]);
+  return `CMS ${type} provider: ${name}. Location: ${cityValue || ""}, ${row[state] || "ME"}. CCN: ${ccnValue || "N/A"}. Source: CMS dataset ${datasetId}.`;
 }
 
 function deduplicateProviders(rows) {
@@ -327,11 +334,13 @@ export async function syncToDatabase(providers, providerType, datasetId) {
           `UPDATE cms_provider_records SET
             provider_name_raw=$1, cms_certification_number=$2, npi=$3, address=$4, city=$5,
             zip_code=$6, phone=$7, county=$8, source_row_json=$9, source_evidence_text=$10,
+            certification_date=$11, quality_star_rating=$12,
             last_synced_at=NOW(), updated_at=NOW()
-          WHERE id=$11`,
+          WHERE id=$13`,
           [
             p.provider_name_raw, p.cms_certification_number, p.npi, p.address, p.city,
             p.zip_code, p.phone, p.county, JSON.stringify(p.source_row_json), p.source_evidence_text,
+            p.certification_date || null, p.quality_star_rating != null ? p.quality_star_rating : null,
             existing.rows[0].id,
           ]
         );
@@ -341,13 +350,14 @@ export async function syncToDatabase(providers, providerType, datasetId) {
           `INSERT INTO cms_provider_records
             (cms_dataset_identifier, provider_type, provider_name_raw, provider_name_normalized,
              cms_certification_number, npi, address, city, state, zip_code, phone, county,
-             source_row_json, source_evidence_text, last_synced_at)
-          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,NOW())`,
+             source_row_json, source_evidence_text, certification_date, quality_star_rating, last_synced_at)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,NOW())`,
           [
             datasetId, providerType, p.provider_name_raw, p.provider_name_normalized,
             p.cms_certification_number, p.npi, p.address, p.city, p.state || "ME",
             p.zip_code, p.phone, p.county,
             JSON.stringify(p.source_row_json), p.source_evidence_text,
+            p.certification_date || null, p.quality_star_rating != null ? p.quality_star_rating : null,
           ]
         );
         created++;
@@ -358,6 +368,31 @@ export async function syncToDatabase(providers, providerType, datasetId) {
     }
   }
   return { created, updated, unchanged, failed };
+}
+
+/**
+ * Backfill county for existing cms_provider_records that have a zip_code but no county.
+ * Runs after sync to fix records that were inserted before zip→county lookup was in place.
+ * Returns the number of rows updated.
+ */
+export async function backfillMissingCounties() {
+  let updated = 0;
+  try {
+    const rows = await query(
+      "SELECT id, zip_code FROM cms_provider_records WHERE (county IS NULL OR county = '') AND zip_code IS NOT NULL"
+    );
+    for (const row of rows.rows) {
+      const county = countyFromZip(row.zip_code);
+      if (county) {
+        await query("UPDATE cms_provider_records SET county=$1, updated_at=NOW() WHERE id=$2", [county, row.id]);
+        updated++;
+      }
+    }
+    console.log(`[CMS] backfillMissingCounties: updated ${updated} of ${rows.rows.length} records`);
+  } catch (err) {
+    console.error("[CMS] backfillMissingCounties error:", err.message);
+  }
+  return updated;
 }
 
 export async function logSync({ syncType, datasetId, providerType, startedAt, status, counts, error, sample }) {

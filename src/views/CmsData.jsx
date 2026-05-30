@@ -14,6 +14,9 @@ import cmsCountyMarket from "../data/cmsCountyMarket.js";
 import { number, currency } from "../utils/formatters.js";
 import { exportCmsCSV } from "../utils/csvExport.js";
 import CmsDataPanel from "../components/CmsDataPanel.jsx";
+import FreshnessChip from "../components/FreshnessChip.jsx";
+
+const CMS_LAST_SYNCED = "2026-05-01";
 
 export default function CmsData() {
   const { dark } = useDarkMode();
@@ -40,6 +43,10 @@ export default function CmsData() {
         Market data from the CMS 2022 Home Health and Hospice <Abbr term="PUF">Public Use File (PUF)</Abbr>. The CMS Data Connection tab links to the live CMS Provider Data Catalog API for real-time competitor verification and quality benchmarks.
       </SectionHeader>
 
+      <div className="flex items-center gap-2 flex-wrap">
+        <FreshnessChip lastSynced={CMS_LAST_SYNCED} label="CMS data" syncType="PUF 2022" />
+      </div>
+
       <div className="flex flex-wrap gap-2">
         {tabs.map((t) => (
           <button
@@ -55,10 +62,10 @@ export default function CmsData() {
       {activeTab === "market" && (
         <>
           <div className="grid gap-4 md:grid-cols-4">
-            <Metric label="CMS counties loaded" value={rows.length} detail="County market rows from CMS 2022 PUF included in this model." />
-            <Metric label="HH users" value={number(rows.reduce((sum, row) => sum + row.hh.users, 0))} detail="Medicare home health users across all loaded counties." />
-            <Metric label="Hospice users" value={number(rows.reduce((sum, row) => sum + row.hos.users, 0))} detail="Medicare hospice users across all loaded counties." />
-            <Metric label="Total HH payments" value={currency(totalHHPay)} detail="Aggregate Medicare home health payments across all counties." />
+            <Metric label="CMS counties loaded" value={rows.length} detail="County market rows from CMS 2022 PUF included in this model." color="blue" />
+            <Metric label="HH users" value={number(rows.reduce((sum, row) => sum + row.hh.users, 0))} detail="Medicare home health users across all loaded counties." color="emerald" />
+            <Metric label="Hospice users" value={number(rows.reduce((sum, row) => sum + row.hos.users, 0))} detail="Medicare hospice users across all loaded counties." color="violet" />
+            <Metric label="Total HH payments" value={currency(totalHHPay)} detail="Aggregate Medicare home health payments across all counties." color="indigo" />
           </div>
 
           <div className="flex justify-end">

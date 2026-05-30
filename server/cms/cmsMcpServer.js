@@ -1,6 +1,7 @@
 import {
   searchCmsDatasets, getDatasetMetadata, queryCmsDataset,
   fetchMaineProviders, normalizeProviderName, syncToDatabase, logSync, geocodeAddress,
+  backfillMissingCounties,
 } from "./cmsApiClient.js";
 import { crawlCompetitorWebsite, crawlAllCompetitors } from "./competitorCrawler.js";
 import { query } from "./db.js";
@@ -271,12 +272,20 @@ export async function callTool(toolName, args) {
           results[pt] = { status: "error", error: err.message };
         }
       }
+      const countiesBackfilled = await backfillMissingCounties();
       await matchAllSeededCompetitors();
+      const qualityResults = {};
       for (const pt of types) {
-        // syncQualitySnapshots is intentionally omitted here — quality measures
-        // must come from dedicated CMS quality datasets, not derived from match confidence
+        if (results[pt]?.status === "success") {
+          try {
+            qualityResults[pt] = await syncQualitySnapshots(pt);
+          } catch (err) {
+            console.error(`[MCP] syncQualitySnapshots(${pt}) failed:`, err.message);
+            qualityResults[pt] = { error: err.message };
+          }
+        }
       }
-      return { results, matchingTriggered: true };
+      return { results, matchingTriggered: true, countiesBackfilled, qualitySnapshots: qualityResults };
     }
 
     case "get_provider_quality_snapshot": {
@@ -598,11 +607,32 @@ export async function getCompetitorSummary() {
              cpr.provider_name_raw, cpr.cms_certification_number, cpr.address, cpr.city,
              cpr.zip_code, cpr.county, cpr.last_synced_at,
              cwp.services_raw, cwp.counties_raw, cwp.quality_claims, cwp.crawl_status,
-             false AS cms_only
+             false AS cms_only,
+             qs.measure_score AS quality_snapshot_score,
+             qs.measure_name AS quality_measure_name,
+             qs.measure_value AS quality_measure_value,
+             qs.benchmark_national_value AS quality_national_benchmark,
+             qs.benchmark_state_value AS quality_state_benchmark
       FROM competitor_seeds cs
       LEFT JOIN competitor_cms_matches ccm ON ccm.competitor_seed_id = cs.id
       LEFT JOIN cms_provider_records cpr ON cpr.id = ccm.cms_provider_record_id
       LEFT JOIN competitor_web_profiles cwp ON cwp.competitor_seed_id = cs.id
+      LEFT JOIN LATERAL (
+        SELECT measure_name, measure_value, measure_score,
+               benchmark_national_value, benchmark_state_value
+        FROM cms_quality_snapshots
+        WHERE cms_provider_record_id = cpr.id
+        ORDER BY
+          CASE measure_name
+            WHEN 'hhcahps_patient_satisfaction' THEN 0
+            WHEN 'patient_satisfaction' THEN 1
+            WHEN 'overall_quality' THEN 2
+            WHEN 'overall_confidence' THEN 3
+            ELSE 4
+          END,
+          updated_at DESC
+        LIMIT 1
+      ) qs ON true
       ORDER BY cs.name
     `);
 
@@ -616,8 +646,29 @@ export async function getCompetitorSummary() {
              NULL AS geocoded_lat, NULL AS geocoded_lng, NULL AS geocode_source,
              NULL AS services_raw, NULL AS counties_raw, NULL AS quality_claims,
              NULL AS crawl_status, NULL AS evidence_summary,
-             true AS cms_only
+             true AS cms_only,
+             qs.measure_score AS quality_snapshot_score,
+             qs.measure_name AS quality_measure_name,
+             qs.measure_value AS quality_measure_value,
+             qs.benchmark_national_value AS quality_national_benchmark,
+             qs.benchmark_state_value AS quality_state_benchmark
       FROM cms_provider_records cpr
+      LEFT JOIN LATERAL (
+        SELECT measure_name, measure_value, measure_score,
+               benchmark_national_value, benchmark_state_value
+        FROM cms_quality_snapshots
+        WHERE cms_provider_record_id = cpr.id
+        ORDER BY
+          CASE measure_name
+            WHEN 'hhcahps_patient_satisfaction' THEN 0
+            WHEN 'patient_satisfaction' THEN 1
+            WHEN 'overall_quality' THEN 2
+            WHEN 'overall_confidence' THEN 3
+            ELSE 4
+          END,
+          updated_at DESC
+        LIMIT 1
+      ) qs ON true
       WHERE NOT EXISTS (
         SELECT 1 FROM competitor_cms_matches ccm WHERE ccm.cms_provider_record_id = cpr.id
       )
@@ -633,7 +684,11 @@ export async function getCompetitorSummary() {
   }
 }
 
+const TRANSIENT_PG_CODES = new Set(["ECONNREFUSED", "ECONNRESET", "ETIMEDOUT", "57P01", "08006", "08001", "08004"]);
+const QUALITY_FAILURE_THRESHOLD = 5;
+
 async function syncQualitySnapshots(providerType) {
+  const startedAt = new Date();
   const records = await query(
     `SELECT id, provider_name_normalized, cms_certification_number, state, cms_dataset_identifier
      FROM cms_provider_records WHERE provider_type=$1 ORDER BY id`,
@@ -650,6 +705,7 @@ async function syncQualitySnapshots(providerType) {
   const stateAvgConf = parseFloat(stateStats.rows[0]?.avg_conf || 0) || 0.70;
   // National baseline: CMS publishes ~70% Medicare-certified agency compliance baseline
   const nationalAvgConf = 0.70;
+
   for (const pr of records.rows) {
     const hasCcn = !!pr.cms_certification_number;
     const matchRec = await query(
@@ -663,28 +719,80 @@ async function syncQualitySnapshots(providerType) {
       { name: "cms_certification_status", value: hasCcn ? "Active CCN" : "No CCN", score: hasCcn ? 1.0 : 0.0, state_val: "Active CCN", natl_val: "Active CCN" },
       { name: "provider_type_coverage", value: providerType, score: 1.0, state_val: providerType, natl_val: providerType },
     ];
+
     for (const m of measures) {
+      const insertArgs = [
+        pr.id, providerType, m.name, m.value, m.score, m.state_val, m.natl_val,
+        pr.cms_dataset_identifier || "CMS Provider Data Catalog",
+      ];
+      const attemptInsert = () => query(
+        `INSERT INTO cms_quality_snapshots
+           (cms_provider_record_id, provider_type, measure_name, measure_value, measure_score,
+            benchmark_state_value, benchmark_national_value, period, source_dataset, updated_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,'2024',$8,NOW())
+         ON CONFLICT (cms_provider_record_id, measure_name, period)
+         DO UPDATE SET
+           measure_score = EXCLUDED.measure_score,
+           measure_value = EXCLUDED.measure_value,
+           benchmark_state_value = EXCLUDED.benchmark_state_value,
+           benchmark_national_value = EXCLUDED.benchmark_national_value,
+           provider_type = EXCLUDED.provider_type,
+           source_dataset = EXCLUDED.source_dataset,
+           updated_at = NOW()`,
+        insertArgs
+      );
+
       try {
-        await query(
-          `INSERT INTO cms_quality_snapshots
-             (cms_provider_record_id, provider_type, measure_name, measure_value, measure_score,
-              benchmark_state_value, benchmark_national_value, period, source_dataset, updated_at)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,'2024',$8,NOW())
-           ON CONFLICT DO NOTHING`,
-          [pr.id, providerType, m.name, m.value, m.score, m.state_val, m.natl_val,
-           pr.cms_dataset_identifier || "CMS Provider Data Catalog"]
-        );
+        await attemptInsert();
         inserted++;
       } catch (err) {
-        failures.push(`provider_id=${pr.id} measure=${m.name}: ${err.message}`);
+        const errCode = err.code || "UNKNOWN";
+        const isTransient = TRANSIENT_PG_CODES.has(errCode);
+
+        if (isTransient) {
+          await new Promise((r) => setTimeout(r, 500));
+          try {
+            await attemptInsert();
+            inserted++;
+            console.warn(`[MCP] syncQualitySnapshots(${providerType}) — transient retry succeeded: provider_id=${pr.id} measure=${m.name} code=${errCode}`);
+            continue;
+          } catch (retryErr) {
+            failures.push({ provider_id: pr.id, measure: m.name, code: retryErr.code || "UNKNOWN", message: retryErr.message, transient: true });
+          }
+        } else {
+          failures.push({ provider_id: pr.id, measure: m.name, code: errCode, message: err.message, transient: false });
+        }
       }
     }
   }
+
+  const total = records.rows.length * 3;
+  const failureRate = total > 0 ? failures.length / total : 0;
+
   if (failures.length > 0) {
-    console.error(`[MCP] syncQualitySnapshots(${providerType}) — ${failures.length} insert failures:`, failures.slice(0, 5));
+    console.error(
+      `[MCP] syncQualitySnapshots(${providerType}) — ${failures.length}/${total} failures (${(failureRate * 100).toFixed(1)}%):`,
+      failures.slice(0, 10).map((f) => `provider_id=${f.provider_id} measure=${f.measure} code=${f.code} transient=${f.transient}: ${f.message}`)
+    );
+
+    if (failures.length > QUALITY_FAILURE_THRESHOLD) {
+      const sampleErrors = failures.slice(0, 10)
+        .map((f) => `provider_id=${f.provider_id} measure=${f.measure} code=${f.code}: ${f.message}`)
+        .join("; ");
+      const syncStatus = failureRate >= 0.5 ? "error" : "warn";
+      await logSync({
+        syncType: "quality_snapshot",
+        providerType,
+        startedAt,
+        status: syncStatus,
+        counts: { created: inserted, failed: failures.length },
+        error: `${failures.length}/${total} quality snapshot inserts failed (${(failureRate * 100).toFixed(1)}%). Sample: ${sampleErrors}`,
+      });
+    }
   }
+
   console.log(`[MCP] syncQualitySnapshots(${providerType}) — inserted ${inserted}, failed ${failures.length}`);
-  return { inserted, failed: failures.length, errors: failures.slice(0, 5) };
+  return { inserted, failed: failures.length, errors: failures.slice(0, 10) };
 }
 
 export async function getCmsStats() {

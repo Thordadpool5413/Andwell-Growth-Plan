@@ -15,6 +15,13 @@ function isNationalChain(comp) {
   return NATIONAL_CHAINS.some((nc) => haystack.toLowerCase().includes(nc.toLowerCase()));
 }
 
+function resolveCounties(c) {
+  if (c.counties_raw?.length) return c.counties_raw;
+  if (c.known_counties?.length) return c.known_counties;
+  if (c.county) return [c.county];
+  return [];
+}
+
 const SORT_KEYS = [
   { key: "name", label: "Name" },
   { key: "match_status", label: "CMS Status" },
@@ -88,10 +95,128 @@ function DimCell({ value, dark, isAndwell, dimKey }) {
   );
 }
 
+function pickBestMeasure(measures) {
+  if (!measures || !measures.length) return null;
+  const ORDER = ["hhcahps_patient_satisfaction", "patient_satisfaction", "overall_quality", "overall_confidence"];
+  const ranked = [...measures].sort((a, b) => {
+    const ai = ORDER.indexOf(a.measure_name ?? "");
+    const bi = ORDER.indexOf(b.measure_name ?? "");
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+  });
+  return ranked[0];
+}
+
+function QualityBadge({ score, dark }) {
+  if (score == null) return null;
+  const pct = Math.round(Math.min(Math.max(score, 0), 1) * 100);
+  if (pct >= 80) {
+    return (
+      <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${dark ? "bg-emerald-900/50 text-emerald-300" : "bg-emerald-50 text-emerald-700"}`}>
+        High quality
+      </span>
+    );
+  }
+  if (pct >= 60) {
+    return (
+      <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${dark ? "bg-amber-900/50 text-amber-300" : "bg-amber-50 text-amber-700"}`}>
+        Avg
+      </span>
+    );
+  }
+  return (
+    <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${dark ? "bg-red-900/50 text-red-300" : "bg-red-50 text-red-700"}`}>
+      Below avg
+    </span>
+  );
+}
+
+function QualityScoreBar({ score, measureName, measureValue, nationalBenchmark, dark, isAndwell, compact = false }) {
+  const pct = score != null ? Math.round(Math.min(Math.max(score, 0), 1) * 100) : null;
+  const national = nationalBenchmark != null ? Math.round(Math.min(Math.max(parseFloat(nationalBenchmark) || 0, 0), 1) * 100) : null;
+
+  const barColor = isAndwell
+    ? (pct == null ? (dark ? "bg-slate-600" : "bg-slate-300") : "bg-blue-500")
+    : pct == null
+      ? dark ? "bg-slate-600" : "bg-slate-300"
+      : pct >= 80 ? "bg-emerald-500"
+      : pct >= 60 ? "bg-amber-500"
+      : "bg-red-500";
+
+  const labelColor = isAndwell
+    ? (pct == null
+        ? (dark ? "text-slate-500" : "text-slate-400")
+        : (dark ? "text-blue-300" : "text-blue-700"))
+    : pct == null
+      ? (dark ? "text-slate-500" : "text-slate-400")
+      : pct >= 80 ? (dark ? "text-emerald-400" : "text-emerald-700")
+      : pct >= 60 ? (dark ? "text-amber-400" : "text-amber-700")
+      : (dark ? "text-red-400" : "text-red-700");
+
+  const displayLabel = measureName === "hhcahps_patient_satisfaction" || measureName === "patient_satisfaction"
+    ? "HHCAHPS satisfaction"
+    : measureName === "overall_quality"
+      ? "Overall quality"
+      : measureName === "overall_confidence"
+        ? "CMS match quality"
+        : "Quality score";
+
+  if (compact) {
+    return (
+      <div className="flex items-center gap-1.5 min-w-0">
+        <div className={`h-1.5 w-16 rounded-full overflow-hidden ${dark ? "bg-slate-700" : "bg-slate-200"}`}>
+          <div
+            className={`h-full rounded-full transition-all ${barColor}`}
+            style={{ width: `${pct ?? 0}%` }}
+          />
+        </div>
+        <span className={`text-[10px] font-black tabular-nums ${labelColor}`}>
+          {pct != null ? `${pct}%` : "—"}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between gap-1">
+        <span className={`text-[10px] font-black uppercase tracking-wide truncate ${dark ? "text-slate-400" : "text-slate-500"}`}>
+          {displayLabel}
+        </span>
+        <span className={`text-[10px] font-black tabular-nums shrink-0 ${labelColor}`}>
+          {pct != null ? `${pct}%` : "—"}
+        </span>
+      </div>
+      <div className={`h-2 w-full rounded-full overflow-hidden ${dark ? "bg-slate-700" : "bg-slate-200"}`}>
+        <div
+          className={`h-full rounded-full transition-all duration-300 ${barColor}`}
+          style={{ width: `${pct ?? 0}%` }}
+        />
+      </div>
+      {national != null && pct != null && (
+        <div className="flex items-center justify-between">
+          <span className={`text-[9px] ${dark ? "text-slate-600" : "text-slate-400"}`}>
+            Natl. avg: {national}%
+          </span>
+          {pct > national && (
+            <span className={`text-[9px] font-black ${dark ? "text-emerald-500" : "text-emerald-600"}`}>↑ above avg</span>
+          )}
+          {pct < national && (
+            <span className={`text-[9px] font-black ${dark ? "text-amber-500" : "text-amber-600"}`}>↓ below avg</span>
+          )}
+        </div>
+      )}
+      {pct == null && (
+        <p className={`text-[9px] ${dark ? "text-slate-600" : "text-slate-400"}`}>Run CMS sync to populate</p>
+      )}
+    </div>
+  );
+}
+
 function SortableMatrix({ competitors, dark, providerType }) {
   const [sortKey, setSortKey] = useState("name");
   const [sortAsc, setSortAsc] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
+  const [countiesOpenId, setCountiesOpenId] = useState(null);
 
   const hasHospiceCert = (c) => c.provider_type === "hospice" || c.provider_type === "both" || (c.cms_certification_number && (c.match_status === "CMS Verified" || c.match_status === "CMS and Website Verified") && (c.provider_type !== "homehealth"));
   const hasHHCert = (c) => c.provider_type === "homehealth" || c.provider_type === "both";
@@ -105,14 +230,17 @@ function SortableMatrix({ competitors, dark, providerType }) {
     return [...competitors].sort((a, b) => {
       let va, vb;
       if (sortKey === "national") { va = isNationalChain(a) ? 1 : 0; vb = isNationalChain(b) ? 1 : 0; }
-      else if (sortKey === "counties") { va = a.known_counties?.length || 0; vb = b.known_counties?.length || 0; }
+      else if (sortKey === "counties") { va = resolveCounties(a).length; vb = resolveCounties(b).length; }
       else if (sortKey === "services") { va = a.services_raw?.length || 0; vb = b.services_raw?.length || 0; }
       else if (sortKey === "match_confidence") { va = a.match_confidence || 0; vb = b.match_confidence || 0; }
       else if (sortKey === "hospice_cert") { va = hasHospiceCert(a) ? 1 : 0; vb = hasHospiceCert(b) ? 1 : 0; }
       else if (sortKey === "hh_cert") { va = hasHHCert(a) ? 1 : 0; vb = hasHHCert(b) ? 1 : 0; }
       else if (sortKey === "health_system") { va = getHealthSystem(a) ? 1 : 0; vb = getHealthSystem(b) ? 1 : 0; }
       else if (sortKey === "est_beneficiaries") { va = a.estimated_beneficiaries || 0; vb = b.estimated_beneficiaries || 0; }
-      else if (sortKey === "quality_star") { va = a.quality_star_rating || 0; vb = b.quality_star_rating || 0; }
+      else if (sortKey === "quality_star") {
+        va = (a.quality_star_rating || 0) * 100 + (a.quality_snapshot_score != null ? a.quality_snapshot_score * 20 : 0);
+        vb = (b.quality_star_rating || 0) * 100 + (b.quality_snapshot_score != null ? b.quality_snapshot_score * 20 : 0);
+      }
       else { va = (a[sortKey] || "").toString().toLowerCase(); vb = (b[sortKey] || "").toString().toLowerCase(); }
       const cmp = typeof va === "number" ? va - vb : va < vb ? -1 : va > vb ? 1 : 0;
       return sortAsc ? cmp : -cmp;
@@ -188,11 +316,45 @@ function SortableMatrix({ competitors, dark, providerType }) {
                   <td className={`px-4 py-3 text-[11px] ${dark ? "text-slate-400" : "text-slate-500"}`}>
                     {comp.estimated_beneficiaries ? comp.estimated_beneficiaries.toLocaleString() : "—"}
                   </td>
-                  <td className={`px-4 py-3 text-[11px] ${dark ? "text-slate-300" : "text-slate-700"}`}>
-                    {comp.quality_star_rating ? `${comp.quality_star_rating}★` : <span title="Requires CMS quality dataset sync — not derived from match confidence">N/A</span>}
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col gap-1 min-w-[120px]">
+                      {comp.quality_star_rating ? (
+                        <span className={`text-[11px] font-black ${dark ? "text-amber-300" : "text-amber-600"}`}>{comp.quality_star_rating}★</span>
+                      ) : null}
+                      <QualityScoreBar
+                        score={comp.quality_snapshot_score}
+                        measureName={comp.quality_measure_name}
+                        measureValue={comp.quality_measure_value}
+                        nationalBenchmark={comp.quality_national_benchmark}
+                        dark={dark}
+                        isAndwell={false}
+                        compact
+                      />
+                    </div>
                   </td>
-                  <td className={`px-4 py-3 ${dark ? "text-slate-300" : "text-slate-600"}`}>
-                    {comp.known_counties?.length ? comp.known_counties.slice(0, 3).join(", ") + (comp.known_counties.length > 3 ? ` +${comp.known_counties.length - 3}` : "") : "—"}
+                  <td className="px-4 py-3">
+                    {(() => {
+                      const counties = resolveCounties(comp);
+                      const cid = comp.id || comp.name;
+                      const open = countiesOpenId === cid;
+                      if (!counties.length) return <span className={`text-[11px] ${dark ? "text-slate-500" : "text-slate-400"}`}>—</span>;
+                      return (
+                        <div>
+                          <button
+                            onClick={() => setCountiesOpenId(open ? null : cid)}
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-black transition ${dark ? "bg-indigo-900/40 text-indigo-300 hover:bg-indigo-800/50" : "bg-indigo-50 text-indigo-700 hover:bg-indigo-100"}`}
+                            title="Click to view county list"
+                          >
+                            {counties.length} {counties.length === 1 ? "county" : "counties"} {open ? "▲" : "▼"}
+                          </button>
+                          {open && (
+                            <div className={`mt-1.5 rounded-xl p-2 text-[10px] leading-relaxed ${dark ? "bg-slate-800 text-slate-300 border border-slate-700" : "bg-slate-50 text-slate-600 border border-slate-200"}`}>
+                              {counties.join(", ")}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className={`px-4 py-3 ${dark ? "text-slate-300" : "text-slate-600"}`}>
                     {comp.services_raw?.length ? `${comp.services_raw.length} lines` : "—"}
@@ -222,9 +384,37 @@ function SortableMatrix({ competitors, dark, providerType }) {
   );
 }
 
-function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE }) {
+const CARD_SORT_OPTIONS = [
+  { key: "default",            label: "Default order" },
+  { key: "quality_desc",       label: "Quality score: high → low" },
+  { key: "beneficiaries_desc", label: "Beneficiaries: high → low" },
+  { key: "name_asc",           label: "Name: A → Z" },
+];
+
+function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, andwellQuality }) {
   const [expandedId, setExpandedId] = useState(null);
-  const paged = competitors.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
+  const [cardSort, setCardSort] = useState("default");
+  const [countiesOpenId, setCountiesOpenId] = useState(null);
+
+  const sorted = useMemo(() => {
+    if (cardSort === "default") return competitors;
+    return [...competitors].sort((a, b) => {
+      if (cardSort === "quality_desc") {
+        const qa = a.quality_snapshot_score ?? -1;
+        const qb = b.quality_snapshot_score ?? -1;
+        return qb - qa;
+      }
+      if (cardSort === "beneficiaries_desc") {
+        return (b.estimated_beneficiaries || 0) - (a.estimated_beneficiaries || 0);
+      }
+      if (cardSort === "name_asc") {
+        return (a.name || "").localeCompare(b.name || "");
+      }
+      return 0;
+    });
+  }, [competitors, cardSort]);
+
+  const paged = sorted.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
   const hasHospiceCertC = (c) => c.provider_type === "hospice" || c.provider_type === "both" || (c.cms_certification_number && (c.match_status === "CMS Verified" || c.match_status === "CMS and Website Verified") && c.provider_type !== "homehealth");
   const hasHHCertC = (c) => c.provider_type === "homehealth" || c.provider_type === "both";
@@ -237,7 +427,8 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE })
   const getCompValue = (comp, dim) => {
     const national = isNationalChain(comp);
     const status = comp.match_status || "Needs Review";
-    const counties = comp.known_counties?.length || comp.counties_raw?.length || 0;
+    const countiesList = resolveCounties(comp);
+    const counties = countiesList.length;
     const services = comp.services_raw?.length || 0;
     switch (dim.key) {
       case "ccn": return comp.cms_certification_number || "—";
@@ -251,7 +442,7 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE })
       case "match_conf": return comp.match_confidence != null ? `${Math.round(comp.match_confidence * 100)}%` : "—";
       case "est_beneficiaries": return comp.estimated_beneficiaries ? comp.estimated_beneficiaries.toLocaleString() : "—";
       case "quality_star": return comp.quality_star_rating ? `${comp.quality_star_rating}★` : "N/A";
-      case "counties": return counties > 0 ? `${counties} counties` : "Unknown";
+      case "counties": return counties > 0 ? `${counties} ${counties === 1 ? "county" : "counties"}` : "Unknown";
       case "services": return services > 0 ? `${services} lines` : "Unknown";
       case "affiliations": return comp.parent_company || (national ? "National chain" : "None");
       default: return "—";
@@ -259,7 +450,22 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE })
   };
 
   return (
-    <div className="overflow-x-auto pb-2">
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <label className={`text-[11px] font-black uppercase tracking-wide shrink-0 ${dark ? "text-slate-400" : "text-slate-500"}`}>
+          Sort by
+        </label>
+        <select
+          value={cardSort}
+          onChange={(e) => setCardSort(e.target.value)}
+          className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold border transition focus:outline-none focus:ring-2 focus:ring-blue-500 ${dark ? "bg-slate-800 border-slate-700 text-slate-200" : "bg-white border-slate-200 text-slate-700"}`}
+        >
+          {CARD_SORT_OPTIONS.map((opt) => (
+            <option key={opt.key} value={opt.key}>{opt.label}</option>
+          ))}
+        </select>
+      </div>
+      <div className="overflow-x-auto pb-2">
       <div className="flex gap-3" style={{ minWidth: `${(paged.length + 1) * 200}px` }}>
         <div className="w-48 shrink-0">
           <div className={`rounded-2xl border-2 p-4 ${dark ? "border-blue-700 bg-blue-950/30" : "border-blue-400 bg-blue-50"}`}>
@@ -275,6 +481,16 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE })
                   <DimCell value={dim.andwellValue} isAndwell dark={dark} />
                 </div>
               ))}
+            </div>
+            <div className={`mt-3 pt-3 border-t ${dark ? "border-slate-700" : "border-blue-200"}`}>
+              <QualityScoreBar
+                score={andwellQuality?.measure_score ?? null}
+                measureName={andwellQuality?.measure_name ?? "hhcahps_patient_satisfaction"}
+                measureValue={andwellQuality?.measure_value ?? null}
+                nationalBenchmark={andwellQuality?.benchmark_national_value ?? null}
+                dark={dark}
+                isAndwell
+              />
             </div>
           </div>
         </div>
@@ -296,6 +512,7 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE })
                   {comp.cms_only && (
                     <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase ${dark ? "bg-violet-900/40 text-violet-400" : "bg-violet-50 text-violet-600"}`}>CMS discovered</span>
                   )}
+                  <QualityBadge score={comp.quality_snapshot_score} dark={dark} />
                 </div>
                 <p className={`text-sm font-black leading-5 ${dark ? "text-white" : "text-slate-950"}`}>{comp.name}</p>
                 {comp.parent_company && <p className={`text-[10px] mt-0.5 ${dark ? "text-slate-400" : "text-slate-500"}`}>{comp.parent_company}</p>}
@@ -304,12 +521,53 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE })
                 </div>
               </div>
               <div className="space-y-2">
-                {DIMENSIONS.map((dim) => (
-                  <div key={dim.key} className="flex items-center justify-between gap-1 text-[11px]">
-                    <span className={`${dark ? "text-slate-400" : "text-slate-500"} truncate`} title={dim.tooltip}>{dim.label}</span>
-                    <DimCell value={getCompValue(comp, dim)} dark={dark} dimKey={dim.key} />
-                  </div>
-                ))}
+                {DIMENSIONS.map((dim) => {
+                  if (dim.key === "counties") {
+                    const cid = comp.id || comp.name;
+                    const countyList = resolveCounties(comp);
+                    const open = countiesOpenId === cid;
+                    return (
+                      <div key={dim.key} className="text-[11px]">
+                        <div className="flex items-center justify-between gap-1">
+                          <span className={`${dark ? "text-slate-400" : "text-slate-500"} truncate`} title={dim.tooltip}>{dim.label}</span>
+                          {countyList.length > 0 ? (
+                            <button
+                              onClick={() => setCountiesOpenId(open ? null : cid)}
+                              className={`rounded-full px-2 py-0.5 text-[10px] font-black transition ${dark ? "bg-indigo-900/40 text-indigo-300 hover:bg-indigo-800/50" : "bg-indigo-50 text-indigo-700 hover:bg-indigo-100"}`}
+                              title="Click to view county list"
+                            >
+                              {countyList.length} {countyList.length === 1 ? "county" : "counties"} {open ? "▲" : "▼"}
+                            </button>
+                          ) : (
+                            <DimCell value="Unknown" dark={dark} dimKey={dim.key} />
+                          )}
+                        </div>
+                        {open && (
+                          <div className={`mt-1.5 rounded-xl p-2 text-[10px] leading-relaxed ${dark ? "bg-slate-900 text-slate-300 border border-slate-700" : "bg-slate-50 text-slate-600 border border-slate-200"}`}>
+                            {countyList.join(", ")}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+                  return (
+                    <div key={dim.key} className="flex items-center justify-between gap-1 text-[11px]">
+                      <span className={`${dark ? "text-slate-400" : "text-slate-500"} truncate`} title={dim.tooltip}>{dim.label}</span>
+                      <DimCell value={getCompValue(comp, dim)} dark={dark} dimKey={dim.key} />
+                    </div>
+                  );
+                })}
+              </div>
+              <div className={`mt-3 pt-3 border-t ${dark ? "border-slate-700" : "border-slate-100"}`}>
+                <QualityScoreBar
+                  score={comp.quality_snapshot_score != null ? comp.quality_snapshot_score : null}
+                  measureName={comp.quality_measure_name}
+                  measureValue={comp.quality_measure_value}
+                  nationalBenchmark={comp.quality_national_benchmark}
+                  stateBenchmark={comp.quality_state_benchmark}
+                  dark={dark}
+                  isAndwell={false}
+                />
               </div>
               {expanded && <CmsEvidenceCard competitor={comp} />}
               <button
@@ -328,6 +586,7 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE })
           </div>
         )}
       </div>
+      </div>
     </div>
   );
 }
@@ -340,6 +599,7 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
   const [filter, setFilter] = useState("all");
   const [page, setPage] = useState(0);
   const [viewMode, setViewMode] = useState("columns");
+  const [andwellQuality, setAndwellQuality] = useState(null);
   const PAGE_SIZE = 6;
 
   useEffect(() => {
@@ -348,17 +608,29 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
       try {
         const tr = await fetch("/api/ai/token");
         const { token } = tr.ok ? await tr.json() : { token: "" };
-        const r = await fetch("/api/cms/competitors", { headers: { "x-ai-token": token } });
-        if (!r.ok) throw new Error(r.statusText);
-        const data = await r.json();
+        const [compRes, qualRes] = await Promise.all([
+          fetch("/api/cms/competitors", { headers: { "x-ai-token": token } }),
+          fetch("/api/cms/tool", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-ai-token": token },
+            body: JSON.stringify({ tool_name: "get_provider_quality_snapshot", args: { provider_name: "Andwell", provider_type: providerType } }),
+          }),
+        ]);
+        if (!compRes.ok) throw new Error(compRes.statusText);
+        const data = await compRes.json();
         setCompetitors(data.competitors || []);
+        if (qualRes.ok) {
+          const qualData = await qualRes.json();
+          const best = pickBestMeasure(qualData.quality_measures || []);
+          setAndwellQuality(best || null);
+        }
       } catch (err) {
         setError(err.toString());
       } finally {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [providerType]);
 
   const filtered = useMemo(() => {
     return competitors.filter((c) => {
@@ -366,6 +638,7 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
       if (filter === "review") return !c.match_status || c.match_status === "Needs Review";
       if (filter === "national") return isNationalChain(c);
       if (filter === "regional") return !isNationalChain(c);
+      if (filter === "high_quality") return c.quality_snapshot_score != null && c.quality_snapshot_score >= 0.8;
       const ptFilter = providerType === "hospice" ? ["hospice", "both"] : ["homehealth", "both"];
       if (filter === "type") return ptFilter.includes(c.provider_type);
       return true;
@@ -387,6 +660,7 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
           { id: "review", label: "Needs Review" },
           { id: "national", label: "National chains" },
           { id: "regional", label: "Regional" },
+          { id: "high_quality", label: "High quality (≥80%)" },
         ].map((f) => (
           <button
             key={f.id}
@@ -424,7 +698,7 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
 
       {!loading && !error && viewMode === "columns" && (
         <>
-          <ComparisonColumns competitors={filtered} dark={dark} providerType={providerType} page={page} PAGE_SIZE={PAGE_SIZE} />
+          <ComparisonColumns competitors={filtered} dark={dark} providerType={providerType} page={page} PAGE_SIZE={PAGE_SIZE} andwellQuality={andwellQuality} />
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2">
               <button disabled={page === 0} onClick={() => setPage((p) => p - 1)}
