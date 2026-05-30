@@ -598,11 +598,32 @@ export async function getCompetitorSummary() {
              cpr.provider_name_raw, cpr.cms_certification_number, cpr.address, cpr.city,
              cpr.zip_code, cpr.county, cpr.last_synced_at,
              cwp.services_raw, cwp.counties_raw, cwp.quality_claims, cwp.crawl_status,
-             false AS cms_only
+             false AS cms_only,
+             qs.measure_score AS quality_snapshot_score,
+             qs.measure_name AS quality_measure_name,
+             qs.measure_value AS quality_measure_value,
+             qs.benchmark_national_value AS quality_national_benchmark,
+             qs.benchmark_state_value AS quality_state_benchmark
       FROM competitor_seeds cs
       LEFT JOIN competitor_cms_matches ccm ON ccm.competitor_seed_id = cs.id
       LEFT JOIN cms_provider_records cpr ON cpr.id = ccm.cms_provider_record_id
       LEFT JOIN competitor_web_profiles cwp ON cwp.competitor_seed_id = cs.id
+      LEFT JOIN LATERAL (
+        SELECT measure_name, measure_value, measure_score,
+               benchmark_national_value, benchmark_state_value
+        FROM cms_quality_snapshots
+        WHERE cms_provider_record_id = cpr.id
+        ORDER BY
+          CASE measure_name
+            WHEN 'hhcahps_patient_satisfaction' THEN 0
+            WHEN 'patient_satisfaction' THEN 1
+            WHEN 'overall_quality' THEN 2
+            WHEN 'overall_confidence' THEN 3
+            ELSE 4
+          END,
+          updated_at DESC
+        LIMIT 1
+      ) qs ON true
       ORDER BY cs.name
     `);
 
@@ -616,8 +637,29 @@ export async function getCompetitorSummary() {
              NULL AS geocoded_lat, NULL AS geocoded_lng, NULL AS geocode_source,
              NULL AS services_raw, NULL AS counties_raw, NULL AS quality_claims,
              NULL AS crawl_status, NULL AS evidence_summary,
-             true AS cms_only
+             true AS cms_only,
+             qs.measure_score AS quality_snapshot_score,
+             qs.measure_name AS quality_measure_name,
+             qs.measure_value AS quality_measure_value,
+             qs.benchmark_national_value AS quality_national_benchmark,
+             qs.benchmark_state_value AS quality_state_benchmark
       FROM cms_provider_records cpr
+      LEFT JOIN LATERAL (
+        SELECT measure_name, measure_value, measure_score,
+               benchmark_national_value, benchmark_state_value
+        FROM cms_quality_snapshots
+        WHERE cms_provider_record_id = cpr.id
+        ORDER BY
+          CASE measure_name
+            WHEN 'hhcahps_patient_satisfaction' THEN 0
+            WHEN 'patient_satisfaction' THEN 1
+            WHEN 'overall_quality' THEN 2
+            WHEN 'overall_confidence' THEN 3
+            ELSE 4
+          END,
+          updated_at DESC
+        LIMIT 1
+      ) qs ON true
       WHERE NOT EXISTS (
         SELECT 1 FROM competitor_cms_matches ccm WHERE ccm.cms_provider_record_id = cpr.id
       )
