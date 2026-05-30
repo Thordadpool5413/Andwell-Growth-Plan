@@ -34,22 +34,22 @@ export default function ChartContainer({ height = "h-80", children, title, subti
   const isReady = dims.width > 0 && dims.height > 0;
 
   return (
-    <div>
+    <div className="flex flex-col h-full">
       {(title || subtitle) && (
-        <div className="mb-3">
-          {title && <p className={`text-sm font-black ${dark ? "text-white" : "text-slate-900"}`}>{title}</p>}
-          {subtitle && <p className={`text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{subtitle}</p>}
+        <div className="mb-4">
+          {title && <p className={`text-sm font-black tracking-tight ${dark ? "text-white" : "text-slate-900"}`}>{title}</p>}
+          {subtitle && <p className={`mt-0.5 text-xs font-medium ${dark ? "text-slate-400" : "text-slate-500"}`}>{subtitle}</p>}
         </div>
       )}
-      <div ref={wrapperRef} className={height}>
+      <div ref={wrapperRef} className={`${height} min-h-0 flex-1`}>
         {isReady ? (
-          <ResponsiveContainer width={dims.width} height={dims.height}>
+          <ResponsiveContainer width="100%" height="100%">
             {children}
           </ResponsiveContainer>
         ) : null}
       </div>
       {caption && (
-        <p className={`mt-2 text-[11px] italic ${dark ? "text-slate-500" : "text-slate-400"}`}>{caption}</p>
+        <p className={`mt-4 text-[11px] font-medium italic leading-relaxed ${dark ? "text-slate-500" : "text-slate-400"}`}>{caption}</p>
       )}
     </div>
   );
