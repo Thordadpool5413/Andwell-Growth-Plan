@@ -355,9 +355,36 @@ function SortableMatrix({ competitors, dark, providerType }) {
   );
 }
 
+const CARD_SORT_OPTIONS = [
+  { key: "default",            label: "Default order" },
+  { key: "quality_desc",       label: "Quality score: high → low" },
+  { key: "beneficiaries_desc", label: "Beneficiaries: high → low" },
+  { key: "name_asc",           label: "Name: A → Z" },
+];
+
 function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, andwellQuality }) {
   const [expandedId, setExpandedId] = useState(null);
-  const paged = competitors.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
+  const [cardSort, setCardSort] = useState("default");
+
+  const sorted = useMemo(() => {
+    if (cardSort === "default") return competitors;
+    return [...competitors].sort((a, b) => {
+      if (cardSort === "quality_desc") {
+        const qa = a.quality_snapshot_score ?? -1;
+        const qb = b.quality_snapshot_score ?? -1;
+        return qb - qa;
+      }
+      if (cardSort === "beneficiaries_desc") {
+        return (b.estimated_beneficiaries || 0) - (a.estimated_beneficiaries || 0);
+      }
+      if (cardSort === "name_asc") {
+        return (a.name || "").localeCompare(b.name || "");
+      }
+      return 0;
+    });
+  }, [competitors, cardSort]);
+
+  const paged = sorted.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
   const hasHospiceCertC = (c) => c.provider_type === "hospice" || c.provider_type === "both" || (c.cms_certification_number && (c.match_status === "CMS Verified" || c.match_status === "CMS and Website Verified") && c.provider_type !== "homehealth");
   const hasHHCertC = (c) => c.provider_type === "homehealth" || c.provider_type === "both";
@@ -392,7 +419,22 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, a
   };
 
   return (
-    <div className="overflow-x-auto pb-2">
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <label className={`text-[11px] font-black uppercase tracking-wide shrink-0 ${dark ? "text-slate-400" : "text-slate-500"}`}>
+          Sort by
+        </label>
+        <select
+          value={cardSort}
+          onChange={(e) => setCardSort(e.target.value)}
+          className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold border transition focus:outline-none focus:ring-2 focus:ring-blue-500 ${dark ? "bg-slate-800 border-slate-700 text-slate-200" : "bg-white border-slate-200 text-slate-700"}`}
+        >
+          {CARD_SORT_OPTIONS.map((opt) => (
+            <option key={opt.key} value={opt.key}>{opt.label}</option>
+          ))}
+        </select>
+      </div>
+      <div className="overflow-x-auto pb-2">
       <div className="flex gap-3" style={{ minWidth: `${(paged.length + 1) * 200}px` }}>
         <div className="w-48 shrink-0">
           <div className={`rounded-2xl border-2 p-4 ${dark ? "border-blue-700 bg-blue-950/30" : "border-blue-400 bg-blue-50"}`}>
@@ -482,6 +524,7 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, a
             <p className={`text-sm ${dark ? "text-slate-400" : "text-slate-500"}`}>No competitors match this filter.</p>
           </div>
         )}
+      </div>
       </div>
     </div>
   );
