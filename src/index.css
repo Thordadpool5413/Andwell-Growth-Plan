@@ -42,6 +42,17 @@ textarea {
   animation: tabFadeIn 150ms ease-out both;
 }
 
+/* AI panel trigger — one-shot attention pulse on new tab */
+@keyframes askPanelPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7); }
+  60%  { box-shadow: 0 0 0 12px rgba(139, 92, 246, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
+}
+
+.ask-panel-pulse {
+  animation: askPanelPulse 1s ease-out 1;
+}
+
 /* Board Report print styles — suppress all UI chrome */
 @media print {
   header,

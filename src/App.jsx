@@ -172,7 +172,7 @@ function Dashboard() {
           </div>
         </div>
       </div>
-      <AskPanel rows={rows} totals={totals} />
+      <AskPanel rows={rows} totals={totals} activeTab={activeTab} />
     </div>
   );
 }
