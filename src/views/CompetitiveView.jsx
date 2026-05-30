@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import {
   Bar, BarChart, CartesianGrid, Cell,
-  Tooltip, XAxis, YAxis,
+  XAxis, YAxis, Legend,
 } from "recharts";
 import Card from "../components/Card.jsx";
 import ChartContainer from "../components/ChartContainer.jsx";
+import CustomTooltip from "../components/CustomTooltip.jsx";
 import Metric from "../components/Metric.jsx";
 import Badge from "../components/Badge.jsx";
 import Abbr from "../components/Abbr.jsx";
@@ -79,12 +80,16 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
   const summary = getProviderSummary(service);
   const providers = namedProviderRows.filter((row) => row.service === service).sort((a, b) => b.beneficiaries - a.beneficiaries);
   const countyProviders = providers.filter((row) => row.locationCounty === selectedCounty);
-  const chartRows = providers.slice(0, 10).map((provider) => ({ ...provider, sharePct: Number((provider.providerVolumeShare * 100).toFixed(1)) }));
+  const chartRows = providers.slice(0, 10).map((provider) => ({
+    ...provider,
+    sharePct: Number((provider.providerVolumeShare * 100).toFixed(1)),
+    isAndwell: provider.isAndwellCmsRecord,
+  }));
   const threat = getCompetitiveThreatScore(selectedCounty);
 
   return (
     <div className="space-y-6">
-      <SectionHeader eyebrow="Competitive view" title="Named provider competitor layer">
+      <SectionHeader eyebrow="Competitive view" icon="⚔️" title="Named provider competitor layer">
         Provider file share, CMS-verified competitor matching, and the Andwell comparison grid. Use the comparison grid tab to see each competitor cross-referenced with CMS certification data and website intelligence.
       </SectionHeader>
 
@@ -146,56 +151,69 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2">
-        {COMPETITIVE_TABS.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setActiveTab(t.id)}
-            className={`rounded-full px-4 py-2 text-sm font-black transition ${activeTab === t.id ? "bg-blue-600 text-white" : dark ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-blue-50"}`}
-          >
-            {t.label}
-          </button>
-        ))}
-        {activeTab === "providers" && (
-          <>
-            {["Home Healthcare", "Hospice"].map((item) => (
-              <button key={item} onClick={() => setService(item)} className={`rounded-full px-4 py-2 text-sm font-black transition ${service === item ? "bg-slate-700 text-white" : dark ? "bg-slate-800 text-slate-400 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50"}`}>
-                {item}
-              </button>
-            ))}
-            {Object.keys(cmsCountyMarket).map((county) => (
-              <button key={county} onClick={() => setSelectedCounty(county)} className={`rounded-full px-4 py-2 text-sm font-black transition ${selectedCounty === county ? dark ? "bg-slate-100 text-slate-950" : "bg-slate-950 text-white" : dark ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"}`}>
-                {county}
-              </button>
-            ))}
+      <div className={`rounded-2xl border ${dark ? "border-slate-700 bg-slate-800/40" : "border-slate-200 bg-white"}`}>
+        <div className={`flex border-b ${dark ? "border-slate-700" : "border-slate-200"}`}>
+          {COMPETITIVE_TABS.map((t) => (
             <button
-              onClick={() => exportCompetitiveCSV(providers)}
-              className={`ml-auto rounded-full px-4 py-2 text-xs font-black transition ${dark ? "bg-slate-700 text-emerald-400 ring-1 ring-slate-600 hover:bg-slate-600" : "bg-white text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-50"}`}
+              key={t.id}
+              onClick={() => setActiveTab(t.id)}
+              className={`px-5 py-3 text-sm font-black transition border-b-2 -mb-px ${
+                activeTab === t.id
+                  ? dark ? "border-blue-400 text-blue-400" : "border-blue-600 text-blue-700"
+                  : dark ? "border-transparent text-slate-400 hover:text-slate-200" : "border-transparent text-slate-500 hover:text-slate-700"
+              }`}
             >
-              Export CSV
+              {t.label}
             </button>
-          </>
-        )}
+          ))}
+        </div>
+        <div className="p-4">
+          {activeTab === "providers" && (
+            <div className="flex flex-wrap gap-2">
+              {["Home Healthcare", "Hospice"].map((item) => (
+                <button key={item} onClick={() => setService(item)} className={`rounded-full px-4 py-2 text-sm font-black transition ${service === item ? "bg-slate-700 text-white" : dark ? "bg-slate-800 text-slate-400 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50"}`}>
+                  {item}
+                </button>
+              ))}
+              {Object.keys(cmsCountyMarket).map((county) => (
+                <button key={county} onClick={() => setSelectedCounty(county)} className={`rounded-full px-4 py-2 text-sm font-black transition ${selectedCounty === county ? dark ? "bg-slate-100 text-slate-950" : "bg-slate-950 text-white" : dark ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"}`}>
+                  {county}
+                </button>
+              ))}
+              <button
+                onClick={() => exportCompetitiveCSV(providers)}
+                className={`ml-auto rounded-full px-4 py-2 text-xs font-black transition ${dark ? "bg-slate-700 text-emerald-400 ring-1 ring-slate-600 hover:bg-slate-600" : "bg-white text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-50"}`}
+              >
+                Export CSV
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {activeTab === "providers" && (
         <section className="grid gap-6 lg:grid-cols-[1fr_1fr]">
           <Card title={`Top ${service} providers`} eyebrow="Provider file share">
-            <ChartContainer height="h-96">
-                <BarChart data={chartRows} layout="vertical" margin={{ left: 10, right: 20, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
-                  <XAxis
-                    type="number"
-                    tickFormatter={(value) => `${value}%`}
-                    tick={{ fill: dark ? "#94a3b8" : "#475569" }}
-                    label={{ value: "Provider file share (%)", position: "insideBottom", offset: -12, fontSize: 10, fill: dark ? "#64748b" : "#94a3b8" }}
-                  />
-                  <YAxis type="category" dataKey="providerName" width={170} tick={{ fontSize: 11, fill: dark ? "#94a3b8" : "#475569" }} />
-                  <Tooltip formatter={(value, name) => name === "sharePct" ? `${value}%` : number(value)} contentStyle={dark ? { backgroundColor: "#1e293b", border: "1px solid #334155", color: "#f1f5f9" } : undefined} />
-                  <Bar dataKey="sharePct" name="Provider file share" radius={[0, 8, 8, 0]}>
-                    {chartRows.map((row) => <Cell key={row.providerName} fill={row.isAndwellCmsRecord ? COLORS.blue : COLORS.slate} />)}
-                  </Bar>
-                </BarChart>
+            <ChartContainer
+              height="h-96"
+              title={`${service} — top 10 by provider file share`}
+              subtitle="Andwell highlighted in blue"
+              caption="Source: CMS Provider File — provider file share ≠ county market share"
+            >
+              <BarChart data={chartRows} layout="vertical" margin={{ left: 10, right: 20, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
+                <XAxis
+                  type="number"
+                  tickFormatter={(value) => `${value}%`}
+                  tick={{ fill: dark ? "#94a3b8" : "#475569" }}
+                  label={{ value: "Provider file share (%)", position: "insideBottom", offset: -12, fontSize: 10, fill: dark ? "#64748b" : "#94a3b8" }}
+                />
+                <YAxis type="category" dataKey="providerName" width={170} tick={{ fontSize: 11, fill: dark ? "#94a3b8" : "#475569" }} />
+                <CustomTooltip formatter={(value, name) => name === "sharePct" ? `${value}%` : number(value)} />
+                <Bar dataKey="sharePct" name="Provider file share" radius={[0, 8, 8, 0]}>
+                  {chartRows.map((row) => <Cell key={row.providerName} fill={row.isAndwellCmsRecord ? COLORS.blue : COLORS.slate} />)}
+                </Bar>
+              </BarChart>
             </ChartContainer>
           </Card>
           <Card title={`${selectedCounty} named providers`} eyebrow="County located providers">
@@ -252,8 +270,8 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
                   </tr>
                 </thead>
                 <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-slate-100"}`}>
-                  {marketShareBuildRows.map((row) => (
-                    <tr key={row.layer} className={`align-top ${dark ? "hover:bg-slate-700/50" : "hover:bg-slate-50"}`}>
+                  {marketShareBuildRows.map((row, i) => (
+                    <tr key={row.layer} className={`align-top ${dark ? i % 2 === 1 ? "bg-slate-800/60 hover:bg-slate-700/50" : "hover:bg-slate-700/50" : i % 2 === 1 ? "bg-slate-50/60 hover:bg-slate-50" : "hover:bg-slate-50"}`}>
                       <td className={`px-5 py-4 font-black ${dark ? "text-white" : ""}`}>{row.layer}</td>
                       <td className="px-5 py-4"><Badge tone={badgeTone(row.status)}>{row.status}</Badge></td>
                       <td className={`px-5 py-4 ${dark ? "text-slate-300" : "text-slate-700"}`}>{row.data}</td>
@@ -265,15 +283,20 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
               </table>
             </div>
           </Card>
+
           <Card title="Market share formulas" eyebrow="Formula transparency">
-            <div className="grid gap-3 md:grid-cols-2">
-              {marketShareFormulaRows.map((row) => (
-                <div key={row.metric} className={`rounded-2xl border p-4 ${dark ? "border-slate-700 bg-slate-700/30" : "border-slate-200 bg-slate-50"}`}>
-                  <div className="flex items-center justify-between gap-3">
-                    <p className={`font-black ${dark ? "text-white" : "text-slate-950"}`}>{row.metric}</p>
-                    <Badge tone={row.state.includes("Built") ? "green" : "amber"}>{row.state}</Badge>
+            <div className={`grid gap-0 rounded-2xl border overflow-hidden ${dark ? "border-slate-700" : "border-slate-200"}`}>
+              {marketShareFormulaRows.map((row, i) => (
+                <div key={row.metric} className={`grid grid-cols-[1fr_2fr] gap-0 border-b last:border-b-0 ${dark ? "border-slate-700" : "border-slate-200"}`}>
+                  <div className={`px-5 py-4 border-r ${dark ? "border-slate-700 bg-slate-800/60" : "border-slate-200 bg-slate-50"}`}>
+                    <div className="flex flex-col gap-1.5">
+                      <p className={`font-black text-sm ${dark ? "text-white" : "text-slate-950"}`}>{row.metric}</p>
+                      <Badge tone={row.state.includes("Built") ? "green" : "amber"}>{row.state}</Badge>
+                    </div>
                   </div>
-                  <p className={`mt-2 text-sm leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>{row.formula}</p>
+                  <div className="px-5 py-4">
+                    <p className={`text-sm leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>{row.formula}</p>
+                  </div>
                 </div>
               ))}
             </div>

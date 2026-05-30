@@ -13,7 +13,42 @@ import { currency, number } from "../utils/formatters.js";
 
 const CMS_LAST_SYNCED = "2026-05-01";
 
-const tierTone = (tier) => tier === "Prime" ? "green" : tier === "Strong" ? "blue" : tier === "Developing" ? "amber" : "slate";
+const TIER_STYLES = {
+  Prime: {
+    bg: "bg-emerald-100 dark:bg-emerald-900/40",
+    text: "text-emerald-700 dark:text-emerald-300",
+    dot: "bg-emerald-500",
+    border: "border-emerald-300 dark:border-emerald-700",
+  },
+  Strong: {
+    bg: "bg-blue-100 dark:bg-blue-900/40",
+    text: "text-blue-700 dark:text-blue-300",
+    dot: "bg-blue-500",
+    border: "border-blue-300 dark:border-blue-700",
+  },
+  Developing: {
+    bg: "bg-amber-100 dark:bg-amber-900/40",
+    text: "text-amber-700 dark:text-amber-300",
+    dot: "bg-amber-500",
+    border: "border-amber-300 dark:border-amber-700",
+  },
+  Other: {
+    bg: "bg-slate-100 dark:bg-slate-800",
+    text: "text-slate-600 dark:text-slate-400",
+    dot: "bg-slate-400",
+    border: "border-slate-200 dark:border-slate-700",
+  },
+};
+
+function TierChip({ tier }) {
+  const s = TIER_STYLES[tier] || TIER_STYLES.Other;
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1 text-sm font-black ${s.bg} ${s.text} ${s.border}`}>
+      <span className={`h-2 w-2 rounded-full flex-shrink-0 ${s.dot}`} />
+      {tier}
+    </span>
+  );
+}
 
 export default function OpportunityScore({ rows }) {
   const { dark } = useDarkMode();
@@ -29,7 +64,7 @@ export default function OpportunityScore({ rows }) {
 
   return (
     <div className="space-y-6">
-      <SectionHeader eyebrow="Opportunity scoring" title="County opportunity ranking with factor analysis">
+      <SectionHeader eyebrow="Opportunity scoring" icon="🏆" title="County opportunity ranking with factor analysis">
         Composite score (0–100) combining market size (25%), low competition (20%), Andwell presence (15%), revenue efficiency (20%), and growth potential (20%). Higher is better.
       </SectionHeader>
 
@@ -76,23 +111,26 @@ export default function OpportunityScore({ rows }) {
             <div key={county.county} className={`rounded-2xl border p-5 transition ${dark ? "border-slate-700 bg-slate-800 hover:border-slate-600" : "border-slate-200 bg-white hover:border-slate-300"}`}>
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl font-black text-lg ${
-                    index === 0 ? "bg-amber-100 text-amber-700" : index === 1 ? "bg-slate-100 text-slate-600" : index === 2 ? "bg-orange-100 text-orange-700" : dark ? "bg-slate-700 text-slate-300" : "bg-slate-100 text-slate-500"
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl font-black text-lg flex-shrink-0 ${
+                    index === 0 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
+                    : index === 1 ? "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                    : index === 2 ? "bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300"
+                    : dark ? "bg-slate-700 text-slate-300" : "bg-slate-100 text-slate-500"
                   }`}>
                     {index + 1}
                   </div>
                   <div>
                     <p className={`text-lg font-black ${dark ? "text-white" : "text-slate-950"}`}>{county.county}</p>
-                    <div className="mt-1 flex items-center gap-2">
-                      <Badge tone={tierTone(county.tier)}>{county.tier}</Badge>
+                    <div className="mt-1 flex items-center gap-2 flex-wrap">
+                      <TierChip tier={county.tier} />
                       <span className={`text-sm ${dark ? "text-slate-400" : "text-slate-500"}`}>
-                        {number(county.marketUsers)} users | Threat: {county.threatScore}/100
+                        {number(county.marketUsers)} users · Threat {county.threatScore}/100
                       </span>
                     </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className={`text-3xl font-black ${county.score >= 60 ? dark ? "text-emerald-400" : "text-emerald-600" : dark ? "text-amber-400" : "text-amber-600"}`}>
+                <div className="text-right flex-shrink-0">
+                  <p className={`text-4xl font-black ${county.score >= 60 ? dark ? "text-emerald-400" : "text-emerald-600" : dark ? "text-amber-400" : "text-amber-600"}`}>
                     {county.score}
                   </p>
                   <p className={`text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>/100</p>
@@ -100,7 +138,11 @@ export default function OpportunityScore({ rows }) {
               </div>
 
               <div className="mt-4">
-                <div className={`h-2 w-full overflow-hidden rounded-full ${dark ? "bg-slate-700" : "bg-slate-100"}`}>
+                <div className="flex items-center justify-between mb-1 text-xs">
+                  <span className={dark ? "text-slate-500" : "text-slate-400"}>Score</span>
+                  <span className={`font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>{county.score}/100</span>
+                </div>
+                <div className={`h-2.5 w-full overflow-hidden rounded-full ${dark ? "bg-slate-700" : "bg-slate-100"}`}>
                   <div
                     className={`h-full rounded-full transition-all ${county.score >= 80 ? "bg-emerald-500" : county.score >= 60 ? "bg-blue-500" : county.score >= 40 ? "bg-amber-500" : "bg-slate-400"}`}
                     style={{ width: `${county.score}%` }}
@@ -123,7 +165,7 @@ export default function OpportunityScore({ rows }) {
               <div className="mt-3 flex gap-6 text-sm">
                 <div><span className={dark ? "text-slate-400" : "text-slate-500"}>Y1 rev: </span><span className={`font-black ${dark ? "text-blue-400" : "text-blue-700"}`}>{currency(county.y1Revenue)}</span></div>
                 <div><span className={dark ? "text-slate-400" : "text-slate-500"}>Y3 rev: </span><span className={`font-black ${dark ? "text-emerald-400" : "text-emerald-600"}`}>{currency(county.y3Revenue)}</span></div>
-                <div><span className={dark ? "text-slate-400" : "text-slate-500"}>Growth: </span><span className={`font-black text-emerald-600`}>+{county.y1Revenue > 0 ? Math.round((county.y3Revenue - county.y1Revenue) / county.y1Revenue * 100) : 0}%</span></div>
+                <div><span className={dark ? "text-slate-400" : "text-slate-500"}>Growth: </span><span className="font-black text-emerald-600">+{county.y1Revenue > 0 ? Math.round((county.y3Revenue - county.y1Revenue) / county.y1Revenue * 100) : 0}%</span></div>
               </div>
             </div>
           ))}
