@@ -205,7 +205,10 @@ function SortableMatrix({ competitors, dark, providerType }) {
       else if (sortKey === "hh_cert") { va = hasHHCert(a) ? 1 : 0; vb = hasHHCert(b) ? 1 : 0; }
       else if (sortKey === "health_system") { va = getHealthSystem(a) ? 1 : 0; vb = getHealthSystem(b) ? 1 : 0; }
       else if (sortKey === "est_beneficiaries") { va = a.estimated_beneficiaries || 0; vb = b.estimated_beneficiaries || 0; }
-      else if (sortKey === "quality_star") { va = a.quality_star_rating || 0; vb = b.quality_star_rating || 0; }
+      else if (sortKey === "quality_star") {
+        va = (a.quality_star_rating || 0) * 100 + (a.quality_snapshot_score != null ? a.quality_snapshot_score * 20 : 0);
+        vb = (b.quality_star_rating || 0) * 100 + (b.quality_snapshot_score != null ? b.quality_snapshot_score * 20 : 0);
+      }
       else { va = (a[sortKey] || "").toString().toLowerCase(); vb = (b[sortKey] || "").toString().toLowerCase(); }
       const cmp = typeof va === "number" ? va - vb : va < vb ? -1 : va > vb ? 1 : 0;
       return sortAsc ? cmp : -cmp;
@@ -506,6 +509,7 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
       if (filter === "review") return !c.match_status || c.match_status === "Needs Review";
       if (filter === "national") return isNationalChain(c);
       if (filter === "regional") return !isNationalChain(c);
+      if (filter === "high_quality") return c.quality_snapshot_score != null && c.quality_snapshot_score >= 0.8;
       const ptFilter = providerType === "hospice" ? ["hospice", "both"] : ["homehealth", "both"];
       if (filter === "type") return ptFilter.includes(c.provider_type);
       return true;
@@ -527,6 +531,7 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
           { id: "review", label: "Needs Review" },
           { id: "national", label: "National chains" },
           { id: "regional", label: "Regional" },
+          { id: "high_quality", label: "High quality (≥80%)" },
         ].map((f) => (
           <button
             key={f.id}
