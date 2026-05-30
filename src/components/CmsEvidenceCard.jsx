@@ -8,9 +8,11 @@ export default function CmsEvidenceCard({ competitor, compact = false }) {
 
   if (!competitor) return null;
 
+  // Display only the persisted backend status — never infer from crawl_status alone.
+  // "CMS and Website Verified" is written by the server only when corroboration passes.
   const status = competitor.match_status || "Needs Review";
   const hasWebData = competitor.crawl_status === "success";
-  const displayStatus = hasWebData && (status === "CMS Verified") ? "CMS and Website Verified" : status;
+  const displayStatus = status;
 
   const border = displayStatus === "CMS Verified" || displayStatus === "CMS and Website Verified"
     ? dark ? "border-emerald-800/50" : "border-emerald-200"
