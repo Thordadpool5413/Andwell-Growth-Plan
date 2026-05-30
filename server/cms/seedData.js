@@ -28,7 +28,7 @@ export const SEEDED_COMPETITORS = [
     aliases: ["Northern Light Home Care & Hospice", "NLHCH", "Northern Light"],
     parent_company: "Northern Light Health",
     provider_type: "both",
-    website_url: "https://northernlighthealth.org/Locations/Northern-Light-Home-Care-Hospice",
+    website_url: "https://northernlighthealth.org/homecare-hospice",
     known_counties: ["Cumberland", "Penobscot", "Kennebec"],
   },
   {
@@ -36,7 +36,7 @@ export const SEEDED_COMPETITORS = [
     aliases: ["MaineHealth Care At Home", "MH Care at Home"],
     parent_company: "MaineHealth",
     provider_type: "both",
-    website_url: "https://mainehealth.org/care-at-home",
+    website_url: "https://www.mainehealth.org/mainehealth-home-health-and-hospice",
     known_counties: ["York", "Cumberland"],
   },
   {
@@ -44,7 +44,7 @@ export const SEEDED_COMPETITORS = [
     aliases: ["CHANS Home Health Care", "Chans Home Health & Hospice", "CHANS"],
     parent_company: "MaineHealth",
     provider_type: "both",
-    website_url: "https://mainehealth.org/chans",
+    website_url: "https://www.mainehealth.org/chans-home-health-hospice",
     known_counties: ["Cumberland"],
   },
   {
@@ -52,7 +52,7 @@ export const SEEDED_COMPETITORS = [
     aliases: ["Mainegeneral Community Care", "MaineGeneral"],
     parent_company: "MaineGeneral Health",
     provider_type: "both",
-    website_url: "https://www.mainegeneral.org/community-care",
+    website_url: "https://www.mainegeneral.org/medical-services/home-care-hospice/",
     known_counties: ["Kennebec"],
   },
   {
@@ -68,7 +68,7 @@ export const SEEDED_COMPETITORS = [
     aliases: ["St Joseph Hospice", "St Joseph Homecare", "Saint Joseph Hospice"],
     parent_company: "Northern Light Health",
     provider_type: "both",
-    website_url: "https://northernlighthealth.org/Locations/Northern-Light-St-Joseph-Hospital",
+    website_url: "https://stjosephbangor.org/services/homecare-and-hospice/",
     known_counties: ["Penobscot"],
   },
   {
@@ -92,7 +92,7 @@ export const SEEDED_COMPETITORS = [
     aliases: ["Constellation Home Care Me Llc", "Constellation Home Care"],
     parent_company: "Constellation Health Services",
     provider_type: "both",
-    website_url: "https://www.constellationhealthservices.com",
+    website_url: "https://constellationhs.com",
     known_counties: ["Androscoggin"],
   },
   {
@@ -116,7 +116,7 @@ export const SEEDED_COMPETITORS = [
     aliases: ["Miles Memorial Home Health", "Miles St Andrews"],
     parent_company: "MaineHealth",
     provider_type: "both",
-    website_url: "https://mainehealth.org/miles-and-st-andrews",
+    website_url: "https://www.mainehealth.org/mainehealth-home-health-and-hospice",
     known_counties: ["Lincoln", "Knox"],
   },
   {
@@ -124,7 +124,7 @@ export const SEEDED_COMPETITORS = [
     aliases: ["VNA Hospice of Southern Maine", "Hospice of Southern Maine", "VNA"],
     parent_company: null,
     provider_type: "both",
-    website_url: "https://www.vnacarenetwork.org",
+    website_url: "https://www.vnacarenewengland.org/",
     known_counties: ["Cumberland", "York"],
   },
   {
@@ -132,7 +132,7 @@ export const SEEDED_COMPETITORS = [
     aliases: ["Aroostook Hospice"],
     parent_company: null,
     provider_type: "hospice",
-    website_url: "https://www.aroostookhospice.org",
+    website_url: "https://aroostookhouseofcomfort.org/",
     known_counties: ["Aroostook"],
   },
 ];
