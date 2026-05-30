@@ -20,6 +20,7 @@ import LaunchTimeline from "./views/LaunchTimeline.jsx";
 import BoardReport from "./views/BoardReport.jsx";
 import LaunchChecklist from "./views/LaunchChecklist.jsx";
 import AskPanel from "./components/AskPanel.jsx";
+import ScenarioSidebar from "./components/ScenarioSidebar.jsx";
 
 const TAB_GROUPS = [
   { label: "Planning", tabs: ["Executive View", "County Plan", "Referral Plan", "Opportunity Score"] },
@@ -34,6 +35,7 @@ function Dashboard() {
   const [selectedCounty, setSelectedCounty] = useState("York");
   const [scenario, setScenario] = useState(DEFAULT_SCENARIO);
   const [showScenario, setShowScenario] = useState(false);
+  const [showScenarioSidebar, setShowScenarioSidebar] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
   const [competitorProviderType, setCompetitorProviderType] = useState("all");
 
@@ -56,7 +58,7 @@ function Dashboard() {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${dark ? "bg-slate-950 text-slate-100" : "bg-gradient-to-b from-slate-50 to-white text-slate-900"}`}>
-      <div className="px-4 py-6 sm:px-6 lg:px-10">
+      <div className={`px-4 py-6 sm:px-6 lg:px-10 transition-all duration-300 ${showScenarioSidebar ? "2xl:pr-[22rem]" : ""}`}>
         <header className={`mx-auto mb-6 max-w-7xl rounded-2xl px-6 py-6 shadow-xl transition-colors duration-300 print:hidden ${dark ? "bg-gradient-to-br from-blue-950 via-slate-900 to-slate-950 border border-slate-700" : "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"}`}>
           <div className="flex items-center justify-between gap-6">
             <div className="min-w-0">
@@ -173,6 +175,41 @@ function Dashboard() {
         </div>
       </div>
       <AskPanel rows={rows} totals={totals} activeTab={activeTab} />
+
+      <button
+        onClick={() => setShowScenarioSidebar((p) => !p)}
+        className={`
+          fixed right-0 top-1/2 z-50 -translate-y-1/2 print:hidden
+          transition-all duration-300
+          ${showScenarioSidebar ? "translate-x-80" : "translate-x-0"}
+        `}
+        aria-label="Open scenario controls"
+        title="Scenario controls"
+      >
+        <div className={`
+          flex flex-col items-center justify-center gap-1.5
+          rounded-l-2xl px-2 py-4 shadow-xl border-y border-l
+          transition-colors duration-200
+          ${showScenarioSidebar
+            ? dark ? "bg-blue-900 border-blue-700 text-blue-200" : "bg-blue-600 border-blue-500 text-white"
+            : dark ? "bg-slate-800 border-slate-600 text-blue-400 hover:bg-slate-700 hover:text-blue-300" : "bg-white border-slate-200 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+          }
+        `}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
+            <path fillRule="evenodd" d="M7.84 1.804A1 1 0 018.82 1h2.36a1 1 0 01.98.804l.331 1.652a6.993 6.993 0 011.929 1.115l1.598-.54a1 1 0 011.186.447l1.18 2.044a1 1 0 01-.205 1.251l-1.267 1.113a7.047 7.047 0 010 2.228l1.267 1.113a1 1 0 01.206 1.25l-1.18 2.045a1 1 0 01-1.187.447l-1.598-.54a6.993 6.993 0 01-1.929 1.115l-.33 1.652a1 1 0 01-.98.804H8.82a1 1 0 01-.98-.804l-.331-1.652a6.993 6.993 0 01-1.929-1.115l-1.598.54a1 1 0 01-1.186-.447l-1.18-2.044a1 1 0 01.205-1.251l1.267-1.114a7.05 7.05 0 010-2.227L1.821 7.773a1 1 0 01-.206-1.25l1.18-2.045a1 1 0 011.187-.447l1.598.54A6.993 6.993 0 017.51 3.456l.33-1.652zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+          </svg>
+          <span className="text-[10px] font-black uppercase tracking-widest" style={{ writingMode: "vertical-rl", textOrientation: "mixed", transform: "rotate(180deg)" }}>
+            Scenario
+          </span>
+        </div>
+      </button>
+
+      <ScenarioSidebar
+        scenario={scenario}
+        setScenario={setScenario}
+        open={showScenarioSidebar}
+        onClose={() => setShowScenarioSidebar(false)}
+      />
     </div>
   );
 }
