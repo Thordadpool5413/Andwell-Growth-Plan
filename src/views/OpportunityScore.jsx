@@ -30,10 +30,10 @@ export default function OpportunityScore({ rows }) {
       </SectionHeader>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <Metric label="Average opportunity score" value={`${avgScore}/100`} detail="Mean score across all launch counties." />
-        <Metric label="Prime counties" value={primeCount} detail="Counties scoring 80+ (top tier)." />
-        <Metric label="Top county" value={topCounty?.county || "—"} detail={`Score: ${topCounty?.score || 0}/100 (${topCounty?.tier || "—"})`} />
-        <Metric label="Total Y1 opportunity" value={currency(scores.reduce((s, c) => s + c.y1Revenue, 0))} detail="Combined Y1 revenue across all scored counties." />
+        <Metric label="Average opportunity score" value={`${avgScore}/100`} detail="Mean score across all launch counties." color="emerald" />
+        <Metric label="Prime counties" value={primeCount} detail="Counties scoring 80+ (top tier)." color="emerald" />
+        <Metric label="Top county" value={topCounty?.county || "—"} detail={`Score: ${topCounty?.score || 0}/100 (${topCounty?.tier || "—"})`} color="blue" />
+        <Metric label="Total Y1 opportunity" value={currency(scores.reduce((s, c) => s + c.y1Revenue, 0))} detail="Combined Y1 revenue across all scored counties." color="indigo" />
       </div>
 
       <Card title="County opportunity leaderboard" eyebrow="Ranked by composite score">

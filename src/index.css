@@ -26,6 +26,22 @@ textarea {
   min-width: 0;
 }
 
+/* Tab content fade-slide transition */
+@keyframes tabFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tab-fade-in {
+  animation: tabFadeIn 150ms ease-out both;
+}
+
 /* Board Report print styles — suppress all UI chrome */
 @media print {
   header,

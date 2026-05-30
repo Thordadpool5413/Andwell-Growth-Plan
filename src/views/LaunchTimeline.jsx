@@ -76,10 +76,10 @@ export default function LaunchTimeline({ rows }) {
       </SectionHeader>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <Metric label="Launch counties" value={countyTimeline.length} detail="Counties in the active rollout plan." />
-        <Metric label="Total timeline" value={`${totalMonths} months`} detail="Full rollout duration across all phases." />
-        <Metric label="Avg break-even" value={`${avgBreakEven} months`} detail="Mean estimated months to contribution break-even." />
-        <Metric label="Phase 1 counties" value={countyTimeline.filter((c) => c.launchGroup === "Priority 1").length} detail="Immediate launch targets." />
+        <Metric label="Launch counties" value={countyTimeline.length} detail="Counties in the active rollout plan." color="emerald" />
+        <Metric label="Total timeline" value={`${totalMonths} months`} detail="Full rollout duration across all phases." color="blue" />
+        <Metric label="Avg break-even" value={`${avgBreakEven} months`} detail="Mean estimated months to contribution break-even." color="amber" />
+        <Metric label="Phase 1 counties" value={countyTimeline.filter((c) => c.launchGroup === "Priority 1").length} detail="Immediate launch targets." color="emerald" />
       </div>
 
       <Card title="Gantt timeline" eyebrow="24-month rollout view">

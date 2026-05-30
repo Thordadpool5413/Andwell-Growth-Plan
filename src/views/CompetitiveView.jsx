@@ -85,10 +85,10 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
       </SectionHeader>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <Metric label={`${service} providers`} value={summary.providers} detail="Named Maine provider rows loaded." />
-        <Metric label="Total beneficiaries" value={number(summary.beneficiaries)} detail="Provider file beneficiary volume." />
-        <Metric label="Andwell rank" value={summary.andwellRank ? `#${summary.andwellRank}` : "N/A"} detail="Ranked by beneficiary volume in the provider file." />
-        <Metric label="Andwell provider file share" value={percent(summary.andwellShare)} detail={<span>Not county market share. This is <Abbr term="Provider File Share">provider file share</Abbr>.</span>} />
+        <Metric label={`${service} providers`} value={summary.providers} detail="Named Maine provider rows loaded." color="blue" />
+        <Metric label="Total beneficiaries" value={number(summary.beneficiaries)} detail="Provider file beneficiary volume." color="blue" />
+        <Metric label="Andwell rank" value={summary.andwellRank ? `#${summary.andwellRank}` : "N/A"} detail="Ranked by beneficiary volume in the provider file." color="emerald" />
+        <Metric label="Andwell provider file share" value={percent(summary.andwellShare)} detail={<span>Not county market share. This is <Abbr term="Provider File Share">provider file share</Abbr>.</span>} color="violet" />
       </div>
 
       {threat && (

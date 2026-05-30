@@ -43,6 +43,7 @@ export default function ExecutiveView({ rows, totals }) {
           label="Active growth counties"
           value={rows.length}
           detail="County and service line combinations in the active model."
+          color="emerald"
         />
         <Metric
           label="Year 1 referrals"
@@ -50,6 +51,7 @@ export default function ExecutiveView({ rows, totals }) {
           detail="Gross referrals needed at a 75% conversion baseline (NAHC median)."
           sparkData={[totals.y1Referrals, totals.y2Referrals, totals.y3Referrals]}
           sparkColor={COLORS.blue}
+          color="blue"
         />
         <Metric
           label="Year 1 revenue"
@@ -57,11 +59,13 @@ export default function ExecutiveView({ rows, totals }) {
           detail="Modeled Year 1 gross revenue from all active service lines."
           sparkData={[totals.y1Revenue, totals.y2Revenue, totals.y3Revenue]}
           sparkColor={COLORS.green}
+          color="indigo"
         />
         <Metric
           label="Named competitors"
           value={namedProviderRows.length}
           detail="Home Healthcare and Hospice provider rows loaded into the competitive layer."
+          color="amber"
         />
       </div>
 

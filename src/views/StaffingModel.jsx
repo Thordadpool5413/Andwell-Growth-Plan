@@ -40,10 +40,10 @@ export default function StaffingModel({ rows }) {
       </SectionHeader>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <Metric label="Y1 total FTEs" value={model.totalFTE[0]} detail="Clinical staff needed for Year 1 starts." sparkData={model.totalFTE} sparkColor={COLORS.blue} />
-        <Metric label="Y3 total FTEs" value={model.totalFTE[2]} detail="Full ramp headcount by Year 3." />
-        <Metric label="Y1 staffing cost" value={currency(model.totalCost[0])} detail="Total salary cost at Year 1 FTE levels." sparkData={model.totalCost} sparkColor={COLORS.red} />
-        <Metric label="3-year staffing cost" value={currency(model.totalCost.reduce((s, c) => s + c, 0))} detail="Cumulative salary investment across all years." />
+        <Metric label="Y1 total FTEs" value={model.totalFTE[0]} detail="Clinical staff needed for Year 1 starts." sparkData={model.totalFTE} sparkColor={COLORS.blue} color="blue" />
+        <Metric label="Y3 total FTEs" value={model.totalFTE[2]} detail="Full ramp headcount by Year 3." color="emerald" />
+        <Metric label="Y1 staffing cost" value={currency(model.totalCost[0])} detail="Total salary cost at Year 1 FTE levels." sparkData={model.totalCost} sparkColor={COLORS.red} color="amber" />
+        <Metric label="3-year staffing cost" value={currency(model.totalCost.reduce((s, c) => s + c, 0))} detail="Cumulative salary investment across all years." color="amber" />
       </div>
 
       <Card title="FTE breakdown by service line" eyebrow="Staffing detail">
