@@ -537,14 +537,32 @@ app.get("/api/cms/hospice-quality", strictOriginCheck, tokenCheck, async (req, r
 app.get("/api/cms/hhvbp", strictOriginCheck, tokenCheck, async (req, res) => {
   try {
     const { query: dbQuery } = await import("./server/cms/db.js");
-    const result = await dbQuery(
-      `SELECT v.*,
-              CASE WHEN v.ccn = '207019' THEN true ELSE false END AS is_andwell
-       FROM cms_hhvbp_scores v
-       WHERE v.state = 'ME'
-       ORDER BY v.total_performance_score DESC NULLS LAST`
-    );
-    res.json({ rows: result.rows, count: result.rows.length });
+    const [maineResult, nationalResult] = await Promise.all([
+      dbQuery(
+        `SELECT v.*,
+                CASE WHEN v.ccn = '207019' THEN true ELSE false END AS is_andwell
+         FROM cms_hhvbp_scores v
+         WHERE v.state = 'ME'
+         ORDER BY v.total_performance_score DESC NULLS LAST`
+      ),
+      dbQuery(
+        `SELECT AVG(total_performance_score::numeric) AS nat_avg
+         FROM cms_hhvbp_scores
+         WHERE total_performance_score IS NOT NULL`
+      ),
+    ]);
+    const scoredRows = maineResult.rows.filter((r) => r.total_performance_score != null);
+    const stateAvgTps = scoredRows.length
+      ? scoredRows.reduce((s, r) => s + parseFloat(r.total_performance_score), 0) / scoredRows.length
+      : null;
+    const nationalAvgRaw = nationalResult.rows[0]?.nat_avg;
+    const nationalAvgTps = nationalAvgRaw != null ? parseFloat(parseFloat(nationalAvgRaw).toFixed(2)) : null;
+    res.json({
+      rows: maineResult.rows,
+      count: maineResult.rows.length,
+      state_avg_tps: stateAvgTps != null ? parseFloat(stateAvgTps.toFixed(2)) : null,
+      national_avg_tps: nationalAvgTps,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

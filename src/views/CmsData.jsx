@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   Bar, CartesianGrid, ComposedChart, Line,
-  Tooltip, XAxis, YAxis, Legend, BarChart, Cell,
+  Tooltip, XAxis, YAxis, Legend, BarChart, Cell, ReferenceLine,
 } from "recharts";
 import Card from "../components/Card.jsx";
 import ChartContainer from "../components/ChartContainer.jsx";
@@ -196,8 +196,38 @@ function QualityRatingsTab({ dark }) {
   );
 }
 
+function HHVBPTooltip({ active, payload, dark }) {
+  if (!active || !payload?.[0]) return null;
+  const d = payload[0].payload;
+  const fmt = (v) => (v != null ? parseFloat(v).toFixed(2) : null);
+  const containerCls = dark
+    ? "bg-slate-800 border-slate-700 text-slate-100"
+    : "bg-white border-slate-200 text-slate-900";
+  return (
+    <div className={`rounded-xl border p-3 text-xs shadow-lg max-w-[220px] space-y-1.5 ${containerCls}`}>
+      <p className="font-black text-sm leading-tight">{d.name}</p>
+      <p>TPS: <strong>{d.tps.toFixed(1)}</strong>{d.payAdj ? <span className="ml-2 text-emerald-500 font-bold">{d.payAdj}</span> : null}</p>
+      <div className={`border-t pt-1 ${dark ? "border-slate-700" : "border-slate-100"}`}>
+        <p className={`font-bold mb-0.5 ${dark ? "text-slate-400" : "text-slate-500"}`}>Clinical Outcomes</p>
+        {fmt(d.dtc) && <p>Discharge to community: <strong>{fmt(d.dtc)}</strong></p>}
+        {fmt(d.ach) && <p>Avoid hospitalizations: <strong>{fmt(d.ach)}</strong></p>}
+        {fmt(d.ed) && <p>ED use: <strong>{fmt(d.ed)}</strong></p>}
+      </div>
+      <div className={`border-t pt-1 ${dark ? "border-slate-700" : "border-slate-100"}`}>
+        <p className={`font-bold mb-0.5 ${dark ? "text-slate-400" : "text-slate-500"}`}>Patient Experience</p>
+        {fmt(d.careQuality) && <p>Care of patients: <strong>{fmt(d.careQuality)}</strong></p>}
+        {fmt(d.communication) && <p>Communication: <strong>{fmt(d.communication)}</strong></p>}
+        {fmt(d.overallRating) && <p>Overall rating: <strong>{fmt(d.overallRating)}</strong></p>}
+        {fmt(d.willingness) && <p>Willingness to recommend: <strong>{fmt(d.willingness)}</strong></p>}
+      </div>
+    </div>
+  );
+}
+
 function HHVBPTab({ dark }) {
   const [data, setData] = useState([]);
+  const [stateAvgTps, setStateAvgTps] = useState(null);
+  const [nationalAvgTps, setNationalAvgTps] = useState(null);
   const [synced, setSynced] = useState(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -211,6 +241,8 @@ function HHVBPTab({ dark }) {
       if (r.ok) {
         const d = await r.json();
         setData(d.rows || []);
+        setStateAvgTps(d.state_avg_tps ?? null);
+        setNationalAvgTps(d.national_avg_tps ?? null);
         if (d.rows?.[0]?.synced_at) setSynced(d.rows[0].synced_at);
       }
     } catch (_) {}
@@ -241,10 +273,17 @@ function HHVBPTab({ dark }) {
 
   const andwellRow = data.find((r) => r.ccn === ANDWELL_CCN || r.is_andwell);
   const chartData = data.filter((r) => r.total_performance_score != null).map((r) => ({
-    name: (r.provider_name || r.ccn || "").replace("Home Care", "HC").replace("Health", "H").replace("Hospice", "Hosp").slice(0, 22),
+    name: (r.provider_name || r.ccn || "").replace("Home Care", "HC").replace("Health", "Hlth").replace("Hospice", "Hosp").slice(0, 24),
     tps: parseFloat(r.total_performance_score),
     isAndwell: r.ccn === ANDWELL_CCN || r.is_andwell,
     payAdj: r.payment_adjustment_pct,
+    dtc: r.dtc_achievement_pts,
+    ach: r.ach_achievement_pts,
+    ed: r.ed_use_achievement_pts,
+    careQuality: r.care_quality_achievement_pts,
+    communication: r.communication_achievement_pts,
+    overallRating: r.overall_rating_achievement_pts,
+    willingness: r.willingness_recommend_achievement_pts,
   }));
 
   if (!data.length) {
@@ -308,20 +347,48 @@ function HHVBPTab({ dark }) {
       )}
 
       {chartData.length > 0 && (
-        <Card title="Total Performance Score — All Maine HHAs" eyebrow="HHVBP dataset 56d7-4994">
-          <ChartContainer height="h-80">
-            <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 30, bottom: 10 }}>
+        <Card title="Total Performance Score — All Maine HHAs" eyebrow="HHVBP dataset 56d7-4994 · hover a bar for domain breakdown">
+          <ChartContainer height="h-96">
+            <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 60, bottom: 16, top: 4 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
-              <XAxis type="number" tick={{ fill: dark ? "#94a3b8" : "#475569" }} label={{ value: "TPS", position: "insideBottom", offset: -8, fontSize: 10, fill: dark ? "#64748b" : "#94a3b8" }} />
-              <YAxis type="category" dataKey="name" width={180} tick={{ fontSize: 10, fill: dark ? "#94a3b8" : "#475569" }} />
-              <Tooltip contentStyle={dark ? { backgroundColor: "#1e293b", border: "1px solid #334155", color: "#f1f5f9" } : undefined} formatter={(val) => [val.toFixed(1), "TPS"]} />
+              <XAxis
+                type="number"
+                tick={{ fill: dark ? "#94a3b8" : "#475569", fontSize: 11 }}
+                label={{ value: "Total Performance Score (TPS)", position: "insideBottom", offset: -10, fontSize: 10, fill: dark ? "#64748b" : "#94a3b8" }}
+              />
+              <YAxis type="category" dataKey="name" width={190} tick={{ fontSize: 10, fill: dark ? "#94a3b8" : "#475569" }} />
+              <Tooltip content={<HHVBPTooltip dark={dark} />} />
+              {nationalAvgTps != null && (
+                <ReferenceLine
+                  x={nationalAvgTps}
+                  stroke={dark ? "#f59e0b" : "#d97706"}
+                  strokeDasharray="5 3"
+                  strokeWidth={1.5}
+                  label={{ value: `US Avg ${nationalAvgTps.toFixed(1)}`, position: "top", fontSize: 10, fill: dark ? "#f59e0b" : "#d97706", fontWeight: 700 }}
+                />
+              )}
+              {stateAvgTps != null && nationalAvgTps !== stateAvgTps && (
+                <ReferenceLine
+                  x={stateAvgTps}
+                  stroke={dark ? "#94a3b8" : "#64748b"}
+                  strokeDasharray="3 3"
+                  strokeWidth={1}
+                  label={{ value: `ME ${stateAvgTps.toFixed(1)}`, position: "insideTopRight", fontSize: 9, fill: dark ? "#94a3b8" : "#64748b" }}
+                />
+              )}
               <Bar dataKey="tps" name="Total Performance Score" radius={[0, 6, 6, 0]}>
                 {chartData.map((entry) => (
-                  <Cell key={entry.name} fill={entry.isAndwell ? COLORS.blue : COLORS.slate} />
+                  <Cell key={entry.name} fill={entry.isAndwell ? COLORS.blue : COLORS.slate} fillOpacity={entry.isAndwell ? 1 : 0.65} />
                 ))}
               </Bar>
             </BarChart>
           </ChartContainer>
+          <div className="mt-3 flex flex-wrap gap-4 text-xs">
+            <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm" style={{ backgroundColor: COLORS.blue }} /> Andwell</span>
+            <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm" style={{ backgroundColor: COLORS.slate, opacity: 0.65 }} /> Competitor</span>
+            {nationalAvgTps != null && <span className="flex items-center gap-1.5"><span className="inline-block w-5 border-t-2 border-dashed" style={{ borderColor: "#d97706" }} /> US national average</span>}
+            {stateAvgTps != null && <span className="flex items-center gap-1.5"><span className="inline-block w-5 border-t-2 border-dashed" style={{ borderColor: "#64748b" }} /> ME state average</span>}
+          </div>
         </Card>
       )}
 
