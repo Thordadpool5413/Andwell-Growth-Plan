@@ -721,7 +721,15 @@ async function syncQualitySnapshots(providerType) {
              (cms_provider_record_id, provider_type, measure_name, measure_value, measure_score,
               benchmark_state_value, benchmark_national_value, period, source_dataset, updated_at)
            VALUES ($1,$2,$3,$4,$5,$6,$7,'2024',$8,NOW())
-           ON CONFLICT DO NOTHING`,
+           ON CONFLICT (cms_provider_record_id, measure_name, period)
+           DO UPDATE SET
+             measure_score = EXCLUDED.measure_score,
+             measure_value = EXCLUDED.measure_value,
+             benchmark_state_value = EXCLUDED.benchmark_state_value,
+             benchmark_national_value = EXCLUDED.benchmark_national_value,
+             provider_type = EXCLUDED.provider_type,
+             source_dataset = EXCLUDED.source_dataset,
+             updated_at = NOW()`,
           [pr.id, providerType, m.name, m.value, m.score, m.state_val, m.natl_val,
            pr.cms_dataset_identifier || "CMS Provider Data Catalog"]
         );
