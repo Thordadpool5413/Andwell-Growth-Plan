@@ -225,6 +225,18 @@ async function migrate() {
       CREATE UNIQUE INDEX IF NOT EXISTS competitor_web_profiles_seed_idx
       ON competitor_web_profiles (competitor_seed_id);
     `);
+    await client.query(`
+      DELETE FROM cms_quality_snapshots
+      WHERE id NOT IN (
+        SELECT MAX(id)
+        FROM cms_quality_snapshots
+        GROUP BY cms_provider_record_id, measure_name, period
+      );
+    `);
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS cms_quality_snapshots_provider_measure_period_idx
+      ON cms_quality_snapshots (cms_provider_record_id, measure_name, period);
+    `);
 
     console.log("[migrate] All CMS tables and indexes verified/created.");
   } catch (err) {
