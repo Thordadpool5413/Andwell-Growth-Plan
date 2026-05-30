@@ -375,8 +375,14 @@ function isNationalChainComp(c) {
   const hay = `${c.name || ""} ${c.parent_company || ""}`.toLowerCase();
   return NATIONAL_CHAIN_NAMES.some((ch) => hay.includes(ch));
 }
+function resolveCounties(c) {
+  if (c.counties_raw?.length) return c.counties_raw;
+  if (c.known_counties?.length) return c.known_counties;
+  if (c.county) return [c.county];
+  return [];
+}
 function competitorOverlapsAndwell(c) {
-  const counties = c.known_counties?.length ? c.known_counties : c.county ? [c.county] : [];
+  const counties = resolveCounties(c);
   return counties.some((cn) => ANDWELL_COUNTIES.has(cn));
 }
 
@@ -394,7 +400,7 @@ function placedPin(c, idx, ci) {
     const lng = parseFloat(c.geocoded_lng);
     if (!isNaN(lat) && !isNaN(lng)) return { lat, lng, geocoded: true };
   }
-  const counties = c.known_counties?.length ? c.known_counties : c.county ? [c.county] : [];
+  const counties = resolveCounties(c);
   const county = counties[ci] || counties[0];
   const base = COUNTY_COORDS[county];
   if (!base) return null;
@@ -412,7 +418,7 @@ function CompetitorMarkers({ visible, dark, competitors }) {
         const coords = placedPin(c, idx, 0);
         if (coords) return [{ ...c, ...coords }];
       }
-      const counties = c.known_counties?.length ? c.known_counties : c.county ? [c.county] : [];
+      const counties = resolveCounties(c);
       return counties.slice(0, 2).map((county, ci) => {
         const coords = placedPin({ ...c, county }, idx, ci);
         if (!coords) return null;
