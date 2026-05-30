@@ -15,6 +15,13 @@ function isNationalChain(comp) {
   return NATIONAL_CHAINS.some((nc) => haystack.toLowerCase().includes(nc.toLowerCase()));
 }
 
+function resolveCounties(c) {
+  if (c.counties_raw?.length) return c.counties_raw;
+  if (c.known_counties?.length) return c.known_counties;
+  if (c.county) return [c.county];
+  return [];
+}
+
 const SORT_KEYS = [
   { key: "name", label: "Name" },
   { key: "match_status", label: "CMS Status" },
@@ -209,6 +216,7 @@ function SortableMatrix({ competitors, dark, providerType }) {
   const [sortKey, setSortKey] = useState("name");
   const [sortAsc, setSortAsc] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
+  const [countiesOpenId, setCountiesOpenId] = useState(null);
 
   const hasHospiceCert = (c) => c.provider_type === "hospice" || c.provider_type === "both" || (c.cms_certification_number && (c.match_status === "CMS Verified" || c.match_status === "CMS and Website Verified") && (c.provider_type !== "homehealth"));
   const hasHHCert = (c) => c.provider_type === "homehealth" || c.provider_type === "both";
@@ -222,7 +230,7 @@ function SortableMatrix({ competitors, dark, providerType }) {
     return [...competitors].sort((a, b) => {
       let va, vb;
       if (sortKey === "national") { va = isNationalChain(a) ? 1 : 0; vb = isNationalChain(b) ? 1 : 0; }
-      else if (sortKey === "counties") { va = a.known_counties?.length || 0; vb = b.known_counties?.length || 0; }
+      else if (sortKey === "counties") { va = resolveCounties(a).length; vb = resolveCounties(b).length; }
       else if (sortKey === "services") { va = a.services_raw?.length || 0; vb = b.services_raw?.length || 0; }
       else if (sortKey === "match_confidence") { va = a.match_confidence || 0; vb = b.match_confidence || 0; }
       else if (sortKey === "hospice_cert") { va = hasHospiceCert(a) ? 1 : 0; vb = hasHospiceCert(b) ? 1 : 0; }
@@ -324,8 +332,29 @@ function SortableMatrix({ competitors, dark, providerType }) {
                       />
                     </div>
                   </td>
-                  <td className={`px-4 py-3 ${dark ? "text-slate-300" : "text-slate-600"}`}>
-                    {comp.known_counties?.length ? comp.known_counties.slice(0, 3).join(", ") + (comp.known_counties.length > 3 ? ` +${comp.known_counties.length - 3}` : "") : "—"}
+                  <td className="px-4 py-3">
+                    {(() => {
+                      const counties = resolveCounties(comp);
+                      const cid = comp.id || comp.name;
+                      const open = countiesOpenId === cid;
+                      if (!counties.length) return <span className={`text-[11px] ${dark ? "text-slate-500" : "text-slate-400"}`}>—</span>;
+                      return (
+                        <div>
+                          <button
+                            onClick={() => setCountiesOpenId(open ? null : cid)}
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-black transition ${dark ? "bg-indigo-900/40 text-indigo-300 hover:bg-indigo-800/50" : "bg-indigo-50 text-indigo-700 hover:bg-indigo-100"}`}
+                            title="Click to view county list"
+                          >
+                            {counties.length} {counties.length === 1 ? "county" : "counties"} {open ? "▲" : "▼"}
+                          </button>
+                          {open && (
+                            <div className={`mt-1.5 rounded-xl p-2 text-[10px] leading-relaxed ${dark ? "bg-slate-800 text-slate-300 border border-slate-700" : "bg-slate-50 text-slate-600 border border-slate-200"}`}>
+                              {counties.join(", ")}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className={`px-4 py-3 ${dark ? "text-slate-300" : "text-slate-600"}`}>
                     {comp.services_raw?.length ? `${comp.services_raw.length} lines` : "—"}
@@ -365,6 +394,7 @@ const CARD_SORT_OPTIONS = [
 function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, andwellQuality }) {
   const [expandedId, setExpandedId] = useState(null);
   const [cardSort, setCardSort] = useState("default");
+  const [countiesOpenId, setCountiesOpenId] = useState(null);
 
   const sorted = useMemo(() => {
     if (cardSort === "default") return competitors;
@@ -397,7 +427,8 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, a
   const getCompValue = (comp, dim) => {
     const national = isNationalChain(comp);
     const status = comp.match_status || "Needs Review";
-    const counties = comp.known_counties?.length || comp.counties_raw?.length || 0;
+    const countiesList = resolveCounties(comp);
+    const counties = countiesList.length;
     const services = comp.services_raw?.length || 0;
     switch (dim.key) {
       case "ccn": return comp.cms_certification_number || "—";
@@ -411,7 +442,7 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, a
       case "match_conf": return comp.match_confidence != null ? `${Math.round(comp.match_confidence * 100)}%` : "—";
       case "est_beneficiaries": return comp.estimated_beneficiaries ? comp.estimated_beneficiaries.toLocaleString() : "—";
       case "quality_star": return comp.quality_star_rating ? `${comp.quality_star_rating}★` : "N/A";
-      case "counties": return counties > 0 ? `${counties} counties` : "Unknown";
+      case "counties": return counties > 0 ? `${counties} ${counties === 1 ? "county" : "counties"}` : "Unknown";
       case "services": return services > 0 ? `${services} lines` : "Unknown";
       case "affiliations": return comp.parent_company || (national ? "National chain" : "None");
       default: return "—";
@@ -490,12 +521,42 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, a
                 </div>
               </div>
               <div className="space-y-2">
-                {DIMENSIONS.map((dim) => (
-                  <div key={dim.key} className="flex items-center justify-between gap-1 text-[11px]">
-                    <span className={`${dark ? "text-slate-400" : "text-slate-500"} truncate`} title={dim.tooltip}>{dim.label}</span>
-                    <DimCell value={getCompValue(comp, dim)} dark={dark} dimKey={dim.key} />
-                  </div>
-                ))}
+                {DIMENSIONS.map((dim) => {
+                  if (dim.key === "counties") {
+                    const cid = comp.id || comp.name;
+                    const countyList = resolveCounties(comp);
+                    const open = countiesOpenId === cid;
+                    return (
+                      <div key={dim.key} className="text-[11px]">
+                        <div className="flex items-center justify-between gap-1">
+                          <span className={`${dark ? "text-slate-400" : "text-slate-500"} truncate`} title={dim.tooltip}>{dim.label}</span>
+                          {countyList.length > 0 ? (
+                            <button
+                              onClick={() => setCountiesOpenId(open ? null : cid)}
+                              className={`rounded-full px-2 py-0.5 text-[10px] font-black transition ${dark ? "bg-indigo-900/40 text-indigo-300 hover:bg-indigo-800/50" : "bg-indigo-50 text-indigo-700 hover:bg-indigo-100"}`}
+                              title="Click to view county list"
+                            >
+                              {countyList.length} {countyList.length === 1 ? "county" : "counties"} {open ? "▲" : "▼"}
+                            </button>
+                          ) : (
+                            <DimCell value="Unknown" dark={dark} dimKey={dim.key} />
+                          )}
+                        </div>
+                        {open && (
+                          <div className={`mt-1.5 rounded-xl p-2 text-[10px] leading-relaxed ${dark ? "bg-slate-900 text-slate-300 border border-slate-700" : "bg-slate-50 text-slate-600 border border-slate-200"}`}>
+                            {countyList.join(", ")}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+                  return (
+                    <div key={dim.key} className="flex items-center justify-between gap-1 text-[11px]">
+                      <span className={`${dark ? "text-slate-400" : "text-slate-500"} truncate`} title={dim.tooltip}>{dim.label}</span>
+                      <DimCell value={getCompValue(comp, dim)} dark={dark} dimKey={dim.key} />
+                    </div>
+                  );
+                })}
               </div>
               <div className={`mt-3 pt-3 border-t ${dark ? "border-slate-700" : "border-slate-100"}`}>
                 <QualityScoreBar
