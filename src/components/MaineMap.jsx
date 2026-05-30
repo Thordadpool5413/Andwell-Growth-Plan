@@ -419,7 +419,7 @@ function CompetitorMarkers({ visible, dark, competitors }) {
         if (coords) return [{ ...c, county: c.county || resolveCounties(c)[0] || null, ...coords }];
       }
       const counties = resolveCounties(c);
-      return counties.slice(0, 2).map((county, ci) => {
+      return counties.map((county, ci) => {
         const coords = placedPin({ ...c, county }, idx, ci);
         if (!coords) return null;
         return { ...c, county, ...coords };
@@ -485,7 +485,14 @@ function CompetitorMarkers({ visible, dark, competitors }) {
                   )}
                   {comp.geocode_source === "cms_address" && <p style={{ margin: "3px 0 0", fontSize: 9, color: "#94a3b8" }}>📍 CMS address geocoded</p>}
                   {national && <p style={{ margin: "4px 0 0", fontSize: 10, color: "#dc2626", fontWeight: 700 }}>⚠ National chain</p>}
-                  {overlaps && <p style={{ margin: "2px 0 0", fontSize: 10, color: "#d97706", fontWeight: 700 }}>⚡ Andwell overlap county</p>}
+                  {overlaps && (() => {
+                    const overlapCounties = resolveCounties(comp).filter(cn => ANDWELL_COUNTIES.has(cn));
+                    return (
+                      <p style={{ margin: "2px 0 0", fontSize: 10, color: "#d97706", fontWeight: 700 }}>
+                        ⚡ Andwell overlap{overlapCounties.length > 0 ? `: ${overlapCounties.join(", ")}` : " county"}
+                      </p>
+                    );
+                  })()}
                 </div>
               </InfoWindow>
             )}
