@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { DEFAULT_SCENARIO } from "./data/constants.js";
 import DataSourceBanner from "./components/DataSourceBanner.jsx";
 import { buildRows } from "./utils/calculations.js";
@@ -33,11 +33,49 @@ function Dashboard() {
   const { dark, toggle } = useDarkMode();
   const [activeTab, setActiveTab] = useState("Executive View");
   const [selectedCounty, setSelectedCounty] = useState("York");
-  const [scenario, setScenario] = useState(DEFAULT_SCENARIO);
+  const [scenario, setScenario] = useState(() => {
+    try {
+      const saved = localStorage.getItem("andwell_scenario");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return { ...DEFAULT_SCENARIO, ...parsed };
+      }
+    } catch {}
+    return DEFAULT_SCENARIO;
+  });
+  const [scenarioRestored, setScenarioRestored] = useState(() => {
+    try {
+      const saved = localStorage.getItem("andwell_scenario");
+      if (!saved) return false;
+      const parsed = JSON.parse(saved);
+      const isDefault =
+        parsed.conversionRate === DEFAULT_SCENARIO.conversionRate &&
+        JSON.stringify(parsed.hhCapture) === JSON.stringify(DEFAULT_SCENARIO.hhCapture) &&
+        JSON.stringify(parsed.woundCapture) === JSON.stringify(DEFAULT_SCENARIO.woundCapture) &&
+        JSON.stringify(parsed.therapyCapture) === JSON.stringify(DEFAULT_SCENARIO.therapyCapture);
+      return !isDefault;
+    } catch {}
+    return false;
+  });
   const [showScenario, setShowScenario] = useState(false);
   const [showScenarioSidebar, setShowScenarioSidebar] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
   const [competitorProviderType, setCompetitorProviderType] = useState("all");
+
+  useEffect(() => {
+    const isDefault =
+      scenario.conversionRate === DEFAULT_SCENARIO.conversionRate &&
+      JSON.stringify(scenario.hhCapture) === JSON.stringify(DEFAULT_SCENARIO.hhCapture) &&
+      JSON.stringify(scenario.woundCapture) === JSON.stringify(DEFAULT_SCENARIO.woundCapture) &&
+      JSON.stringify(scenario.therapyCapture) === JSON.stringify(DEFAULT_SCENARIO.therapyCapture);
+    try {
+      if (isDefault) {
+        localStorage.removeItem("andwell_scenario");
+      } else {
+        localStorage.setItem("andwell_scenario", JSON.stringify(scenario));
+      }
+    } catch {}
+  }, [scenario]);
 
   const rows = useMemo(() => buildRows(scenario), [scenario]);
   const totals = useMemo(
@@ -209,6 +247,8 @@ function Dashboard() {
         setScenario={setScenario}
         open={showScenarioSidebar}
         onClose={() => setShowScenarioSidebar(false)}
+        wasRestored={scenarioRestored}
+        onRestoredDismiss={() => setScenarioRestored(false)}
       />
     </div>
   );
