@@ -1,4 +1,5 @@
 import { query } from "./db.js";
+import { countyFromZip } from "./maineZipCounty.js";
 
 const BASE_URL = process.env.CMS_PROVIDER_DATA_BASE_URL || "https://data.cms.gov/provider-data/api/1";
 const DATA_API_BASE = process.env.CMS_DATA_API_BASE_URL || "https://data.cms.gov/provider-data/api/1";
@@ -239,6 +240,9 @@ function normalizeProviderRow(row, providerType, datasetId) {
   const qualityStarField = findField(row, ["quality_of_patient_care_star_rating", "star_rating", "overall_rating"]);
 
   const rawName = row[nameField] || "";
+  const zip = row[zipField] || null;
+  const countyRaw = row[countyField] || null;
+  const county = countyRaw || countyFromZip(zip);
   return {
     provider_name_raw: rawName,
     provider_name_normalized: normalizeProviderName(rawName),
@@ -249,9 +253,9 @@ function normalizeProviderRow(row, providerType, datasetId) {
     address: row[addrField] || null,
     city: row[cityField] || null,
     state: row[stateField] || "ME",
-    zip_code: row[zipField] || null,
+    zip_code: zip,
     phone: row[phoneField] || null,
-    county: row[countyField] || null,
+    county,
     certification_date: row[certDateField] || null,
     quality_star_rating: row[qualityStarField] != null ? parseFloat(row[qualityStarField]) || null : null,
     source_row_json: row,
@@ -364,6 +368,31 @@ export async function syncToDatabase(providers, providerType, datasetId) {
     }
   }
   return { created, updated, unchanged, failed };
+}
+
+/**
+ * Backfill county for existing cms_provider_records that have a zip_code but no county.
+ * Runs after sync to fix records that were inserted before zip→county lookup was in place.
+ * Returns the number of rows updated.
+ */
+export async function backfillMissingCounties() {
+  let updated = 0;
+  try {
+    const rows = await query(
+      "SELECT id, zip_code FROM cms_provider_records WHERE (county IS NULL OR county = '') AND zip_code IS NOT NULL"
+    );
+    for (const row of rows.rows) {
+      const county = countyFromZip(row.zip_code);
+      if (county) {
+        await query("UPDATE cms_provider_records SET county=$1, updated_at=NOW() WHERE id=$2", [county, row.id]);
+        updated++;
+      }
+    }
+    console.log(`[CMS] backfillMissingCounties: updated ${updated} of ${rows.rows.length} records`);
+  } catch (err) {
+    console.error("[CMS] backfillMissingCounties error:", err.message);
+  }
+  return updated;
 }
 
 export async function logSync({ syncType, datasetId, providerType, startedAt, status, counts, error, sample }) {
