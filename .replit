@@ -41,7 +41,7 @@ externalPort = 3000
 [deployment]
 deploymentTarget = "autoscale"
 build = ["npm", "run", "build"]
-run = ["node", "server.js"]
+run = ["npm", "start"]
 
 [postMerge]
 path = "scripts/post-merge.sh"
