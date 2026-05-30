@@ -28,6 +28,7 @@ function Dashboard() {
   const [scenario, setScenario] = useState(DEFAULT_SCENARIO);
   const [showScenario, setShowScenario] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
+  const [competitorProviderType, setCompetitorProviderType] = useState("all");
 
   const rows = useMemo(() => buildRows(scenario), [scenario]);
   const totals = useMemo(
@@ -122,9 +123,9 @@ function Dashboard() {
 
           <div id="tab-content">
             {activeTab === "Executive View" && <ExecutiveView rows={rows} totals={totals} />}
-            {activeTab === "County Plan" && <CountyPlan rows={rows} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} />}
+            {activeTab === "County Plan" && <CountyPlan rows={rows} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} competitorProviderType={competitorProviderType} setCompetitorProviderType={setCompetitorProviderType} />}
             {activeTab === "Referral Plan" && <ReferralPlan rows={rows} />}
-            {activeTab === "Competitive View" && <CompetitiveView selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} />}
+            {activeTab === "Competitive View" && <CompetitiveView selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} competitorProviderType={competitorProviderType} setCompetitorProviderType={setCompetitorProviderType} />}
             {activeTab === "Service Lines" && <ServiceLines />}
             {activeTab === "CMS Data" && <CmsData />}
             {activeTab === "Financial Model" && <FinancialModel rows={rows} />}

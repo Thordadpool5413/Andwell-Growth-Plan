@@ -36,9 +36,24 @@ const COMPETITIVE_TABS = [
   { id: "methodology", label: "Methodology" },
 ];
 
-export default function CompetitiveView({ selectedCounty, setSelectedCounty }) {
+export default function CompetitiveView({ selectedCounty, setSelectedCounty, competitorProviderType = "all", setCompetitorProviderType }) {
   const { dark } = useDarkMode();
-  const [service, setService] = useState("Home Healthcare");
+
+  const derivedService = competitorProviderType === "hospice" ? "Hospice" : "Home Healthcare";
+  const [service, setServiceState] = useState(derivedService);
+
+  const setService = (svc) => {
+    setServiceState(svc);
+    if (setCompetitorProviderType) {
+      setCompetitorProviderType(svc === "Hospice" ? "hospice" : "homehealth");
+    }
+  };
+
+  React.useEffect(() => {
+    if (competitorProviderType === "hospice") setServiceState("Hospice");
+    else if (competitorProviderType === "homehealth") setServiceState("Home Healthcare");
+  }, [competitorProviderType]);
+
   const [activeTab, setActiveTab] = useState("providers");
   const [cmsCompetitors, setCmsCompetitors] = useState([]);
 
