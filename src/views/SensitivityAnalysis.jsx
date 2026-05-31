@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import Card from "../components/Card.jsx";
 import Metric from "../components/Metric.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
+import Abbr from "../components/Abbr.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
 import { getSensitivityAnalysis } from "../utils/calculations.js";
@@ -16,6 +17,9 @@ function TornadoBar({ variable, maxRange, dark }) {
   const lowX = variable.lowDelta < 0 ? center - lowWidth : center;
   const highX = variable.highDelta > 0 ? center : center - highWidth;
 
+  const bandWidth = Math.abs(variable.highDelta - variable.lowDelta) * scale;
+  const bandX = Math.min(center - lowWidth, center + highWidth - bandWidth);
+
   const formatVal = variable.format === "percent"
     ? (v) => `${(v * 100).toFixed(0)}%`
     : (v) => `$${Math.round(v).toLocaleString()}`;
@@ -28,27 +32,55 @@ function TornadoBar({ variable, maxRange, dark }) {
           Range: {currency(variable.range)}
         </p>
       </div>
-      <svg viewBox={`0 0 ${barWidth} 36`} className="w-full h-9">
-        <line x1={center} y1="0" x2={center} y2="36" stroke={dark ? "#475569" : "#94a3b8"} strokeWidth="1" strokeDasharray="3 3" />
+      <svg viewBox={`0 0 ${barWidth} 52`} className="w-full" style={{ height: "52px" }}>
+        <rect
+          x={Math.min(center - lowWidth, center)}
+          y="4"
+          width={lowWidth + highWidth}
+          height="22"
+          rx="6"
+          fill={dark ? "#334155" : "#e2e8f0"}
+          opacity="0.5"
+        />
+
+        <line x1={center} y1="0" x2={center} y2="36" stroke={dark ? "#475569" : "#94a3b8"} strokeWidth="1.5" strokeDasharray="3 3" />
+
         {variable.lowDelta < 0 && (
-          <rect x={lowX} y="4" width={lowWidth} height="12" rx="4" fill="#ef4444" opacity="0.8" />
+          <rect x={lowX} y="8" width={lowWidth} height="14" rx="4" fill="#ef4444" opacity="0.85" />
         )}
         {variable.lowDelta > 0 && (
-          <rect x={lowX} y="4" width={lowWidth} height="12" rx="4" fill="#22c55e" opacity="0.8" />
+          <rect x={lowX} y="8" width={lowWidth} height="14" rx="4" fill="#22c55e" opacity="0.85" />
         )}
         {variable.highDelta > 0 && (
-          <rect x={highX} y="4" width={highWidth} height="12" rx="4" fill="#22c55e" opacity="0.8" />
+          <rect x={center} y="8" width={highWidth} height="14" rx="4" fill="#22c55e" opacity="0.85" />
         )}
         {variable.highDelta < 0 && (
-          <rect x={highX} y="4" width={highWidth} height="12" rx="4" fill="#ef4444" opacity="0.8" />
+          <rect x={center - highWidth} y="8" width={highWidth} height="14" rx="4" fill="#ef4444" opacity="0.85" />
         )}
-        <text x={Math.max(lowX - 4, 4)} y="28" textAnchor="end" fontSize="9" fill={dark ? "#94a3b8" : "#64748b"}>
+
+        <line x1={center} y1="4" x2={center} y2="26" stroke={dark ? "#94a3b8" : "#475569"} strokeWidth="1.5" />
+
+        <text x={Math.max(lowX - 4, 2)} y="46" textAnchor="end" fontSize="10" fill={dark ? "#94a3b8" : "#64748b"}>
           {formatVal(variable.low)} → {currency(variable.lowDelta)}
         </text>
-        <text x={Math.min(center + highWidth + 4, barWidth - 4)} y="28" textAnchor="start" fontSize="9" fill={dark ? "#94a3b8" : "#64748b"}>
+        <text x={Math.min(center + highWidth + 4, barWidth - 2)} y="46" textAnchor="start" fontSize="10" fill={dark ? "#94a3b8" : "#64748b"}>
           {formatVal(variable.high)} → +{currency(variable.highDelta)}
         </text>
       </svg>
+      <div className="mt-1 flex items-center gap-3 text-[10px]">
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-2 w-3 rounded bg-red-500 opacity-80" />
+          <span className={dark ? "text-slate-500" : "text-slate-400"}>Downside</span>
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-2 w-3 rounded bg-emerald-500 opacity-80" />
+          <span className={dark ? "text-slate-500" : "text-slate-400"}>Upside</span>
+        </span>
+        <span className="flex items-center gap-1">
+          <span className={`inline-block h-2 w-3 rounded ${dark ? "bg-slate-600" : "bg-slate-200"}`} />
+          <span className={dark ? "text-slate-500" : "text-slate-400"}>Confidence band</span>
+        </span>
+      </div>
     </div>
   );
 }
@@ -64,18 +96,36 @@ export default function SensitivityAnalysis({ rows }) {
 
   return (
     <div className="space-y-6">
-      <SectionHeader eyebrow="Sensitivity analysis" title="What-if revenue impact by variable">
-        Each bar shows how Y1 revenue changes when a single variable moves from its low to high bound while all others stay at baseline. Variables are ranked by total revenue impact range.
+      <SectionHeader eyebrow="Sensitivity analysis" icon="📉" title="What-if revenue impact by variable">
+        Each bar shows how Y1 revenue changes when a single variable moves from its low to high bound while all others stay at baseline. Variables are ranked by total revenue impact range. The shaded band shows the full confidence range.
       </SectionHeader>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <Metric label="Baseline Y1 revenue" value={currency(baseRevenue)} detail="Revenue at default scenario assumptions." />
-        <Metric label="Most sensitive lever" value={topLever?.label || "—"} detail={`Revenue range: ${currency(topLever?.range || 0)}`} />
-        <Metric label="Worst-case total" value={currency(baseRevenue + worstCase)} detail={`All variables at low: ${currency(worstCase)}`} />
-        <Metric label="Best-case total" value={currency(baseRevenue + bestCase)} detail={`All variables at high: +${currency(bestCase)}`} />
+        <Metric label="Baseline Y1 revenue" value={currency(baseRevenue)} detail="Revenue at default scenario assumptions." color="indigo" />
+        <Metric label="Most sensitive lever" value={topLever?.label || "—"} detail={`Revenue range: ${currency(topLever?.range || 0)}`} color="amber" />
+        <Metric label="Worst-case total" value={currency(baseRevenue + worstCase)} detail={`All variables at low: ${currency(worstCase)}`} color="amber" />
+        <Metric label="Best-case total" value={currency(baseRevenue + bestCase)} detail={`All variables at high: +${currency(bestCase)}`} color="emerald" />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        {[
+          { label: "Downside scenario", value: currency(baseRevenue + worstCase), delta: currency(worstCase), color: dark ? "border-l-red-500 bg-red-950/20" : "border-l-red-500 bg-red-50", textColor: dark ? "text-red-400" : "text-red-600", deltaPrefix: "" },
+          { label: "Base scenario", value: currency(baseRevenue), delta: "Model baseline", color: dark ? "border-l-blue-500 bg-blue-950/20" : "border-l-blue-500 bg-blue-50", textColor: dark ? "text-blue-400" : "text-blue-700", deltaPrefix: "" },
+          { label: "Upside scenario", value: currency(baseRevenue + bestCase), delta: `+${currency(bestCase)}`, color: dark ? "border-l-emerald-500 bg-emerald-950/20" : "border-l-emerald-500 bg-emerald-50", textColor: dark ? "text-emerald-400" : "text-emerald-600", deltaPrefix: "+" },
+        ].map((s) => (
+          <div key={s.label} className={`rounded-2xl border-l-4 border p-5 ${s.color} ${dark ? "border-slate-700" : "border-slate-200"}`}>
+            <p className={`text-xs font-black uppercase tracking-wide ${dark ? "text-slate-400" : "text-slate-500"}`}>{s.label}</p>
+            <p className={`mt-2 text-3xl font-black ${s.textColor}`}>{s.value}</p>
+            <p className={`mt-1 text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>{s.delta}</p>
+          </div>
+        ))}
       </div>
 
       <Card title="Revenue sensitivity tornado" eyebrow="Ranked by impact range">
+        <div className={`mb-3 rounded-xl border px-3 py-2 text-xs ${dark ? "border-slate-700 bg-slate-800/60 text-slate-400" : "border-slate-100 bg-slate-50 text-slate-500"}`}>
+          <span className="font-black">Range sources: </span>
+          <Abbr term="HH">HH</Abbr> reimbursement $2,500–$4,000 (CMS national <Abbr term="HH">HH</Abbr> reimbursement range) · <Abbr term="Conversion Rate">Conversion rate</Abbr> 60–90% (<Abbr term="NAHC">NAHC</Abbr> 2023 industry median 72–78%) · Capture rate 5–20% (internal Andwell planning assumptions; industry first-year median 8–15%) · Hospice reimbursement mirrors CMS hospice per-diem schedule range. Shaded band = full low-to-high confidence range.
+        </div>
         <div className="space-y-3">
           {analysis.map((variable) => (
             <TornadoBar key={variable.key} variable={variable} maxRange={maxRange} dark={dark} />
@@ -89,18 +139,21 @@ export default function SensitivityAnalysis({ rows }) {
             <div className={`w-40 text-sm font-black ${dark ? "text-white" : "text-slate-950"}`}>Baseline</div>
             <div className="flex-1 relative h-6">
               <div className="absolute inset-y-0 left-0 rounded-lg bg-blue-600" style={{ width: "50%" }} />
+              <div className="absolute inset-y-0 left-0 rounded-lg bg-blue-400/30" style={{ width: "55%" }} />
             </div>
             <div className={`w-28 text-right text-sm font-black ${dark ? "text-blue-400" : "text-blue-700"}`}>{currency(baseRevenue)}</div>
           </div>
           {analysis.map((variable) => {
             const pct = baseRevenue > 0 ? Math.max(Math.abs(variable.highDelta) / baseRevenue * 100, 2) : 0;
+            const bandPct = baseRevenue > 0 ? Math.max(Math.abs(variable.range) / baseRevenue * 100, 2) : 0;
             return (
               <div key={variable.key} className={`flex items-center gap-3 rounded-xl p-3 ${dark ? "bg-slate-700/30" : "bg-white"}`}>
                 <div className={`w-40 text-sm ${dark ? "text-slate-300" : "text-slate-700"}`}>{variable.label}</div>
                 <div className="flex-1 relative h-6">
+                  <div className="absolute inset-y-1 left-0 rounded-lg bg-emerald-200/50 dark:bg-emerald-900/30" style={{ width: `${Math.min(bandPct, 50)}%` }} />
                   <div className="absolute inset-y-0 left-0 rounded-lg bg-emerald-500/70" style={{ width: `${Math.min(pct, 50)}%` }} />
                 </div>
-                <div className={`w-28 text-right text-sm font-black text-emerald-600`}>+{currency(variable.highDelta)}</div>
+                <div className="w-28 text-right text-sm font-black text-emerald-600">+{currency(variable.highDelta)}</div>
               </div>
             );
           })}
@@ -130,10 +183,10 @@ export default function SensitivityAnalysis({ rows }) {
               </tr>
             </thead>
             <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-slate-100"}`}>
-              {analysis.map((v) => {
+              {analysis.map((v, i) => {
                 const fmt = v.format === "percent" ? (x) => `${(x * 100).toFixed(0)}%` : (x) => currency(x);
                 return (
-                  <tr key={v.key} className={dark ? "hover:bg-slate-700/50" : "hover:bg-slate-50"}>
+                  <tr key={v.key} className={dark ? i % 2 === 1 ? "bg-slate-800/60 hover:bg-slate-700/50" : "hover:bg-slate-700/50" : i % 2 === 1 ? "bg-slate-50/50 hover:bg-slate-50" : "hover:bg-slate-50"}>
                     <td className={`px-5 py-4 font-black ${dark ? "text-white" : ""}`}>{v.label}</td>
                     <td className={`px-5 py-4 text-right ${dark ? "text-red-400" : "text-red-600"}`}>{fmt(v.low)}</td>
                     <td className={`px-5 py-4 text-right ${dark ? "text-slate-300" : ""}`}>{fmt(v.base)}</td>

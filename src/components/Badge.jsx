@@ -2,28 +2,28 @@ import React from "react";
 import { useDarkMode } from "./DarkModeContext.jsx";
 
 const lightTones = {
-  blue: "bg-blue-50 text-blue-800 border-blue-200",
-  green: "bg-green-50 text-green-800 border-green-200",
-  amber: "bg-amber-50 text-amber-800 border-amber-200",
-  red: "bg-red-50 text-red-800 border-red-200",
-  purple: "bg-purple-50 text-purple-800 border-purple-200",
-  slate: "bg-slate-50 text-slate-800 border-slate-200",
+  blue: "bg-blue-50 text-brand-blue border-blue-200",
+  green: "bg-green-50 text-brand-green border-green-200",
+  amber: "bg-amber-50 text-brand-amber border-amber-200",
+  red: "bg-red-50 text-brand-red border-red-200",
+  purple: "bg-purple-50 text-brand-purple border-purple-200",
+  slate: "bg-slate-50 text-brand-slate border-slate-200",
 };
 
 const darkTones = {
-  blue: "bg-blue-950 text-blue-300 border-blue-800",
-  green: "bg-green-950 text-green-300 border-green-800",
-  amber: "bg-amber-950 text-amber-300 border-amber-800",
-  red: "bg-red-950 text-red-300 border-red-800",
-  purple: "bg-purple-950 text-purple-300 border-purple-800",
-  slate: "bg-slate-800 text-slate-300 border-slate-600",
+  blue: "bg-blue-950/50 text-blue-300 border-blue-800",
+  green: "bg-green-950/50 text-green-300 border-green-800",
+  amber: "bg-amber-950/50 text-amber-300 border-amber-800",
+  red: "bg-red-950/50 text-red-300 border-red-800",
+  purple: "bg-purple-950/50 text-purple-300 border-purple-800",
+  slate: "bg-slate-800/50 text-slate-300 border-slate-600",
 };
 
 export default function Badge({ children, tone = "blue" }) {
   const { dark } = useDarkMode();
   const tones = dark ? darkTones : lightTones;
   return (
-    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-black ${tones[tone]}`}>
+    <span className={`inline-flex items-center rounded-full border px-3 py-0.5 text-[11px] font-black tracking-wide uppercase ${tones[tone]}`}>
       {children}
     </span>
   );

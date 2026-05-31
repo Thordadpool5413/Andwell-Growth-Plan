@@ -1,7 +1,7 @@
 import React from "react";
 
 export default function Sparkline({ data, color = "#2563eb", width = 80, height = 28 }) {
-  if (!data || data.length < 2) return null;
+  if (!data || data.length < 2 || width <= 0 || height <= 0) return null;
 
   const min = Math.min(...data);
   const max = Math.max(...data);

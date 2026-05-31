@@ -224,7 +224,16 @@ export default {
         'glass': 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
         'glass-dark': 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
       },
+        brand: {
+          blue: "#2563eb",
+          green: "#16a34a",
+          purple: "#7c3aed",
+          red: "#dc2626",
+          amber: "#f59e0b",
+          slate: "#64748b",
+        }
+      }
     },
   },
-  plugins: [],
+  plugins: [require("@tailwindcss/typography")],
 };

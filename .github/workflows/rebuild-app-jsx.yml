@@ -3,6 +3,10 @@ name: Rebuild App JSX
 on:
   push:
     paths:
+      - "src/App.jsx"
+      - "package.json"
+      - "package-lock.json"
+      - ".npmrc"
       - ".github/source-update/app.jsx.gz.b64.part*"
       - ".github/workflows/rebuild-app-jsx.yml"
   workflow_dispatch:
@@ -13,34 +17,51 @@ permissions:
 jobs:
   rebuild-app-jsx:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Rebuild src/App.jsx from compressed source chunks
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Rebuild src/App.jsx from compressed source chunks when present
         run: |
+          set -euo pipefail
           mkdir -p src
-          cat .github/source-update/app.jsx.gz.b64.part* > /tmp/app.jsx.gz.b64
-          base64 -d /tmp/app.jsx.gz.b64 > /tmp/app.jsx.gz
-          gzip -d -c /tmp/app.jsx.gz > src/App.jsx
+          if compgen -G ".github/source-update/app.jsx.gz.b64.part*" > /dev/null; then
+            echo "Compressed source chunks found. Rebuilding src/App.jsx."
+            cat .github/source-update/app.jsx.gz.b64.part* > /tmp/app.jsx.gz.b64
+            base64 -d /tmp/app.jsx.gz.b64 > /tmp/app.jsx.gz
+            gzip -d -c /tmp/app.jsx.gz > src/App.jsx
+          else
+            echo "No compressed source chunks found. Using existing src/App.jsx."
+          fi
           test -s src/App.jsx
           grep -q "export default function AndwellGrowthPlanApp" src/App.jsx
 
       - name: Validate production build
         run: |
-          npm install
+          set -euo pipefail
+          npm config set registry https://registry.npmjs.org/
+          npm install --no-audit --no-fund --legacy-peer-deps
           npm run build
 
-      - name: Commit rebuilt App.jsx
+      - name: Commit rebuilt App.jsx and lockfile when changed
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/App.jsx package-lock.json
+          git add src/App.jsx package-lock.json package.json .npmrc
           if git diff --cached --quiet; then
             echo "No source changes to commit."
           else
-            git commit -m "Rebuild App.jsx from uploaded dashboard source"
+            git commit -m "Rebuild and validate Andwell dashboard source"
             git push
           fi
