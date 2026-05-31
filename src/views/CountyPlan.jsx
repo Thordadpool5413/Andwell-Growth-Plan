@@ -64,12 +64,6 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
         </Card>
 
         {/* County Selection List */}
-        <Card title="County launch queue" eyebrow="Prioritization">
-          <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
-            {rows.map((row) => {
-              const rowIntel = getCountyIntelligence(row.county, rows);
-              const isSelected = selectedCounty === row.county;
-              
         <Card title="County launch queue" eyebrow="Prioritization — ranked by opportunity score">
           <div className={`mb-3 rounded-xl border px-3 py-2 text-xs ${dark ? "border-slate-700 bg-slate-800/60 text-slate-400" : "border-slate-100 bg-slate-50 text-slate-500"}`}>
             <span className="font-black">Priority groups: </span>
@@ -87,38 +81,6 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
                 <button
                   key={row.county}
                   onClick={() => setSelectedCounty(row.county)}
-                  className={themeClasses.listItem(dark, isSelected)}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className={`font-bold text-sm ${dark ? "text-white" : "text-slate-950"}`}>
-                        {row.county}
-                      </p>
-                      <p className={`text-xs mt-1 ${dark ? "text-slate-400" : "text-slate-600"}`}>
-                        {row.service}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                      {rowIntel?.threat && (
-                        <span className={`text-xs font-bold px-2 py-1 rounded-full border ${
-                          rowIntel.threat.score >= 50 
-                            ? dark ? "bg-error-900/40 border-error-700/50 text-error-300" : "bg-error-100 border-error-300 text-error-700"
-                            : rowIntel.threat.score >= 30
-                            ? dark ? "bg-warning-900/40 border-warning-700/50 text-warning-300" : "bg-warning-100 border-warning-300 text-warning-700"
-                            : dark ? "bg-success-900/40 border-success-700/50 text-success-300" : "bg-success-100 border-success-300 text-success-700"
-                        }`}>
-                          {rowIntel.threat.score}
-                        </span>
-                      )}
-                      <span className={`text-xs font-bold px-2 py-1 rounded-full border ${
-                        row.launchGroup.includes("1")
-                          ? dark ? "bg-success-900/40 border-success-700/50 text-success-300" : "bg-success-100 border-success-300 text-success-700"
-                          : row.launchGroup.includes("2")
-                          ? dark ? "bg-info-900/40 border-info-700/50 text-info-300" : "bg-info-100 border-info-300 text-info-700"
-                          : dark ? "bg-warning-900/40 border-warning-700/50 text-warning-300" : "bg-warning-100 border-warning-300 text-warning-700"
-                      }`}>
-                        Wave {row.launchGroup}
-                      </span>
                   className={`w-full rounded-2xl border p-3 text-left transition ${
                     isSelected
                       ? dark ? "border-blue-500 bg-blue-950/50" : "border-blue-500 bg-blue-50"

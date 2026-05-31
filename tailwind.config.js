@@ -1,10 +1,11 @@
+import typography from "@tailwindcss/typography";
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        // Semantic colors with full palette
         success: {
           50: '#f0fdf4',
           100: '#dcfce7',
@@ -53,11 +54,18 @@ export default {
           800: '#075985',
           900: '#0c3d5c',
         },
-        // Data state colors
         positive: '#10b981',
         neutral: '#6b7280',
         negative: '#ef4444',
         trending: '#3b82f6',
+        brand: {
+          blue: "#2563eb",
+          green: "#16a34a",
+          purple: "#7c3aed",
+          red: "#dc2626",
+          amber: "#f59e0b",
+          slate: "#64748b",
+        },
       },
       spacing: {
         xs: '0.25rem',
@@ -79,7 +87,6 @@ export default {
         '2xl': '2.25rem',
         '3xl': '2.5rem',
       },
-      // Enhanced shadows with elevation levels
       boxShadow: {
         'elevation-0': '0 0 0 1px rgba(0, 0, 0, 0.05)',
         'elevation-1': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
@@ -92,7 +99,6 @@ export default {
         'warning-glow': '0 0 20px rgba(245, 158, 11, 0.15)',
         'info-glow': '0 0 20px rgba(14, 165, 233, 0.15)',
       },
-      // Expanded animations
       animation: {
         'slide-in': 'slideIn 0.3s ease-out',
         'slide-out': 'slideOut 0.3s ease-out',
@@ -197,7 +203,6 @@ export default {
         'bounce': 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
         'elastic': 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
       },
-      // Typography scale
       fontSize: {
         'xs': ['0.75rem', { lineHeight: '1rem', letterSpacing: '0.02em' }],
         'sm': ['0.875rem', { lineHeight: '1.25rem', letterSpacing: '0.01em' }],
@@ -209,7 +214,6 @@ export default {
         '4xl': ['2.25rem', { lineHeight: '2.5rem' }],
         '5xl': ['3rem', { lineHeight: '1' }],
       },
-      // Backdrop effects
       backdropBlur: {
         xs: '2px',
         sm: '4px',
@@ -217,23 +221,13 @@ export default {
         lg: '12px',
         xl: '16px',
       },
-      // Gradients
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
         'glass': 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
         'glass-dark': 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
       },
-        brand: {
-          blue: "#2563eb",
-          green: "#16a34a",
-          purple: "#7c3aed",
-          red: "#dc2626",
-          amber: "#f59e0b",
-          slate: "#64748b",
-        }
-      }
     },
   },
-  plugins: [require("@tailwindcss/typography")],
+  plugins: [typography],
 };
