@@ -125,6 +125,11 @@ function StatusBadge({ status }) {
 
 const SERVICE_OPTIONS = ["All", "Home Health", "Hospice"];
 const COUNTY_LIST = Object.keys(cmsCountyMarket);
+const SVC_LABELS = {
+  "All":        ["Home Healthcare", "Hospice"],
+  "Home Health":["Home Healthcare"],
+  "Hospice":    ["Hospice"],
+};
 
 export default function MarketDynamicsView({ setActiveTab }) {
   const { dark } = useDarkMode();
@@ -202,18 +207,40 @@ export default function MarketDynamicsView({ setActiveTab }) {
     return Math.round((v / cmsCompetitors.length) * 100);
   }, [cmsCompetitors]);
 
+  const activeSvcLabels = SVC_LABELS[selectedService] || ["Home Healthcare", "Hospice"];
+
+  /* ── Service-aware statewide KPIs ── */
+  const statewideKpis = useMemo(() => {
+    if (selectedService === "Home Health") {
+      const dom = hhSummary.andwellShare || 0;
+      return {
+        andwellDominance: dom,
+        competitionShare: 1 - dom,
+        velocityPct: Math.round(dom * 100 * 0.65 * 10) / 10,
+      };
+    }
+    if (selectedService === "Hospice") {
+      const dom = hosSummary.andwellShare || 0;
+      return {
+        andwellDominance: dom,
+        competitionShare: 1 - dom,
+        velocityPct: null,
+      };
+    }
+    return {
+      andwellDominance: statewideAndwellDominance,
+      competitionShare: 1 - statewideAndwellDominance,
+      velocityPct: Math.round(andwellHHShare * 100 * 0.65 * 10) / 10,
+    };
+  }, [selectedService, hhSummary, hosSummary, statewideAndwellDominance, andwellHHShare]);
+
   /* ── County-scoped KPI derivation ── */
   const countyKpis = useMemo(() => {
     if (selectedCounty === "Statewide") return null;
     const mkt = cmsCountyMarket[selectedCounty];
     if (!mkt) return null;
 
-    const serviceMap = {
-      "All":        ["Home Healthcare", "Hospice"],
-      "Home Health":["Home Healthcare"],
-      "Hospice":    ["Hospice"],
-    };
-    const svcs = serviceMap[selectedService] || ["Home Healthcare", "Hospice"];
+    const svcs = activeSvcLabels;
 
     const countyRows = namedProviderRows.filter(
       (r) => r.locationCounty === selectedCounty && svcs.includes(r.service)
@@ -226,30 +253,42 @@ export default function MarketDynamicsView({ setActiveTab }) {
       .filter((r) => !r.isAndwellCmsRecord)
       .reduce((s, r) => s + r.providerVolumeShare, 0);
 
-    const hhUsers  = svcs.includes("Home Healthcare") ? (mkt.hh?.users  || 0) : 0;
-    const hosUsers = svcs.includes("Hospice")         ? (mkt.hos?.users || 0) : 0;
+    const hhUsers  = svcs.includes("Home Healthcare") ? (mkt.hh?.users  ?? 0) : 0;
+    const hosUsers = svcs.includes("Hospice")         ? (mkt.hos?.users ?? 0) : 0;
     const totalUsers = hhUsers + hosUsers;
 
-    const hhProv  = svcs.includes("Home Healthcare") ? (mkt.hh?.prov  || 0) : 0;
-    const hosProv = svcs.includes("Hospice")         ? (mkt.hos?.prov || 0) : 0;
+    const hhProv  = svcs.includes("Home Healthcare") ? (mkt.hh?.prov  ?? 0) : 0;
+    const hosProv = svcs.includes("Hospice")         ? (mkt.hos?.prov ?? 0) : 0;
 
-    const hhRate = svcs.includes("Home Healthcare") ? (mkt.hh?.rate || 0) : null;
+    const hhRate = svcs.includes("Home Healthcare") ? (mkt.hh?.rate ?? null) : null;
 
     return {
-      andwellDominance: andwellCountyShare || statewideAndwellDominance,
-      competitionShare: compCountyShare    || (1 - statewideAndwellDominance),
+      andwellDominance: andwellCountyShare,
+      competitionShare: compCountyShare,
       velocityPct: hhRate != null ? Math.round(hhRate * 100 * 100) / 10 : null,
       totalUsers,
       providerCount: hhProv + hosProv,
       ffs: mkt.ffs,
       mkt,
     };
-  }, [selectedCounty, selectedService, statewideAndwellDominance]);
+  }, [selectedCounty, selectedService]);
 
   /* derived KPI values — county overrides statewide when available */
-  const andwellDominance = countyKpis?.andwellDominance ?? statewideAndwellDominance;
-  const competitionShare = countyKpis?.competitionShare ?? (1 - statewideAndwellDominance);
-  const velocityPct = countyKpis?.velocityPct ?? Math.round(andwellHHShare * 100 * 0.65 * 10) / 10;
+  const isCountyView = selectedCounty !== "Statewide";
+  const andwellDominance = isCountyView ? (countyKpis?.andwellDominance ?? 0) : statewideKpis.andwellDominance;
+  const competitionShare = isCountyView ? (countyKpis?.competitionShare ?? 0) : statewideKpis.competitionShare;
+  const velocityPct = isCountyView ? (countyKpis?.velocityPct ?? null) : statewideKpis.velocityPct;
+
+  /* ── Provider → service mapping for velocity filter ── */
+  const provServiceMap = useMemo(() => {
+    const map = {};
+    for (const row of namedProviderRows) {
+      const k = row.providerName.toLowerCase().slice(0, 12);
+      if (!map[k]) map[k] = new Set();
+      map[k].add(row.service);
+    }
+    return map;
+  }, []);
 
   const velocityRows = useMemo(() => {
     if (!cmsCompetitors.length) return [];
@@ -288,15 +327,31 @@ export default function MarketDynamicsView({ setActiveTab }) {
       .slice(0, 8);
   }, [cmsCompetitors, andwellHHShare]);
 
-  /* ── County-filtered velocity rows ── */
+  /* ── County + service filtered velocity rows ── */
   const filteredVelocityRows = useMemo(() => {
-    if (selectedCounty === "Statewide") return velocityRows;
-    return velocityRows.filter(
-      (r) => r.region === selectedCounty || r.region === "Statewide"
-    );
-  }, [velocityRows, selectedCounty]);
+    let rows = velocityRows;
 
-  /* ── County-filtered emerging markets ── */
+    if (selectedCounty !== "Statewide") {
+      rows = rows.filter((r) => r.region === selectedCounty || r.region === "Statewide");
+    }
+
+    if (selectedService !== "All") {
+      const svcLabel = selectedService === "Home Health" ? "Home Healthcare" : "Hospice";
+      rows = rows.filter((r) => {
+        const lc = (r.name || "").toLowerCase();
+        for (const [k, svcs] of Object.entries(provServiceMap)) {
+          if (lc.includes(k) || k.includes(lc.slice(0, 12))) {
+            return svcs.has(svcLabel);
+          }
+        }
+        return true;
+      });
+    }
+
+    return rows;
+  }, [velocityRows, selectedCounty, selectedService, provServiceMap]);
+
+  /* ── County + service filtered emerging markets ── */
   const filteredEmergingMarkets = useMemo(() => {
     if (selectedCounty === "Statewide") return emergingMarkets;
     const mkt = cmsCountyMarket[selectedCounty];
@@ -493,7 +548,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
             {percent(andwellDominance)}
           </div>
           <div className="mt-1 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: C.primary }}>
-            {selectedCounty === "Statewide" ? "+2.4% vs Prev Qtr" : `Provider file · ${selectedCounty}`}
+            {!isCountyView ? "+2.4% vs Prev Qtr" : `Provider file · ${selectedCounty}`}
           </div>
           <MiniBar pct={andwellDominance * 100} color={C.primary} />
         </div>
@@ -505,21 +560,21 @@ export default function MarketDynamicsView({ setActiveTab }) {
         >
           <div className="flex justify-between items-start mb-3">
             <span className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: textSub }}>
-              {selectedCounty === "Statewide" ? "Aggregated Competition" : "County Providers"}
+              {!isCountyView ? "Aggregated Competition" : "County Providers"}
             </span>
             <svg className="w-5 h-5 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke={C.secondary} strokeWidth="2.5">
               <path d="M17 7L7 17M7 7v10h10"/>
             </svg>
           </div>
           <div className="font-black" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: textMain }}>
-            {selectedCounty === "Statewide"
+            {!isCountyView
               ? percent(competitionShare)
               : (countyKpis?.providerCount ?? "—")}
           </div>
-          <div className="mt-1 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: selectedCounty === "Statewide" ? "#ba1a1a" : C.secondary }}>
-            {selectedCounty === "Statewide" ? "-1.1% Sector Loss" : `Active in ${selectedCounty}`}
+          <div className="mt-1 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: !isCountyView ? "#ba1a1a" : C.secondary }}>
+            {!isCountyView ? "-1.1% Sector Loss" : `Active in ${selectedCounty}`}
           </div>
-          <MiniBar pct={selectedCounty === "Statewide" ? competitionShare * 100 : Math.min((countyKpis?.providerCount ?? 0) * 10, 100)} color={C.secondary} />
+          <MiniBar pct={!isCountyView ? competitionShare * 100 : Math.min((countyKpis?.providerCount ?? 0) * 10, 100)} color={C.secondary} />
         </div>
 
         {/* 3 — Strategic Velocity / County HH Rate */}
@@ -529,7 +584,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
         >
           <div className="flex justify-between items-start mb-3">
             <span className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: textSub }}>
-              {selectedCounty === "Statewide" ? "Strategic Velocity" : "HH Utilization Rate"}
+              {!isCountyView ? "Strategic Velocity" : "HH Utilization Rate"}
             </span>
             <svg className="w-5 h-5 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke={C.tertiaryC} strokeWidth="2.5">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
@@ -539,7 +594,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
             {velocityPct != null ? `${velocityPct}%` : "—"}
           </div>
           <div className="mt-1 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: C.tertiaryC }}>
-            {selectedCounty === "Statewide" ? "High Growth Potential" : "FFS beneficiary utilization"}
+            {!isCountyView ? "High Growth Potential" : "FFS beneficiary utilization"}
           </div>
           <MiniBar pct={velocityPct ?? 0} color={C.tertiaryC} />
         </div>
@@ -551,19 +606,19 @@ export default function MarketDynamicsView({ setActiveTab }) {
         >
           <div className="flex justify-between items-start mb-3">
             <span className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: textSub }}>
-              {selectedCounty === "Statewide" ? "Data Confidence" : "FFS Population"}
+              {!isCountyView ? "Data Confidence" : "FFS Population"}
             </span>
             <svg className="w-5 h-5 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>
             </svg>
           </div>
           <div className="font-black" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: textMain }}>
-            {selectedCounty === "Statewide"
+            {!isCountyView
               ? (displayConfidence != null ? `${displayConfidence}%` : "—")
               : (countyKpis?.ffs != null ? countyKpis.ffs.toLocaleString() : "—")}
           </div>
           <div className="mt-1 flex items-center gap-1.5">
-            {selectedCounty === "Statewide" ? (
+            {!isCountyView ? (
               <>
                 <span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: textSub }}>CMS Verified</span>
                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -575,7 +630,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
             )}
           </div>
           <div className="mt-2 text-[9px] uppercase tracking-[0.15em]" style={{ color: textMute }}>
-            {selectedCounty === "Statewide"
+            {!isCountyView
               ? (loading ? "Loading…" : `Source: CMS Audit · ${cmsCompetitors.length} records`)
               : `CMS county market · ${selectedCounty}`}
           </div>
@@ -799,7 +854,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
           {/* Emerging Markets */}
           <CommandCard className="p-5">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-3" style={{ color: textSub }}>
-              {selectedCounty === "Statewide" ? "Emerging Markets" : `${selectedCounty} Market Snapshot`}
+              {!isCountyView ? "Emerging Markets" : `${selectedCounty} Market Snapshot`}
             </h3>
             <div className="space-y-2">
               {filteredEmergingMarkets.map((m) => (
@@ -814,7 +869,13 @@ export default function MarketDynamicsView({ setActiveTab }) {
                   <div>
                     <div className="font-black text-sm" style={{ color: textMain }}>{m.county}</div>
                     <div className="text-[10px] font-bold uppercase tracking-wide mt-0.5" style={{ color: textMute }}>
-                      {m.score}/100 opportunity score · {number(m.market.hh.users + m.market.hos.users)} users
+                      {(() => {
+                        const users = selectedService === "Home Health" ? m.market.hh.users
+                                    : selectedService === "Hospice"     ? m.market.hos.users
+                                    : m.market.hh.users + m.market.hos.users;
+                        const svcLabel = selectedService === "All" ? "" : ` · ${selectedService}`;
+                        return `${m.score}/100 opportunity score · ${number(users)} users${svcLabel}`;
+                      })()}
                     </div>
                   </div>
                   <svg className="w-5 h-5 shrink-0 ml-2" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2">
