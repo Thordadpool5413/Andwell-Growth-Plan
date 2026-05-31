@@ -3,9 +3,13 @@ import { DEFAULT_SCENARIO } from "./data/constants.js";
 import DataSourceBanner from "./components/DataSourceBanner.jsx";
 import { buildRows } from "./utils/calculations.js";
 import { DarkModeProvider, useDarkMode } from "./components/DarkModeContext.jsx";
+import { ToastProvider, useToast } from "./components/ToastContainer.jsx";
 import ScenarioPanel from "./components/ScenarioPanel.jsx";
 import ScenarioCompare from "./components/ScenarioCompare.jsx";
+import ScenarioManager from "./components/ScenarioManager.jsx";
 import ExportButton from "./components/ExportButton.jsx";
+import InsightsPanel from "./components/InsightsPanel.jsx";
+import { InsightsEngine } from "./utils/insights.js";
 import ExecutiveView from "./views/ExecutiveView.jsx";
 import CountyPlan from "./views/CountyPlan.jsx";
 import ReferralPlan from "./views/ReferralPlan.jsx";
@@ -31,6 +35,7 @@ const TAB_GROUPS = [
 
 function Dashboard() {
   const { dark, toggle } = useDarkMode();
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState("Executive View");
   const [selectedCounty, setSelectedCounty] = useState("York");
   const [scenario, setScenario] = useState(() => {
@@ -60,6 +65,7 @@ function Dashboard() {
   const [showScenario, setShowScenario] = useState(false);
   const [showScenarioSidebar, setShowScenarioSidebar] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
+  const [showInsights, setShowInsights] = useState(false);
   const [competitorProviderType, setCompetitorProviderType] = useState("all");
 
   useEffect(() => {
@@ -103,6 +109,9 @@ function Dashboard() {
     [defaultRows],
   );
 
+  const insightsEngine = useMemo(() => new InsightsEngine(rows, totals), [rows, totals]);
+  const insights = useMemo(() => insightsEngine.getAllInsights(), [insightsEngine]);
+
   return (
     <div className={`min-h-screen transition-colors duration-300 ${dark ? "bg-slate-950 text-slate-100" : "bg-gradient-to-b from-slate-50 to-white text-slate-900"}`}>
       <div className={`px-4 py-6 sm:px-6 lg:px-10 transition-all duration-300 ${showScenarioSidebar ? "2xl:pr-[22rem]" : ""}`}>
@@ -141,7 +150,7 @@ function Dashboard() {
         <div className="mx-auto max-w-7xl space-y-6">
           <div className="print:hidden space-y-3">
             <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"} shadow-sm`}>
-              <div className="flex items-stretch min-w-max px-2 py-1.5 gap-0">
+              <div className="flex items-stretch min-w-max px-2 py-1.5 gap-0" role="tablist" aria-label="Dashboard views">
                 {TAB_GROUPS.map((group, gi) => (
                   <React.Fragment key={group.label}>
                     {gi > 0 && (
@@ -155,6 +164,10 @@ function Dashboard() {
                         {group.tabs.map((tab) => (
                           <button
                             key={tab}
+                            role="tab"
+                            aria-selected={activeTab === tab}
+                            aria-controls={`panel-${tab.replace(/\s+/g, "-").toLowerCase()}`}
+                            id={`tab-${tab.replace(/\s+/g, "-").toLowerCase()}`}
                             onClick={() => setActiveTab(tab)}
                             className={`relative rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-150 whitespace-nowrap ${
                               activeTab === tab
@@ -203,7 +216,13 @@ function Dashboard() {
           {showCompare && <div className="print:hidden"><ScenarioCompare currentScenario={scenario} /></div>}
 
           <div id="tab-content">
-            <div key={activeTab} className="tab-fade-in">
+            <div
+              key={activeTab}
+              className="tab-fade-in"
+              role="tabpanel"
+              id={`panel-${activeTab.replace(/\s+/g, "-").toLowerCase()}`}
+              aria-labelledby={`tab-${activeTab.replace(/\s+/g, "-").toLowerCase()}`}
+            >
               {activeTab === "Executive View" && <ExecutiveView rows={rows} totals={totals} />}
               {activeTab === "County Plan" && <CountyPlan rows={rows} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} competitorProviderType={competitorProviderType} setCompetitorProviderType={setCompetitorProviderType} />}
               {activeTab === "Referral Plan" && <ReferralPlan rows={rows} />}
@@ -221,6 +240,7 @@ function Dashboard() {
           </div>
         </div>
       </div>
+
       <AskPanel rows={rows} totals={totals} activeTab={activeTab} />
 
       <button
@@ -265,10 +285,12 @@ function Dashboard() {
   );
 }
 
-export default function AndwellGrowthPlanApp() {
+export default function App() {
   return (
     <DarkModeProvider>
-      <Dashboard />
+      <ToastProvider>
+        <Dashboard />
+      </ToastProvider>
     </DarkModeProvider>
   );
 }

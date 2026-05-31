@@ -13,6 +13,7 @@ import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { getCountyIntelligence, getOpportunityScore } from "../utils/calculations.js";
 import { streamChat, buildCountyPrompt, AI_AVAILABLE } from "../utils/ai.js";
 import { currency, number, percent } from "../utils/formatters.js";
+import { themeClasses } from "../utils/themeClasses.js";
 
 const CMS_LAST_SYNCED = "2026-05-01";
 
@@ -57,9 +58,12 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
   return (
     <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
       <div className="space-y-6">
+        {/* Map Card */}
         <Card title="Maine county map" eyebrow="Geographic view">
           <MaineMap rows={rows} selectedCounty={selectedCounty} onSelectCounty={setSelectedCounty} providerTypeFilter={competitorProviderType} onProviderTypeFilterChange={setCompetitorProviderType} />
         </Card>
+
+        {/* County Selection List */}
         <Card title="County launch queue" eyebrow="Prioritization — ranked by opportunity score">
           <div className={`mb-3 rounded-xl border px-3 py-2 text-xs ${dark ? "border-slate-700 bg-slate-800/60 text-slate-400" : "border-slate-100 bg-slate-50 text-slate-500"}`}>
             <span className="font-black">Priority groups: </span>
@@ -128,6 +132,8 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
           </div>
         </Card>
       </div>
+
+      {/* County Details Panel */}
       <div className="space-y-6">
         <Card title={`${selected.county} County`} eyebrow="County detail">
           <div className="mb-3 flex items-center gap-2">

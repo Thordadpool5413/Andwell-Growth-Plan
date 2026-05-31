@@ -1,5 +1,6 @@
 import React from "react";
 import { DEFAULT_SCENARIO } from "../data/constants.js";
+import Button from "./Button.jsx";
 import { useDarkMode } from "./DarkModeContext.jsx";
 
 function SliderRow({ label, value, min, max, step, format, onChange, dark }) {
@@ -52,7 +53,9 @@ export default function ScenarioPanel({ scenario, setScenario }) {
           <p className={`mt-1 text-sm ${dark ? "text-slate-400" : "text-slate-600"}`}>Adjust assumptions to see real-time financial impact across all views</p>
         </div>
         {!isDefault && (
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => setScenario(DEFAULT_SCENARIO)}
             className={`rounded-full px-4 py-2 text-xs font-black shadow-sm ring-1 transition ${
               dark
@@ -61,7 +64,7 @@ export default function ScenarioPanel({ scenario, setScenario }) {
             }`}
           >
             Reset defaults
-          </button>
+          </Button>
         )}
       </div>
 

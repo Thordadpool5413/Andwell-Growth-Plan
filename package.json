@@ -4,8 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node scripts/apply-replit-host-fix.mjs",
     "dev": "node server.js",
+    "prebuild": "node scripts/apply-replit-host-fix.mjs",
     "build": "vite build",
+    "prestart": "node scripts/apply-replit-host-fix.mjs",
     "start": "NODE_ENV=production node server.js",
     "preview": "vite preview --host 0.0.0.0"
   },
@@ -14,16 +17,22 @@
     "@vis.gl/react-google-maps": "^1.8.3",
     "@vitejs/plugin-react": "latest",
     "autoprefixer": "latest",
+    "dnd-kit": "^0.0.2",
     "express": "^5.2.1",
+    "framer-motion": "^12.39.0",
+    "lucide-react": "^1.17.0",
     "node-cron": "^4.2.1",
+    "papaparse": "^5.5.3",
     "pg": "^8.21.0",
     "postcss": "latest",
     "react": "latest",
     "react-dom": "latest",
+    "react-hot-toast": "^2.6.0",
     "react-is": "^19.2.6",
     "react-markdown": "^10.1.0",
     "recharts": "latest",
     "tailwindcss": "^3.4.17",
-    "vite": "latest"
+    "vite": "latest",
+    "zustand": "^5.0.13"
   }
 }
