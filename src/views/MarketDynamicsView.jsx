@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { namedProviderRows } from "../data/providers.js";
 import cmsCountyMarket from "../data/cmsCountyMarket.js";
 import { getProviderSummary, getOpportunityScore, buildRows } from "../utils/calculations.js";
 import { percent, number } from "../utils/formatters.js";
 import { DEFAULT_SCENARIO } from "../data/constants.js";
+import { streamChat, buildMarketSummaryPrompt, AI_AVAILABLE } from "../utils/ai.js";
 
 /* ── Design tokens (Clinical Intelligence Narrative spec) ── */
 const C = {
@@ -138,6 +139,11 @@ export default function MarketDynamicsView({ setActiveTab }) {
   const [qualityData,    setQualityData]    = useState(null);
   const [loading,        setLoading]        = useState(true);
 
+  const [aiSummary, setAiSummary] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState(null);
+  const aiAbortRef = useRef(null);
+
   useEffect(() => {
     (async () => {
       try {
@@ -154,6 +160,33 @@ export default function MarketDynamicsView({ setActiveTab }) {
       } catch (_) {}
       setLoading(false);
     })();
+  }, []);
+
+  const generateAiSummary = useCallback((vRows, andwellDom, amedisysShare, nlRow, totalComp, natCount) => {
+    if (!AI_AVAILABLE) return;
+    aiAbortRef.current?.abort();
+    const controller = new AbortController();
+    aiAbortRef.current = controller;
+    setAiSummary("");
+    setAiError(null);
+    setAiLoading(true);
+    streamChat({
+      messages: buildMarketSummaryPrompt({
+        velocityRows: vRows,
+        andwellDominance: andwellDom,
+        amedisysCombinedShare: amedisysShare,
+        northernLight: nlRow,
+        totalCompetitors: totalComp,
+        nationalChainCount: natCount,
+      }),
+      signal: controller.signal,
+      onChunk: (_, full) => setAiSummary(full),
+      onDone: () => setAiLoading(false),
+      onError: (err) => {
+        setAiError(err.message);
+        setAiLoading(false);
+      },
+    });
   }, []);
 
   const dataConfidence = useMemo(() => {
@@ -237,6 +270,22 @@ export default function MarketDynamicsView({ setActiveTab }) {
           boxShadow: "0 4px 20px rgb(0 0 0 / 0.25)", borderRadius: "1rem", ...extra }
       : { ...commandCard, borderRadius: "1rem", ...extra };
   }
+
+  const nationalChainCount = useMemo(() => velocityRows.filter((r) => r.national).length, [velocityRows]);
+
+  useEffect(() => {
+    if (loading) return;
+    const hasCmsData = velocityRows.length > 0;
+    generateAiSummary(
+      velocityRows,
+      andwellDominance,
+      amedisysShare,
+      northernLight,
+      hasCmsData ? velocityRows.length : 0,
+      nationalChainCount
+    );
+    return () => { aiAbortRef.current?.abort(); };
+  }, [loading]);
 
   return (
     <div style={{ color: textMain }} className="space-y-6">
@@ -509,41 +558,88 @@ export default function MarketDynamicsView({ setActiveTab }) {
             }}
           >
             <div className="absolute inset-0 pointer-events-none" style={{ ...dotMatrix, opacity: 0.05 }} />
-            <div className="relative z-10 flex items-center gap-3 mb-4">
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2">
-                <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-              </svg>
-              <h3 className="text-sm font-black uppercase tracking-[0.2em] text-white">Market Intel</h3>
+            <div className="relative z-10 flex items-center justify-between gap-2 mb-4">
+              <div className="flex items-center gap-3">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2">
+                  <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-white">Market Intel</h3>
+                {AI_AVAILABLE && (
+                  <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wide bg-violet-600/30 text-violet-300 border border-violet-500/30">
+                    <span className={`h-1.5 w-1.5 rounded-full ${aiLoading ? "bg-violet-400 animate-pulse" : "bg-violet-400"}`} />
+                    AI
+                  </span>
+                )}
+              </div>
+              {AI_AVAILABLE && !aiLoading && (aiSummary || aiError) && (
+                <button
+                  onClick={() => generateAiSummary(velocityRows, andwellDominance, amedisysShare, northernLight, velocityRows.length, nationalChainCount)}
+                  className="text-[9px] font-black uppercase tracking-wide text-slate-400 hover:text-white transition-colors"
+                  title="Regenerate summary"
+                >
+                  ↻ Refresh
+                </button>
+              )}
             </div>
-            <div className="relative z-10 space-y-3">
-              {/* Intel 1 */}
-              <div className="rounded-r-xl p-3.5 border-l-4" style={{ borderLeftColor: C.primary, background: "rgba(255,255,255,0.05)" }}>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: C.primary }}>
-                  Consolidation Alert
-                </p>
-                <p className="text-sm font-medium opacity-90 leading-relaxed">
-                  {northernLight
-                    ? `Northern Light Home Care leads competitor momentum (${northernLight.momentum}%) — dominant in Cumberland and Penobscot.`
-                    : "Northern Light Home Care is the largest competitor by volume — aggressive network expansion risk in Penobscot."}
-                </p>
-                <button className="mt-2 text-[9px] font-black uppercase hover:underline" style={{ color: C.primary }}>
-                  Action: Immediate Outreach
-                </button>
-              </div>
-              {/* Intel 2 */}
-              <div className="rounded-r-xl p-3.5 border-l-4" style={{ borderLeftColor: C.tertiaryC, background: "rgba(255,255,255,0.05)" }}>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: C.tertiaryC }}>
-                  Referral Leakage
-                </p>
-                <p className="text-sm font-medium opacity-90 leading-relaxed">
-                  {amedisysShare > 0
-                    ? `Amedisys holds ${percent(amedisysShare)} combined share across Maine — orthopedic referral capture risk in Bangor market.`
-                    : "Bangor market data suggests 15% of orthopedic referrals are bypassing traditional networks."}
-                </p>
-                <button className="mt-2 text-[9px] font-black uppercase hover:underline" style={{ color: C.tertiaryC }}>
-                  Action: Network Alignment
-                </button>
-              </div>
+
+            <div className="relative z-10">
+              {/* AI Loading skeleton */}
+              {aiLoading && !aiSummary && (
+                <div className="space-y-2 animate-pulse">
+                  <div className="h-3 bg-white/10 rounded-full w-full" />
+                  <div className="h-3 bg-white/10 rounded-full w-[95%]" />
+                  <div className="h-3 bg-white/10 rounded-full w-[88%]" />
+                  <div className="h-3 bg-white/10 rounded-full w-[92%]" />
+                  <div className="h-3 bg-white/10 rounded-full w-[75%]" />
+                </div>
+              )}
+
+              {/* AI streaming / completed text */}
+              {(aiSummary && !aiError) && (
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-sm font-medium opacity-90 leading-relaxed">
+                    {aiSummary}
+                    {aiLoading && <span className="inline-block w-1.5 h-3.5 ml-0.5 bg-violet-400 animate-pulse rounded-sm align-middle" />}
+                  </p>
+                </div>
+              )}
+
+              {/* Fallback static bullets (shown only on AI error or when AI is unavailable) */}
+              {(aiError || !AI_AVAILABLE) && (
+                <div className="space-y-3">
+                  <div className="rounded-r-xl p-3.5 border-l-4" style={{ borderLeftColor: C.primary, background: "rgba(255,255,255,0.05)" }}>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: C.primary }}>
+                      Consolidation Alert
+                    </p>
+                    <p className="text-sm font-medium opacity-90 leading-relaxed">
+                      {northernLight
+                        ? `Northern Light Home Care leads competitor momentum (${northernLight.momentum}%) — dominant in Cumberland and Penobscot.`
+                        : "Northern Light Home Care is the largest competitor by volume — aggressive network expansion risk in Penobscot."}
+                    </p>
+                  </div>
+                  <div className="rounded-r-xl p-3.5 border-l-4" style={{ borderLeftColor: C.tertiaryC, background: "rgba(255,255,255,0.05)" }}>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: C.tertiaryC }}>
+                      Referral Leakage
+                    </p>
+                    <p className="text-sm font-medium opacity-90 leading-relaxed">
+                      {amedisysShare > 0
+                        ? `Amedisys holds ${percent(amedisysShare)} combined share across Maine — orthopedic referral capture risk in Bangor market.`
+                        : "Amedisys (national) is active in Penobscot — orthopedic referral leakage risk identified from provider file data."}
+                    </p>
+                  </div>
+                  <div className="rounded-r-xl p-3.5 border-l-4 border-l-emerald-500" style={{ background: "rgba(255,255,255,0.05)" }}>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 mb-1">
+                      Quality Moat
+                    </p>
+                    <p className="text-sm font-medium opacity-90 leading-relaxed">
+                      Andwell's {percent(andwellDominance)} combined provider file share is backed by CMS quality data — defensible moat against volume-driven national chains.
+                    </p>
+                  </div>
+                  {aiError && (
+                    <p className="text-[10px] text-red-400/70 italic mt-1">AI summary unavailable — showing reference data</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
