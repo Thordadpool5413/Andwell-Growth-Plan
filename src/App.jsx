@@ -14,6 +14,7 @@ import ExecutiveView from "./views/ExecutiveView.jsx";
 import CountyPlan from "./views/CountyPlan.jsx";
 import ReferralPlan from "./views/ReferralPlan.jsx";
 import CompetitiveView from "./views/CompetitiveView.jsx";
+import MarketDynamicsView from "./views/MarketDynamicsView.jsx";
 import ServiceLines from "./views/ServiceLines.jsx";
 import CmsData from "./views/CmsData.jsx";
 import FinancialModel from "./views/FinancialModel.jsx";
@@ -28,7 +29,7 @@ import ScenarioSidebar from "./components/ScenarioSidebar.jsx";
 
 const TAB_GROUPS = [
   { label: "Planning", tabs: ["Executive View", "County Plan", "Referral Plan", "Opportunity Score"] },
-  { label: "Competitive", tabs: ["Competitive View", "Service Lines", "CMS Data"] },
+  { label: "Competitive", tabs: ["Competitive View", "Market Dynamics", "Service Lines", "CMS Data"] },
   { label: "Financial", tabs: ["Financial Model", "Sensitivity"] },
   { label: "Operations", tabs: ["Staffing Model", "Launch Timeline", "Board Report", "Launch Checklist"] },
 ];
@@ -227,6 +228,7 @@ function Dashboard() {
               {activeTab === "County Plan" && <CountyPlan rows={rows} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} competitorProviderType={competitorProviderType} setCompetitorProviderType={setCompetitorProviderType} />}
               {activeTab === "Referral Plan" && <ReferralPlan rows={rows} />}
               {activeTab === "Competitive View" && <CompetitiveView selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} competitorProviderType={competitorProviderType} setCompetitorProviderType={setCompetitorProviderType} />}
+              {activeTab === "Market Dynamics" && <MarketDynamicsView setActiveTab={setActiveTab} />}
               {activeTab === "Service Lines" && <ServiceLines />}
               {activeTab === "CMS Data" && <CmsData />}
               {activeTab === "Financial Model" && <FinancialModel rows={rows} />}
