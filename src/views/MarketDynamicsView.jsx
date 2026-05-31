@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { namedProviderRows } from "../data/providers.js";
 import cmsCountyMarket from "../data/cmsCountyMarket.js";
 import { getProviderSummary, getOpportunityScore, buildRows } from "../utils/calculations.js";
 import { percent, number } from "../utils/formatters.js";
 import { DEFAULT_SCENARIO } from "../data/constants.js";
+import { streamChat, buildMarketSummaryPrompt, AI_AVAILABLE } from "../utils/ai.js";
 
 /* ── Design tokens (Clinical Intelligence Narrative spec) ── */
 const C = {
@@ -122,21 +123,36 @@ function StatusBadge({ status }) {
   );
 }
 
+const SERVICE_OPTIONS = ["All", "Home Health", "Hospice"];
+const COUNTY_LIST = Object.keys(cmsCountyMarket);
+const SVC_LABELS = {
+  "All":        ["Home Healthcare", "Hospice"],
+  "Home Health":["Home Healthcare"],
+  "Hospice":    ["Hospice"],
+};
+
 export default function MarketDynamicsView({ setActiveTab }) {
   const { dark } = useDarkMode();
 
   const hhSummary  = getProviderSummary("Home Healthcare");
   const hosSummary = getProviderSummary("Hospice");
 
-  const andwellDominance = ((hhSummary.andwellShare || 0) + (hosSummary.andwellShare || 0)) / 2;
-  const competitionShare = 1 - andwellDominance;
-  const andwellHHShare   = hhSummary.andwellShare || 0;
-  const velocityPct      = Math.round(andwellHHShare * 100 * 0.65 * 10) / 10;
+  const statewideAndwellDominance = ((hhSummary.andwellShare || 0) + (hosSummary.andwellShare || 0)) / 2;
+  const andwellHHShare            = hhSummary.andwellShare || 0;
+
+  /* ── Filter state ── */
+  const [selectedCounty,  setSelectedCounty]  = useState("Statewide");
+  const [selectedService, setSelectedService] = useState("All");
 
   const [cmsCompetitors, setCmsCompetitors] = useState([]);
   const [hhvbpData,      setHhvbpData]      = useState(null);
   const [qualityData,    setQualityData]    = useState(null);
   const [loading,        setLoading]        = useState(true);
+
+  const [aiSummary, setAiSummary] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState(null);
+  const aiAbortRef = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -156,6 +172,33 @@ export default function MarketDynamicsView({ setActiveTab }) {
     })();
   }, []);
 
+  const generateAiSummary = useCallback((vRows, andwellDom, amedisysShare, nlRow, totalComp, natCount) => {
+    if (!AI_AVAILABLE) return;
+    aiAbortRef.current?.abort();
+    const controller = new AbortController();
+    aiAbortRef.current = controller;
+    setAiSummary("");
+    setAiError(null);
+    setAiLoading(true);
+    streamChat({
+      messages: buildMarketSummaryPrompt({
+        velocityRows: vRows,
+        andwellDominance: andwellDom,
+        amedisysCombinedShare: amedisysShare,
+        northernLight: nlRow,
+        totalCompetitors: totalComp,
+        nationalChainCount: natCount,
+      }),
+      signal: controller.signal,
+      onChunk: (_, full) => setAiSummary(full),
+      onDone: () => setAiLoading(false),
+      onError: (err) => {
+        setAiError(err.message);
+        setAiLoading(false);
+      },
+    });
+  }, []);
+
   const dataConfidence = useMemo(() => {
     if (!cmsCompetitors.length) return null;
     const v = cmsCompetitors.filter(
@@ -163,6 +206,89 @@ export default function MarketDynamicsView({ setActiveTab }) {
     ).length;
     return Math.round((v / cmsCompetitors.length) * 100);
   }, [cmsCompetitors]);
+
+  const activeSvcLabels = SVC_LABELS[selectedService] || ["Home Healthcare", "Hospice"];
+
+  /* ── Service-aware statewide KPIs ── */
+  const statewideKpis = useMemo(() => {
+    if (selectedService === "Home Health") {
+      const dom = hhSummary.andwellShare || 0;
+      return {
+        andwellDominance: dom,
+        competitionShare: 1 - dom,
+        velocityPct: Math.round(dom * 100 * 0.65 * 10) / 10,
+      };
+    }
+    if (selectedService === "Hospice") {
+      const dom = hosSummary.andwellShare || 0;
+      return {
+        andwellDominance: dom,
+        competitionShare: 1 - dom,
+        velocityPct: null,
+      };
+    }
+    return {
+      andwellDominance: statewideAndwellDominance,
+      competitionShare: 1 - statewideAndwellDominance,
+      velocityPct: Math.round(andwellHHShare * 100 * 0.65 * 10) / 10,
+    };
+  }, [selectedService, hhSummary, hosSummary, statewideAndwellDominance, andwellHHShare]);
+
+  /* ── County-scoped KPI derivation ── */
+  const countyKpis = useMemo(() => {
+    if (selectedCounty === "Statewide") return null;
+    const mkt = cmsCountyMarket[selectedCounty];
+    if (!mkt) return null;
+
+    const svcs = activeSvcLabels;
+
+    const countyRows = namedProviderRows.filter(
+      (r) => r.locationCounty === selectedCounty && svcs.includes(r.service)
+    );
+
+    const andwellCountyShare = countyRows
+      .filter((r) => r.isAndwellCmsRecord)
+      .reduce((s, r) => s + r.providerVolumeShare, 0);
+    const compCountyShare = countyRows
+      .filter((r) => !r.isAndwellCmsRecord)
+      .reduce((s, r) => s + r.providerVolumeShare, 0);
+
+    const hhUsers  = svcs.includes("Home Healthcare") ? (mkt.hh?.users  ?? 0) : 0;
+    const hosUsers = svcs.includes("Hospice")         ? (mkt.hos?.users ?? 0) : 0;
+    const totalUsers = hhUsers + hosUsers;
+
+    const hhProv  = svcs.includes("Home Healthcare") ? (mkt.hh?.prov  ?? 0) : 0;
+    const hosProv = svcs.includes("Hospice")         ? (mkt.hos?.prov ?? 0) : 0;
+
+    const hhRate = svcs.includes("Home Healthcare") ? (mkt.hh?.rate ?? null) : null;
+
+    return {
+      andwellDominance: andwellCountyShare,
+      competitionShare: compCountyShare,
+      velocityPct: hhRate != null ? Math.round(hhRate * 100 * 100) / 10 : null,
+      totalUsers,
+      providerCount: hhProv + hosProv,
+      ffs: mkt.ffs,
+      mkt,
+    };
+  }, [selectedCounty, selectedService]);
+
+  /* derived KPI values — county overrides statewide when available */
+  const isCountyView = selectedCounty !== "Statewide";
+  const andwellDominance = isCountyView ? (countyKpis?.andwellDominance ?? 0) : statewideKpis.andwellDominance;
+  const competitionShare = isCountyView ? (countyKpis?.competitionShare ?? 0) : statewideKpis.competitionShare;
+  const velocityPct = isCountyView ? (countyKpis?.velocityPct ?? null) : statewideKpis.velocityPct;
+
+  /* ── Provider → service mapping for velocity filter ── */
+  const provServiceMap = useMemo(() => {
+    const map = {};
+    for (const row of namedProviderRows) {
+      const k = row.providerName.toLowerCase().slice(0, 12);
+      if (!map[k]) map[k] = new Set();
+      map[k].add(row.service);
+    }
+    return map;
+  }, []);
 
   const velocityRows = useMemo(() => {
     if (!cmsCompetitors.length) return [];
@@ -201,6 +327,40 @@ export default function MarketDynamicsView({ setActiveTab }) {
       .slice(0, 8);
   }, [cmsCompetitors, andwellHHShare]);
 
+  /* ── County + service filtered velocity rows ── */
+  const filteredVelocityRows = useMemo(() => {
+    let rows = velocityRows;
+
+    if (selectedCounty !== "Statewide") {
+      rows = rows.filter((r) => r.region === selectedCounty || r.region === "Statewide");
+    }
+
+    if (selectedService !== "All") {
+      const svcLabel = selectedService === "Home Health" ? "Home Healthcare" : "Hospice";
+      rows = rows.filter((r) => {
+        const lc = (r.name || "").toLowerCase();
+        for (const [k, svcs] of Object.entries(provServiceMap)) {
+          if (lc.includes(k) || k.includes(lc.slice(0, 12))) {
+            return svcs.has(svcLabel);
+          }
+        }
+        return true;
+      });
+    }
+
+    return rows;
+  }, [velocityRows, selectedCounty, selectedService, provServiceMap]);
+
+  /* ── County + service filtered emerging markets ── */
+  const filteredEmergingMarkets = useMemo(() => {
+    if (selectedCounty === "Statewide") return emergingMarkets;
+    const mkt = cmsCountyMarket[selectedCounty];
+    if (!mkt) return emergingMarkets;
+    const rows = buildRows(DEFAULT_SCENARIO);
+    const opp  = getOpportunityScore(selectedCounty, rows);
+    return [{ county: selectedCounty, market: mkt, score: opp?.score || 0 }];
+  }, [selectedCounty]);
+
   const andwellQuality = qualityData?.rows?.find((r) =>
     (r.provider_name || "").toLowerCase().includes("androscoggin"));
   const andwellHhvbp  = hhvbpData?.rows?.find((r) =>
@@ -215,8 +375,8 @@ export default function MarketDynamicsView({ setActiveTab }) {
 
   const displayConfidence = dataConfidence ?? (loading ? null : 98);
 
-  const northernLight    = velocityRows.find((r) => (r.name || "").toLowerCase().includes("northern light"));
-  const amedisysRows     = velocityRows.filter((r) => (r.name || "").toLowerCase().includes("amedisys"));
+  const northernLight    = filteredVelocityRows.find((r) => (r.name || "").toLowerCase().includes("northern light"));
+  const amedisysRows     = filteredVelocityRows.filter((r) => (r.name || "").toLowerCase().includes("amedisys"));
   const amedisysShare    = amedisysRows.reduce((s, r) => s + r.providerShare, 0);
 
   /* In dark mode, invert the palette to dark surfaces */
@@ -237,6 +397,22 @@ export default function MarketDynamicsView({ setActiveTab }) {
           boxShadow: "0 4px 20px rgb(0 0 0 / 0.25)", borderRadius: "1rem", ...extra }
       : { ...commandCard, borderRadius: "1rem", ...extra };
   }
+
+  const nationalChainCount = useMemo(() => filteredVelocityRows.filter((r) => r.national).length, [filteredVelocityRows]);
+
+  useEffect(() => {
+    if (loading) return;
+    const hasCmsData = velocityRows.length > 0;
+    generateAiSummary(
+      velocityRows,
+      andwellDominance,
+      amedisysShare,
+      northernLight,
+      hasCmsData ? velocityRows.length : 0,
+      nationalChainCount
+    );
+    return () => { aiAbortRef.current?.abort(); };
+  }, [loading]);
 
   return (
     <div style={{ color: textMain }} className="space-y-6">
@@ -287,6 +463,71 @@ export default function MarketDynamicsView({ setActiveTab }) {
         </div>
       </header>
 
+      {/* ── County + Service Filter Bar ─────────────────────── */}
+      <div
+        className="rounded-2xl p-4 flex flex-col gap-3"
+        style={{ background: surfMed, border: `1px solid ${divider}` }}
+      >
+        {/* County pills */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] shrink-0 w-20" style={{ color: textMute }}>County</span>
+          {["Statewide", ...COUNTY_LIST].map((county) => {
+            const active = selectedCounty === county;
+            return (
+              <button
+                key={county}
+                onClick={() => setSelectedCounty(county)}
+                className="rounded-full px-3 py-1 text-xs font-black transition-all"
+                style={active
+                  ? { background: C.primary, color: "#fff", boxShadow: `0 2px 8px ${C.primary}55` }
+                  : { background: dark ? "#1a1d2a" : "#fff", color: textSub, border: `1px solid ${divider}` }
+                }
+              >
+                {county}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Service line pills */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] shrink-0 w-20" style={{ color: textMute }}>Service</span>
+          {SERVICE_OPTIONS.map((svc) => {
+            const active = selectedService === svc;
+            return (
+              <button
+                key={svc}
+                onClick={() => setSelectedService(svc)}
+                className="rounded-full px-3 py-1 text-xs font-black transition-all"
+                style={active
+                  ? { background: C.secondary, color: "#fff", boxShadow: `0 2px 8px ${C.secondary}55` }
+                  : { background: dark ? "#1a1d2a" : "#fff", color: textSub, border: `1px solid ${divider}` }
+                }
+              >
+                {svc}
+              </button>
+            );
+          })}
+
+          {/* Active filter label */}
+          {(selectedCounty !== "Statewide" || selectedService !== "All") && (
+            <span className="ml-auto text-[10px] font-black uppercase tracking-[0.15em]" style={{ color: C.primary }}>
+              {selectedCounty !== "Statewide" ? selectedCounty : "Statewide"}
+              {selectedService !== "All" ? ` · ${selectedService}` : ""}
+            </span>
+          )}
+          {(selectedCounty !== "Statewide" || selectedService !== "All") && (
+            <button
+              onClick={() => { setSelectedCounty("Statewide"); setSelectedService("All"); }}
+              className="rounded-full px-2.5 py-0.5 text-[10px] font-black transition-all hover:opacity-70"
+              style={{ background: dark ? "#1a1d2a" : "#fff", color: textMute, border: `1px solid ${divider}` }}
+            >
+              Clear ✕
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* ── KPI Cards ──────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
 
@@ -307,77 +548,91 @@ export default function MarketDynamicsView({ setActiveTab }) {
             {percent(andwellDominance)}
           </div>
           <div className="mt-1 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: C.primary }}>
-            +2.4% vs Prev Qtr
+            {!isCountyView ? "+2.4% vs Prev Qtr" : `Provider file · ${selectedCounty}`}
           </div>
           <MiniBar pct={andwellDominance * 100} color={C.primary} />
         </div>
 
-        {/* 2 — Aggregated Competition */}
+        {/* 2 — Aggregated Competition / County Providers */}
         <div
           className="rounded-2xl p-5 relative group"
           style={{ ...card({ borderLeft: `4px solid ${C.secondary}` }) }}
         >
           <div className="flex justify-between items-start mb-3">
             <span className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: textSub }}>
-              Aggregated Competition
+              {!isCountyView ? "Aggregated Competition" : "County Providers"}
             </span>
             <svg className="w-5 h-5 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke={C.secondary} strokeWidth="2.5">
               <path d="M17 7L7 17M7 7v10h10"/>
             </svg>
           </div>
           <div className="font-black" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: textMain }}>
-            {percent(competitionShare)}
+            {!isCountyView
+              ? percent(competitionShare)
+              : (countyKpis?.providerCount ?? "—")}
           </div>
-          <div className="mt-1 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: "#ba1a1a" }}>
-            -1.1% Sector Loss
+          <div className="mt-1 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: !isCountyView ? "#ba1a1a" : C.secondary }}>
+            {!isCountyView ? "-1.1% Sector Loss" : `Active in ${selectedCounty}`}
           </div>
-          <MiniBar pct={competitionShare * 100} color={C.secondary} />
+          <MiniBar pct={!isCountyView ? competitionShare * 100 : Math.min((countyKpis?.providerCount ?? 0) * 10, 100)} color={C.secondary} />
         </div>
 
-        {/* 3 — Strategic Velocity */}
+        {/* 3 — Strategic Velocity / County HH Rate */}
         <div
           className="rounded-2xl p-5 relative group"
           style={{ ...card({ borderLeft: `4px solid ${C.tertiaryC}` }) }}
         >
           <div className="flex justify-between items-start mb-3">
             <span className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: textSub }}>
-              Strategic Velocity
+              {!isCountyView ? "Strategic Velocity" : "HH Utilization Rate"}
             </span>
             <svg className="w-5 h-5 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke={C.tertiaryC} strokeWidth="2.5">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
             </svg>
           </div>
           <div className="font-black" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: textMain }}>
-            {velocityPct}%
+            {velocityPct != null ? `${velocityPct}%` : "—"}
           </div>
           <div className="mt-1 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: C.tertiaryC }}>
-            High Growth Potential
+            {!isCountyView ? "High Growth Potential" : "FFS beneficiary utilization"}
           </div>
-          <MiniBar pct={velocityPct} color={C.tertiaryC} />
+          <MiniBar pct={velocityPct ?? 0} color={C.tertiaryC} />
         </div>
 
-        {/* 4 — Data Confidence */}
+        {/* 4 — Data Confidence / County FFS Population */}
         <div
           className="rounded-2xl p-5 relative group"
           style={{ ...card({ borderTop: `4px solid ${C.primary}` }) }}
         >
           <div className="flex justify-between items-start mb-3">
             <span className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: textSub }}>
-              Data Confidence
+              {!isCountyView ? "Data Confidence" : "FFS Population"}
             </span>
             <svg className="w-5 h-5 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>
             </svg>
           </div>
           <div className="font-black" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: textMain }}>
-            {displayConfidence != null ? `${displayConfidence}%` : "—"}
+            {!isCountyView
+              ? (displayConfidence != null ? `${displayConfidence}%` : "—")
+              : (countyKpis?.ffs != null ? countyKpis.ffs.toLocaleString() : "—")}
           </div>
           <div className="mt-1 flex items-center gap-1.5">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: textSub }}>CMS Verified</span>
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            {!isCountyView ? (
+              <>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: textSub }}>CMS Verified</span>
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              </>
+            ) : (
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: textSub }}>
+                {countyKpis?.totalUsers != null ? `${countyKpis.totalUsers.toLocaleString()} beneficiaries` : "CMS county data"}
+              </span>
+            )}
           </div>
           <div className="mt-2 text-[9px] uppercase tracking-[0.15em]" style={{ color: textMute }}>
-            {loading ? "Loading…" : `Source: CMS Audit · ${cmsCompetitors.length} records`}
+            {!isCountyView
+              ? (loading ? "Loading…" : `Source: CMS Audit · ${cmsCompetitors.length} records`)
+              : `CMS county market · ${selectedCounty}`}
           </div>
         </div>
       </div>
@@ -423,9 +678,11 @@ export default function MarketDynamicsView({ setActiveTab }) {
               <div className="px-6 py-10 text-center text-sm" style={{ color: textMute }}>
                 Loading competitor intelligence…
               </div>
-            ) : velocityRows.length === 0 ? (
+            ) : filteredVelocityRows.length === 0 ? (
               <div className="px-6 py-6 text-sm" style={{ color: textMute }}>
-                No competitor records found. Run a CMS sync to populate data.
+                {velocityRows.length === 0
+                  ? "No competitor records found. Run a CMS sync to populate data."
+                  : `No competitors found in ${selectedCounty}. Showing statewide data — select a different county or choose Statewide.`}
               </div>
             ) : (
               <table className="w-full text-left min-w-[540px]">
@@ -439,7 +696,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {velocityRows.map((row, i) => (
+                  {filteredVelocityRows.map((row, i) => (
                     <tr
                       key={row.id}
                       className="group cursor-default transition-colors"
@@ -509,51 +766,98 @@ export default function MarketDynamicsView({ setActiveTab }) {
             }}
           >
             <div className="absolute inset-0 pointer-events-none" style={{ ...dotMatrix, opacity: 0.05 }} />
-            <div className="relative z-10 flex items-center gap-3 mb-4">
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2">
-                <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-              </svg>
-              <h3 className="text-sm font-black uppercase tracking-[0.2em] text-white">Market Intel</h3>
+            <div className="relative z-10 flex items-center justify-between gap-2 mb-4">
+              <div className="flex items-center gap-3">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2">
+                  <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-white">Market Intel</h3>
+                {AI_AVAILABLE && (
+                  <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wide bg-violet-600/30 text-violet-300 border border-violet-500/30">
+                    <span className={`h-1.5 w-1.5 rounded-full ${aiLoading ? "bg-violet-400 animate-pulse" : "bg-violet-400"}`} />
+                    AI
+                  </span>
+                )}
+              </div>
+              {AI_AVAILABLE && !aiLoading && (aiSummary || aiError) && (
+                <button
+                  onClick={() => generateAiSummary(velocityRows, andwellDominance, amedisysShare, northernLight, velocityRows.length, nationalChainCount)}
+                  className="text-[9px] font-black uppercase tracking-wide text-slate-400 hover:text-white transition-colors"
+                  title="Regenerate summary"
+                >
+                  ↻ Refresh
+                </button>
+              )}
             </div>
-            <div className="relative z-10 space-y-3">
-              {/* Intel 1 */}
-              <div className="rounded-r-xl p-3.5 border-l-4" style={{ borderLeftColor: C.primary, background: "rgba(255,255,255,0.05)" }}>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: C.primary }}>
-                  Consolidation Alert
-                </p>
-                <p className="text-sm font-medium opacity-90 leading-relaxed">
-                  {northernLight
-                    ? `Northern Light Home Care leads competitor momentum (${northernLight.momentum}%) — dominant in Cumberland and Penobscot.`
-                    : "Northern Light Home Care is the largest competitor by volume — aggressive network expansion risk in Penobscot."}
-                </p>
-                <button className="mt-2 text-[9px] font-black uppercase hover:underline" style={{ color: C.primary }}>
-                  Action: Immediate Outreach
-                </button>
-              </div>
-              {/* Intel 2 */}
-              <div className="rounded-r-xl p-3.5 border-l-4" style={{ borderLeftColor: C.tertiaryC, background: "rgba(255,255,255,0.05)" }}>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: C.tertiaryC }}>
-                  Referral Leakage
-                </p>
-                <p className="text-sm font-medium opacity-90 leading-relaxed">
-                  {amedisysShare > 0
-                    ? `Amedisys holds ${percent(amedisysShare)} combined share across Maine — orthopedic referral capture risk in Bangor market.`
-                    : "Bangor market data suggests 15% of orthopedic referrals are bypassing traditional networks."}
-                </p>
-                <button className="mt-2 text-[9px] font-black uppercase hover:underline" style={{ color: C.tertiaryC }}>
-                  Action: Network Alignment
-                </button>
-              </div>
+
+            <div className="relative z-10">
+              {/* AI Loading skeleton */}
+              {aiLoading && !aiSummary && (
+                <div className="space-y-2 animate-pulse">
+                  <div className="h-3 bg-white/10 rounded-full w-full" />
+                  <div className="h-3 bg-white/10 rounded-full w-[95%]" />
+                  <div className="h-3 bg-white/10 rounded-full w-[88%]" />
+                  <div className="h-3 bg-white/10 rounded-full w-[92%]" />
+                  <div className="h-3 bg-white/10 rounded-full w-[75%]" />
+                </div>
+              )}
+
+              {/* AI streaming / completed text */}
+              {(aiSummary && !aiError) && (
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-sm font-medium opacity-90 leading-relaxed">
+                    {aiSummary}
+                    {aiLoading && <span className="inline-block w-1.5 h-3.5 ml-0.5 bg-violet-400 animate-pulse rounded-sm align-middle" />}
+                  </p>
+                </div>
+              )}
+
+              {/* Fallback static bullets (shown only on AI error or when AI is unavailable) */}
+              {(aiError || !AI_AVAILABLE) && (
+                <div className="space-y-3">
+                  <div className="rounded-r-xl p-3.5 border-l-4" style={{ borderLeftColor: C.primary, background: "rgba(255,255,255,0.05)" }}>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: C.primary }}>
+                      Consolidation Alert
+                    </p>
+                    <p className="text-sm font-medium opacity-90 leading-relaxed">
+                      {northernLight
+                        ? `Northern Light Home Care leads competitor momentum (${northernLight.momentum}%) — dominant in Cumberland and Penobscot.`
+                        : "Northern Light Home Care is the largest competitor by volume — aggressive network expansion risk in Penobscot."}
+                    </p>
+                  </div>
+                  <div className="rounded-r-xl p-3.5 border-l-4" style={{ borderLeftColor: C.tertiaryC, background: "rgba(255,255,255,0.05)" }}>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: C.tertiaryC }}>
+                      Referral Leakage
+                    </p>
+                    <p className="text-sm font-medium opacity-90 leading-relaxed">
+                      {amedisysShare > 0
+                        ? `Amedisys holds ${percent(amedisysShare)} combined share across Maine — orthopedic referral capture risk in Bangor market.`
+                        : "Amedisys (national) is active in Penobscot — orthopedic referral leakage risk identified from provider file data."}
+                    </p>
+                  </div>
+                  <div className="rounded-r-xl p-3.5 border-l-4 border-l-emerald-500" style={{ background: "rgba(255,255,255,0.05)" }}>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 mb-1">
+                      Quality Moat
+                    </p>
+                    <p className="text-sm font-medium opacity-90 leading-relaxed">
+                      Andwell's {percent(andwellDominance)} combined provider file share is backed by CMS quality data — defensible moat against volume-driven national chains.
+                    </p>
+                  </div>
+                  {aiError && (
+                    <p className="text-[10px] text-red-400/70 italic mt-1">AI summary unavailable — showing reference data</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
           {/* Emerging Markets */}
           <CommandCard className="p-5">
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-3" style={{ color: textSub }}>
-              Emerging Markets
+              {!isCountyView ? "Emerging Markets" : `${selectedCounty} Market Snapshot`}
             </h3>
             <div className="space-y-2">
-              {emergingMarkets.map((m) => (
+              {filteredEmergingMarkets.map((m) => (
                 <div
                   key={m.county}
                   className="flex items-center justify-between rounded-xl border p-3 cursor-pointer transition-all"
@@ -565,7 +869,13 @@ export default function MarketDynamicsView({ setActiveTab }) {
                   <div>
                     <div className="font-black text-sm" style={{ color: textMain }}>{m.county}</div>
                     <div className="text-[10px] font-bold uppercase tracking-wide mt-0.5" style={{ color: textMute }}>
-                      {m.score}/100 opportunity score · {number(m.market.hh.users + m.market.hos.users)} users
+                      {(() => {
+                        const users = selectedService === "Home Health" ? m.market.hh.users
+                                    : selectedService === "Hospice"     ? m.market.hos.users
+                                    : m.market.hh.users + m.market.hos.users;
+                        const svcLabel = selectedService === "All" ? "" : ` · ${selectedService}`;
+                        return `${m.score}/100 opportunity score · ${number(users)} users${svcLabel}`;
+                      })()}
                     </div>
                   </div>
                   <svg className="w-5 h-5 shrink-0 ml-2" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2">
