@@ -3,9 +3,13 @@ import { DEFAULT_SCENARIO } from "./data/constants.js";
 import DataSourceBanner from "./components/DataSourceBanner.jsx";
 import { buildRows } from "./utils/calculations.js";
 import { DarkModeProvider, useDarkMode } from "./components/DarkModeContext.jsx";
+import { ToastProvider, useToast } from "./components/ToastContainer.jsx";
 import ScenarioPanel from "./components/ScenarioPanel.jsx";
 import ScenarioCompare from "./components/ScenarioCompare.jsx";
+import ScenarioManager from "./components/ScenarioManager.jsx";
 import ExportButton from "./components/ExportButton.jsx";
+import InsightsPanel from "./components/InsightsPanel.jsx";
+import { InsightsEngine } from "./utils/insights.js";
 import ExecutiveView from "./views/ExecutiveView.jsx";
 import CountyPlan from "./views/CountyPlan.jsx";
 import ReferralPlan from "./views/ReferralPlan.jsx";
@@ -31,6 +35,7 @@ const TAB_GROUPS = [
 
 function Dashboard() {
   const { dark, toggle } = useDarkMode();
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState("Executive View");
   const [selectedCounty, setSelectedCounty] = useState("York");
   const [scenario, setScenario] = useState(() => {
@@ -60,6 +65,7 @@ function Dashboard() {
   const [showScenario, setShowScenario] = useState(false);
   const [showScenarioSidebar, setShowScenarioSidebar] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
+  const [showInsights, setShowInsights] = useState(false);
   const [competitorProviderType, setCompetitorProviderType] = useState("all");
 
   useEffect(() => {
@@ -103,7 +109,18 @@ function Dashboard() {
     [defaultRows],
   );
 
+  const insightsEngine = useMemo(() => new InsightsEngine(rows, totals), [rows, totals]);
+  const insights = useMemo(() => insightsEngine.getAllInsights(), [insightsEngine]);
+
   return (
+    <div className="container-page">
+      {/* Sidebar */}
+      <aside className="container-sidebar">
+        {/* Header */}
+        <div style={{ padding: "2rem 1.5rem", borderBottom: "1px solid var(--color-border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <h2 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0, color: "var(--color-text-primary)" }}>Andwell</h2>
+            <p style={{ fontSize: "0.75rem", color: "var(--color-text-tertiary)", margin: "0.5rem 0 0 0" }}>Growth Plan</p>
     <div className={`min-h-screen transition-colors duration-300 ${dark ? "bg-slate-950 text-slate-100" : "bg-gradient-to-b from-slate-50 to-white text-slate-900"}`}>
       <div className={`px-4 py-6 sm:px-6 lg:px-10 transition-all duration-300 ${showScenarioSidebar ? "2xl:pr-[22rem]" : ""}`}>
         <header className={`mx-auto mb-6 max-w-7xl rounded-2xl px-6 py-6 shadow-xl transition-colors duration-300 print:hidden ${dark ? "bg-gradient-to-br from-blue-950 via-slate-900 to-slate-950 border border-slate-700" : "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"}`}>
@@ -134,8 +151,44 @@ function Dashboard() {
               )}
             </button>
           </div>
-        </header>
+          <button
+            onClick={toggle}
+            style={{
+              padding: "0.5rem",
+              borderRadius: "0.5rem",
+              background: "rgba(59, 130, 246, 0.1)",
+              border: "1px solid rgba(59, 130, 246, 0.2)",
+              color: dark ? "#fbbf24" : "#94a3b8",
+              cursor: "pointer",
+              transition: "all 250ms ease",
+              fontSize: "1rem"
+            }}
+          >
+            {dark ? "☀" : "🌙"}
+          </button>
+        </div>
 
+        {/* Navigation */}
+        <nav style={{ flex: 1, overflowY: "auto", padding: "1.5rem 0.75rem" }}>
+          <h6 style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.1em", padding: "0 1rem", marginBottom: "1rem", margin: 0 }}>
+            Views
+          </h6>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            {TABS.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`nav-item w-full text-left ${activeTab === tab ? "active" : ""}`}
+                style={{
+                  padding: "0.75rem 1rem",
+                  fontSize: "0.875rem",
+                  fontWeight: activeTab === tab ? 500 : 400,
+                  borderRadius: "0.5rem",
+                }}
+              >
+                {tab}
+              </button>
+            ))}
         <div className="print:hidden"><DataSourceBanner /></div>
 
         <div className="mx-auto max-w-7xl space-y-6">
@@ -202,7 +255,78 @@ function Dashboard() {
               </div>
             </div>
           </div>
+        </nav>
 
+        {/* Actions */}
+        <div style={{ borderTop: "1px solid var(--color-border)", padding: "1rem 0.75rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          <button
+            onClick={() => {
+              setShowScenario((p) => !p);
+              if (showCompare) setShowCompare(false);
+            }}
+            className={`nav-item w-full text-left ${showScenario ? "active" : ""}`}
+            style={{ padding: "0.75rem 1rem", fontSize: "0.875rem" }}
+          >
+            {showScenario ? "✓" : "○"} Scenario Model
+          </button>
+          <button
+            onClick={() => {
+              setShowCompare((p) => !p);
+              if (showScenario) setShowScenario(false);
+            }}
+            className={`nav-item w-full text-left ${showCompare ? "active" : ""}`}
+            style={{ padding: "0.75rem 1rem", fontSize: "0.875rem" }}
+          >
+            {showCompare ? "✓" : "○"} Compare
+          </button>
+          <button
+            onClick={() => setShowInsights((p) => !p)}
+            className={`nav-item w-full text-left ${showInsights ? "active" : ""}`}
+            style={{ padding: "0.75rem 1rem", fontSize: "0.875rem" }}
+          >
+            {showInsights ? "✓" : "○"} Insights
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <div className="container-main">
+        {/* Header */}
+        <header className="container-header" style={{ background: "linear-gradient(135deg, rgba(31, 41, 55, 0.3) 0%, rgba(15, 23, 42, 0.15) 100%)" }}>
+          <div>
+            <h1 style={{ fontSize: "1.875rem", fontWeight: 700, margin: 0, color: "var(--color-text-primary)" }}>{activeTab}</h1>
+            <p style={{ fontSize: "0.875rem", color: "var(--color-text-tertiary)", margin: "0.5rem 0 0 0" }}>Professional healthcare analytics & insights</p>
+          </div>
+          <ExportButton targetId="tab-content" filename={`Andwell - ${activeTab}`} />
+        </header>
+
+        {/* Content */}
+        <div className="container-content">
+          <div className="content-area">
+            {showScenario && (
+              <div style={{ marginBottom: "2rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem" }}>
+                <ScenarioPanel scenario={scenario} setScenario={setScenario} />
+                <ScenarioManager />
+              </div>
+            )}
+
+            {showCompare && (
+              <div style={{ marginBottom: "2rem" }}>
+                <ScenarioCompare currentScenario={scenario} />
+              </div>
+            )}
+
+            {showInsights && (
+              <div style={{ marginBottom: "2rem" }}>
+                <InsightsPanel insights={insights} onActionClick={(county) => setSelectedCounty(county)} />
+              </div>
+            )}
+
+            <div id="tab-content" style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+              {activeTab === "Executive View" && <ExecutiveView rows={rows} totals={totals} />}
+              {activeTab === "County Plan" && <CountyPlan rows={rows} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} />}
+              {activeTab === "Referral Plan" && <ReferralPlan rows={rows} />}
+              {activeTab === "Competitive View" && <CompetitiveView selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} />}
           {showScenario && <div className="print:hidden"><ScenarioPanel scenario={scenario} setScenario={setScenario} /></div>}
           {showCompare && <div className="print:hidden"><ScenarioCompare currentScenario={scenario} /></div>}
 
@@ -275,10 +399,12 @@ function Dashboard() {
   );
 }
 
-export default function AndwellGrowthPlanApp() {
+export default function App() {
   return (
     <DarkModeProvider>
-      <Dashboard />
+      <ToastProvider>
+        <Dashboard />
+      </ToastProvider>
     </DarkModeProvider>
   );
 }
