@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Market Dynamics &amp; Competitors | Andwell Maine</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .command-card {
+            background: #ffffff;
+            border: 1px solid #e2e1ee;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .command-card:hover {
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+        }
+        .sidebar-dark {
+            background: #191b24;
+            color: #ffffff;
+        }
+        .active-state {
+            background: #004bc6 !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(0, 75, 198, 0.4);
+        }
+        .dot-matrix {
+            background-image: radial-gradient(circle, #004bc6 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "inverse-surface": "#2e3039",
+                      "surface-tint": "#0053da",
+                      "outline": "#737686",
+                      "background": "#faf8ff",
+                      "secondary-fixed": "#dbe1ff",
+                      "on-background": "#191b24",
+                      "tertiary-fixed": "#ffdbcd",
+                      "outline-variant": "#c3c6d7",
+                      "on-primary-fixed-variant": "#003ea7",
+                      "tertiary-fixed-dim": "#ffb596",
+                      "secondary": "#495c94",
+                      "surface-variant": "#e2e1ee",
+                      "surface-dim": "#d9d9e5",
+                      "primary-fixed-dim": "#b4c5ff",
+                      "on-error": "#ffffff",
+                      "on-tertiary-container": "#ffede6",
+                      "primary-fixed": "#dbe1ff",
+                      "tertiary": "#943700",
+                      "error": "#ba1a1a",
+                      "on-tertiary": "#ffffff",
+                      "on-surface-variant": "#434655",
+                      "on-secondary-fixed-variant": "#31447b",
+                      "inverse-primary": "#b4c5ff",
+                      "on-secondary-container": "#394c84",
+                      "on-tertiary-fixed": "#360f00",
+                      "primary": "#004bc6",
+                      "secondary-container": "#acbffe",
+                      "surface-container": "#ededf9",
+                      "on-primary-fixed": "#00174b",
+                      "on-primary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-container-high": "#e7e7f4",
+                      "inverse-on-surface": "#f0f0fc",
+                      "surface-bright": "#faf8ff",
+                      "on-secondary-fixed": "#00174a",
+                      "on-primary-container": "#eeefff",
+                      "surface-container-low": "#f3f2ff",
+                      "on-tertiary-fixed-variant": "#7d2d00",
+                      "on-surface": "#191b24",
+                      "surface": "#faf8ff",
+                      "secondary-fixed-dim": "#b3c5ff",
+                      "error-container": "#ffdad6",
+                      "primary-container": "#2463eb",
+                      "surface-container-highest": "#e2e1ee",
+                      "tertiary-container": "#bc4800",
+                      "on-secondary": "#ffffff",
+                      "on-error-container": "#93000a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "1rem",
+                      "lg": "2rem",
+                      "xl": "3rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-mobile": "16px",
+                      "sm": "8px",
+                      "gutter": "16px",
+                      "unit": "4px",
+                      "xl": "32px",
+                      "margin-desktop": "40px",
+                      "xs": "4px",
+                      "container-max": "1280px",
+                      "md": "16px",
+                      "lg": "24px"
+              },
+              "fontFamily": {
+                      "metric-value": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "body-base": ["Inter"],
+                      "eyebrow-caps": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "footnote": ["Inter"],
+                      "display-lg": ["Inter"],
+                      "body-bold": ["Inter"]
+              },
+              "fontSize": {
+                      "metric-value": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "900"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "900"}],
+                      "body-base": ["14px", {"lineHeight": "24px", "letterSpacing": "0", "fontWeight": "400"}],
+                      "eyebrow-caps": ["10px", {"lineHeight": "14px", "letterSpacing": "0.3em", "fontWeight": "900"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0", "fontWeight": "600"}],
+                      "footnote": ["11px", {"lineHeight": "14px", "letterSpacing": "0", "fontWeight": "400"}],
+                      "display-lg": ["30px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "900"}],
+                      "body-bold": ["14px", {"lineHeight": "24px", "letterSpacing": "0", "fontWeight": "700"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-base overflow-x-hidden">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 right-0 h-20 bg-surface/80 backdrop-blur-md z-50 flex justify-between items-center px-lg border-b border-outline-variant">
+<div class="max-w-container-max mx-auto w-full flex justify-between items-center">
+<div class="flex items-center gap-xl">
+<span class="text-headline-md font-headline-md text-primary tracking-tight">ANDWELL COMMAND</span>
+<nav class="hidden md:flex items-center gap-lg">
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-bold" href="#">Strategy</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-bold" href="#">Referrals</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-bold" href="#">Finance</a>
+<a class="text-primary border-b-2 border-primary pb-1 font-body-bold transition-all" href="#">Market</a>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<div class="hidden md:flex bg-surface-container-low px-md py-sm rounded-full border border-outline-variant items-center gap-sm w-64">
+<span class="material-symbols-outlined text-outline">search</span>
+<input class="bg-transparent border-none outline-none text-label-sm w-full focus:ring-0" placeholder="Search systems..." type="text"/>
+</div>
+<button class="p-sm hover:bg-surface-container rounded-full transition-colors relative">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<img alt="Executive Profile" class="w-10 h-10 rounded-full border-2 border-primary-container shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMA6b4uoAT0euZvF8iytaqOVmnls027DFFYQ1lFCqQjXvUS7RPWwIrYugGdPbfX7Biz5FI8-bou_wARaQ9SKUOHB_vCmfgTDho-gWVRGA70G8hn1hCpVtrpEyoz77JGDH8xDSjRkIDi3M4xhmldOc7KlZd8SwX0UNZyX4NkOclo6zDVjZlvoEb9Pdc_A--assSuofW0SKEtcwmoJM6JV0m4lvYGtJF4o_JWXGK5LMm0-qtGqnATgGixGJhWCtw4qIaV9DC-dawFIU"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar (Dark Themed "Command Node") -->
+<aside class="fixed left-0 top-0 h-full w-72 sidebar-dark flex flex-col p-md z-40 hidden lg:flex">
+<div class="mt-24 mb-xl px-md">
+<div class="flex items-center gap-sm mb-xs">
+<div class="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-primary font-black">shield</span>
+</div>
+<div>
+<h2 class="text-label-sm font-black uppercase tracking-[0.2em] text-white/50">Command Node</h2>
+<p class="text-body-bold text-white">Maine Center 01</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 space-y-sm px-sm overflow-y-auto custom-scrollbar">
+<a class="flex items-center gap-md p-md text-white/60 hover:text-white hover:bg-white/5 rounded-xl transition-all" href="#">
+<span class="material-symbols-outlined">map</span>
+<span>County Growth</span>
+</a>
+<a class="flex items-center gap-md p-md text-white/60 hover:text-white hover:bg-white/5 rounded-xl transition-all" href="#">
+<span class="material-symbols-outlined">hub</span>
+<span>Referral Models</span>
+</a>
+<a class="flex items-center gap-md p-md text-white/60 hover:text-white hover:bg-white/5 rounded-xl transition-all" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span>Financial Impact</span>
+</a>
+<a class="flex items-center gap-md p-md text-white/60 hover:text-white hover:bg-white/5 rounded-xl transition-all" href="#">
+<span class="material-symbols-outlined">database</span>
+<span>CMS Data</span>
+</a>
+<a class="flex items-center gap-md p-md active-state rounded-xl font-body-bold transition-all" href="#">
+<span class="material-symbols-outlined">assessment</span>
+<span>Competitors</span>
+</a>
+<a class="flex items-center gap-md p-md text-white/60 hover:text-white hover:bg-white/5 rounded-xl transition-all" href="#">
+<span class="material-symbols-outlined">verified</span>
+<span>Confidence Log</span>
+</a>
+</nav>
+<div class="mt-auto pt-lg border-t border-white/10 p-md">
+<button class="w-full bg-white text-on-background font-black py-4 px-lg rounded-xl mb-lg hover:bg-primary hover:text-white transition-all active:scale-[0.98] shadow-lg">
+            GENERATE REPORT
+        </button>
+<div class="space-y-sm">
+<a class="flex items-center gap-md p-sm text-white/40 text-label-sm hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">support</span>
+                System Support
+            </a>
+<a class="flex items-center gap-md p-sm text-white/40 text-label-sm hover:text-error transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+                Secure Logout
+            </a>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="lg:ml-72 pt-20 min-h-screen">
+<div class="max-w-container-max mx-auto p-lg md:p-xl">
+<!-- Header Section -->
+<header class="mb-xl flex flex-col md:flex-row md:items-end justify-between gap-lg">
+<div>
+<div class="flex items-center gap-sm mb-sm">
+<span class="bg-primary text-on-primary px-md py-xs rounded-lg font-black text-[10px] tracking-widest flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px] fill-1">verified</span>
+                        CMS REAL-TIME SYNC
+                    </span>
+<span class="text-footnote font-footnote text-on-surface-variant flex items-center gap-1">
+<span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                        Active Intelligence Layer
+                    </span>
+</div>
+<h1 class="text-display-lg font-display-lg text-on-background uppercase tracking-tight">Market Dynamics &amp; Competitors</h1>
+<p class="text-body-base text-on-surface-variant">Maine Clinical Market | Strategic Execution Cluster 4</p>
+</div>
+<div class="flex gap-sm">
+<div class="bg-surface-container-low border border-outline-variant rounded-xl p-1 flex items-center gap-1 shadow-sm">
+<button class="px-lg py-2 bg-primary text-on-primary font-body-bold rounded-lg shadow-sm text-sm">Executive View</button>
+<button class="px-lg py-2 text-on-surface-variant font-body-bold hover:bg-surface-container rounded-lg transition-all text-sm">Tactical Ops</button>
+</div>
+</div>
+</header>
+<!-- Grid 1: High Level Telemetry (Command Card Styles) -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-lg mb-xl">
+<!-- Market Share -->
+<div class="command-card rounded-2xl p-lg border-l-4 border-l-primary group">
+<div class="flex justify-between items-start mb-md">
+<span class="text-label-sm font-black uppercase text-[10px] tracking-widest text-on-surface-variant">Andwell Dominance</span>
+<span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">pie_chart</span>
+</div>
+<div class="text-metric-value font-black text-on-surface">42.8%</div>
+<div class="text-[10px] text-primary font-black uppercase tracking-widest mt-xs">+2.4% vs Prev Qtr</div>
+<div class="mt-md h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 42.8%"></div>
+</div>
+</div>
+<!-- Competitor Drift -->
+<div class="command-card rounded-2xl p-lg border-l-4 border-l-secondary group">
+<div class="flex justify-between items-start mb-md">
+<span class="text-label-sm font-black uppercase text-[10px] tracking-widest text-on-surface-variant">Aggregated Competition</span>
+<span class="material-symbols-outlined text-secondary group-hover:scale-110 transition-transform">trending_down</span>
+</div>
+<div class="text-metric-value font-black text-on-surface">57.2%</div>
+<div class="text-[10px] text-error font-black uppercase tracking-widest mt-xs">-1.1% Sector Loss</div>
+<div class="mt-md h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-secondary" style="width: 57.2%"></div>
+</div>
+</div>
+<!-- Opportunity Velocity -->
+<div class="command-card rounded-2xl p-lg border-l-4 border-l-tertiary group">
+<div class="flex justify-between items-start mb-md">
+<span class="text-label-sm font-black uppercase text-[10px] tracking-widest text-on-surface-variant">Strategic Velocity</span>
+<span class="material-symbols-outlined text-tertiary group-hover:scale-110 transition-transform">bolt</span>
+</div>
+<div class="text-metric-value font-black text-on-surface">9.1%</div>
+<div class="text-[10px] text-tertiary font-black uppercase tracking-widest mt-xs">High Growth Potential</div>
+<div class="mt-md h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-tertiary" style="width: 9.1%"></div>
+</div>
+</div>
+<!-- CMS Verification -->
+<div class="command-card rounded-2xl p-lg border-t-4 border-t-primary group">
+<div class="flex justify-between items-start mb-md">
+<span class="text-label-sm font-black uppercase text-[10px] tracking-widest text-on-surface-variant">Data Confidence</span>
+<span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">verified_user</span>
+</div>
+<div class="text-metric-value font-black text-on-surface">98%</div>
+<div class="flex items-center gap-xs mt-xs">
+<span class="text-[10px] font-black uppercase text-on-surface-variant">CMS Verified</span>
+<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+</div>
+<div class="mt-md text-[9px] text-outline font-body-base uppercase tracking-widest">Source: CMS Audit Q3</div>
+</div>
+</div>
+<!-- Grid 2: Detailed Analytics -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-xl mb-xl items-start">
+<!-- Competitor Velocity Tracking (8 cols) -->
+<section class="lg:col-span-8 command-card rounded-2xl overflow-hidden relative">
+<div class="absolute inset-0 dot-matrix opacity-[0.02] pointer-events-none"></div>
+<div class="p-lg border-b border-outline-variant flex justify-between items-center relative z-10 bg-surface-container-low/50">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary font-black">monitoring</span>
+<h3 class="text-headline-md font-headline-md uppercase text-sm tracking-widest">Competitor Velocity Index</h3>
+</div>
+<button class="text-[10px] text-primary font-black uppercase tracking-widest hover:underline">Full Analysis</button>
+</div>
+<div class="overflow-x-auto relative z-10">
+<table class="w-full text-left">
+<thead class="bg-surface-container text-on-surface-variant">
+<tr>
+<th class="px-lg py-md font-black text-[10px] uppercase tracking-widest">Organization</th>
+<th class="px-lg py-md font-black text-[10px] uppercase tracking-widest">Primary Region</th>
+<th class="px-lg py-md font-black text-[10px] uppercase tracking-widest">Momentum</th>
+<th class="px-lg py-md font-black text-[10px] uppercase tracking-widest">Share Shift</th>
+<th class="px-lg py-md font-black text-[10px] uppercase tracking-widest">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr class="hover:bg-primary/5 transition-colors group cursor-pointer">
+<td class="px-lg py-lg">
+<div class="font-black text-on-background group-hover:text-primary">Northeast Health</div>
+<div class="text-[10px] uppercase font-bold text-outline">Acute Care Specialist</div>
+</td>
+<td class="px-lg py-lg text-body-base">Augusta</td>
+<td class="px-lg py-lg">
+<div class="flex items-center gap-sm text-primary">
+<span class="material-symbols-outlined text-[16px] font-black">arrow_upward</span>
+<span class="font-black">4.2%</span>
+</div>
+</td>
+<td class="px-lg py-lg font-bold">+0.8%</td>
+<td class="px-lg py-lg">
+<span class="bg-error text-on-error px-2 py-1 rounded text-[9px] font-black uppercase tracking-tighter animate-pulse">Alert</span>
+</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors group cursor-pointer">
+<td class="px-lg py-lg">
+<div class="font-black text-on-background group-hover:text-primary">Maine Care Alliance</div>
+<div class="text-[10px] uppercase font-bold text-outline">Post-Acute Focus</div>
+</td>
+<td class="px-lg py-lg text-body-base">Portland Metro</td>
+<td class="px-lg py-lg">
+<div class="flex items-center gap-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">horizontal_rule</span>
+<span class="font-black">0.4%</span>
+</div>
+</td>
+<td class="px-lg py-lg font-bold">-0.2%</td>
+<td class="px-lg py-lg">
+<span class="bg-surface-container-high text-on-surface-variant px-2 py-1 rounded text-[9px] font-black uppercase tracking-tighter">Stable</span>
+</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors group cursor-pointer">
+<td class="px-lg py-lg">
+<div class="font-black text-on-background group-hover:text-primary">Penobscot Valley Group</div>
+<div class="text-[10px] uppercase font-bold text-outline">Integrated Delivery</div>
+</td>
+<td class="px-lg py-lg text-body-base">Bangor Hub</td>
+<td class="px-lg py-lg">
+<div class="flex items-center gap-sm text-tertiary">
+<span class="material-symbols-outlined text-[16px] font-black">arrow_upward</span>
+<span class="font-black">9.1%</span>
+</div>
+</td>
+<td class="px-lg py-lg font-bold">+3.4%</td>
+<td class="px-lg py-lg">
+<span class="bg-tertiary-container text-on-tertiary-container px-2 py-1 rounded text-[9px] font-black uppercase tracking-tighter">Tier 1 Watch</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Tactical Insights (4 cols) -->
+<section class="lg:col-span-4 space-y-lg">
+<!-- Intel Feed (Inverse Surface for high contrast) -->
+<div class="command-card bg-inverse-surface text-inverse-on-surface rounded-2xl p-lg border-none shadow-2xl relative overflow-hidden">
+<div class="absolute inset-0 dot-matrix opacity-[0.05] pointer-events-none"></div>
+<div class="flex items-center gap-md mb-lg relative z-10">
+<span class="material-symbols-outlined text-primary font-black">lightbulb</span>
+<h3 class="text-headline-md font-headline-md uppercase text-sm tracking-widest">Market Intel</h3>
+</div>
+<div class="space-y-lg relative z-10">
+<div class="p-md bg-white/5 border-l-4 border-primary rounded-r-xl">
+<p class="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Consolidation Alert</p>
+<p class="text-body-base font-medium opacity-90">Northeast Health is aggressively acquiring regional outpatient hubs in the Kennebec Valley.</p>
+<button class="text-[9px] font-black text-primary uppercase mt-2 hover:underline">Action: Immediate Outreach</button>
+</div>
+<div class="p-md bg-white/5 border-l-4 border-tertiary rounded-r-xl">
+<p class="text-[10px] font-black uppercase tracking-widest text-tertiary mb-1">Referral Leakage</p>
+<p class="text-body-base font-medium opacity-90">Bangor market data suggests 15% of orthopedic referrals are bypassing traditional networks.</p>
+<button class="text-[9px] font-black text-tertiary uppercase mt-2 hover:underline">Action: Network Alignment</button>
+</div>
+</div>
+</div>
+<!-- Opportunity Zones List -->
+<div class="command-card rounded-2xl p-lg">
+<h3 class="text-label-sm font-black text-on-surface-variant mb-md uppercase tracking-[0.2em] text-[10px]">Emerging Markets</h3>
+<div class="space-y-sm">
+<div class="flex justify-between items-center p-md bg-surface-container-low rounded-xl border border-outline-variant hover:border-primary transition-all cursor-pointer">
+<div>
+<div class="font-black">Penobscot</div>
+<div class="text-[10px] uppercase font-bold text-outline">9.1% Growth Trend</div>
+</div>
+<span class="material-symbols-outlined text-primary">map</span>
+</div>
+<div class="flex justify-between items-center p-md bg-surface-container-low rounded-xl border border-outline-variant hover:border-primary transition-all cursor-pointer">
+<div>
+<div class="font-black">Waldo County</div>
+<div class="text-[10px] uppercase font-bold text-outline">5.4% Underserved</div>
+</div>
+<span class="material-symbols-outlined text-outline">map</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Row 3: CMS Data Layer & Geographic Strategy -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-xl">
+<!-- CMS Data Layer -->
+<div class="command-card rounded-2xl p-lg">
+<div class="flex items-center gap-md mb-lg">
+<span class="material-symbols-outlined text-primary font-black">dataset</span>
+<h3 class="text-headline-md font-headline-md uppercase text-sm tracking-widest">CMS Market Provenance</h3>
+</div>
+<div class="grid grid-cols-2 gap-lg">
+<div class="p-lg rounded-xl bg-surface-container-low border border-outline-variant hover:bg-primary/5 transition-all">
+<div class="text-[9px] font-black uppercase tracking-widest text-outline mb-1">HCAHPS Peer Rank</div>
+<div class="text-metric-value font-black text-primary">Top 4%</div>
+<div class="text-[9px] uppercase font-bold text-on-surface-variant mt-sm">Clinical Meta-Data</div>
+</div>
+<div class="p-lg rounded-xl bg-surface-container-low border border-outline-variant hover:bg-secondary/5 transition-all">
+<div class="text-[9px] font-black uppercase tracking-widest text-outline mb-1">VBP Adjustment</div>
+<div class="text-metric-value font-black text-secondary">+1.85%</div>
+<div class="text-[9px] uppercase font-bold text-on-surface-variant mt-sm">Net Revenue Impact</div>
+</div>
+</div>
+<div class="mt-lg p-lg bg-inverse-surface text-inverse-on-surface rounded-xl relative overflow-hidden">
+<div class="absolute inset-0 dot-matrix opacity-[0.03] pointer-events-none"></div>
+<div class="flex items-center gap-md mb-md relative z-10">
+<span class="material-symbols-outlined text-primary text-[20px] font-black">info</span>
+<p class="text-[10px] font-black uppercase tracking-widest">Data Implication Cluster</p>
+</div>
+<p class="text-body-base opacity-90 relative z-10">The current CMS data indicates that Andwell's dominance in Portland metro is largely insulated by high patient experience scores, creating a competitive moat against volume-driven entrants.</p>
+</div>
+</div>
+<!-- Strategy Map Visualization Area (Command Center Style) -->
+<div class="command-card rounded-2xl overflow-hidden relative h-full min-h-[400px]">
+<img class="w-full h-full object-cover saturate-150 contrast-125" data-alt="A sophisticated topographical map of Maine with dark mode data visualization layers." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_XDcP_2BiTiMo1O9Rzp1z_GHy0zIj_SqCWMNesgu7Dufk8-CnMgblw6zJ23Gp_bLudZiRuZaylHEfO291XfZWoeq1Cc6bmqndJOp3G4SWyDQPGI3VRHfha3McJX60WAI8Fr9YIjIj51el88B03Y7WE0dHN4QxWCOQCIzWH9WWnFdzF1aJFePxv20e7eeeWj6tGDPfopirbzkozLC7X7577RgT3ZO0_WYVlJ0qKqiOZhzJAE1p8LrWhuVjF18el8Ym8yeSzvf3Ol4"/>
+<div class="absolute inset-0 bg-gradient-to-t from-inverse-surface/90 via-transparent to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-lg text-white">
+<div class="bg-primary text-on-primary px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest w-fit mb-sm shadow-lg">Active Strategy Map</div>
+<h4 class="text-headline-md font-headline-md uppercase tracking-tight">Geographic Opportunity Density</h4>
+<p class="text-body-base opacity-80 uppercase text-[10px] font-bold tracking-wider">Visualizing 12 target counties in Q4 Model</p>
+</div>
+<div class="absolute top-lg right-lg space-y-sm">
+<div class="bg-inverse-surface/90 backdrop-blur-md p-md rounded-xl border border-white/10 shadow-2xl">
+<div class="flex items-center gap-3">
+<div class="w-3 h-3 rounded-full bg-primary shadow-[0_0_10px_#004bc6]"></div>
+<span class="text-[9px] font-black uppercase tracking-widest text-white">Andwell Core Hubs</span>
+</div>
+</div>
+<div class="bg-inverse-surface/90 backdrop-blur-md p-md rounded-xl border border-white/10 shadow-2xl">
+<div class="flex items-center gap-3">
+<div class="w-3 h-3 rounded-full bg-tertiary shadow-[0_0_10px_#943700]"></div>
+<span class="text-[9px] font-black uppercase tracking-widest text-white">Expansion Targets</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- AI Co-Pilot Drawer/FAB (Command Terminal Style) -->
+<div class="fixed bottom-8 right-8 z-50" id="ai-drawer-container">
+<button class="w-16 h-16 bg-primary text-on-primary rounded-2xl shadow-2xl flex items-center justify-center hover:scale-110 transition-all duration-300 group relative border-2 border-white" id="ai-fab">
+<span class="material-symbols-outlined text-[32px] group-hover:rotate-12 transition-transform">terminal</span>
+<div class="absolute -top-1 -right-1 w-6 h-6 bg-error rounded-full border-2 border-white flex items-center justify-center">
+<span class="w-2.5 h-2.5 bg-white rounded-full animate-pulse"></span>
+</div>
+</button>
+<div class="fixed right-[-420px] bottom-0 h-full w-[400px] bg-white shadow-2xl z-50 transition-all duration-500 border-l border-outline-variant hidden lg:block" id="ai-drawer">
+<div class="h-full flex flex-col">
+<div class="bg-on-background p-lg text-white">
+<div class="flex items-center justify-between mb-md">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary font-black">data_exploration</span>
+<h3 class="text-label-sm font-black uppercase tracking-widest">Growth AI Engine</h3>
+</div>
+<button class="p-sm hover:bg-white/10 rounded-full" onclick="toggleAI()">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<p class="text-[10px] text-white/50 uppercase tracking-widest font-black">Strategic Insight Terminal Online</p>
+</div>
+<div class="flex-1 overflow-y-auto p-lg space-y-lg custom-scrollbar">
+<div class="bg-surface-container-low p-lg rounded-2xl border border-outline-variant relative overflow-hidden">
+<div class="absolute inset-0 dot-matrix opacity-[0.03] pointer-events-none"></div>
+<p class="text-[10px] text-primary font-black uppercase tracking-widest mb-xs">Analytical Summary</p>
+<p class="text-body-base font-medium">Based on current velocity, Penobscot Valley Group's 9.1% growth represents a direct threat to our northern catchment. I recommend a targeted marketing push focused on 'Clinical Quality Excellence'.</p>
+</div>
+<div class="space-y-sm">
+<p class="text-[9px] font-black text-on-surface-variant uppercase tracking-[0.2em]">Suggested Protocols</p>
+<button class="w-full text-left p-md bg-white border border-outline-variant rounded-xl text-label-sm font-bold hover:bg-primary hover:text-white transition-all uppercase tracking-wide">"Draft expansion plan for Penobscot"</button>
+<button class="w-full text-left p-md bg-white border border-outline-variant rounded-xl text-label-sm font-bold hover:bg-primary hover:text-white transition-all uppercase tracking-wide">"Compare CMS for Northeast Health"</button>
+<button class="w-full text-left p-md bg-white border border-outline-variant rounded-xl text-label-sm font-bold hover:bg-primary hover:text-white transition-all uppercase tracking-wide">"Portland Metro defencive ROI"</button>
+</div>
+</div>
+<div class="p-lg bg-surface-container border-t border-outline-variant">
+<div class="relative">
+<input class="w-full bg-white border-2 border-outline-variant rounded-xl py-4 pl-md pr-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none font-bold text-sm" placeholder="Input analysis command..." type="text"/>
+<button class="absolute right-md top-1/2 -translate-y-1/2 text-primary">
+<span class="material-symbols-outlined font-black">send</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+    function toggleAI() {
+        const drawer = document.getElementById('ai-drawer');
+        const fab = document.getElementById('ai-fab');
+        if (drawer.classList.contains('hidden')) {
+            drawer.classList.remove('hidden');
+            setTimeout(() => {
+                drawer.style.right = '0px';
+            }, 10);
+        } else {
+            drawer.style.right = '-420px';
+            setTimeout(() => {
+                drawer.classList.add('hidden');
+            }, 500);
+        }
+    }
+    document.getElementById('ai-fab').addEventListener('click', toggleAI);
+</script>
+</body></html>
