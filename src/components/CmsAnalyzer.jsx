@@ -52,9 +52,9 @@ export default function CmsAnalyzer() {
   }
 
   return (
-    <div className={`rounded-3xl border p-6 space-y-4 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+    <div className={`rounded-xl border p-6 space-y-4 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
       <div>
-        <p className={`text-xs font-medium uppercase tracking-widest ${dark ? "text-purple-400" : "text-purple-600"}`}>AI + CMS function calling</p>
+        <p className={`text-xs font-medium uppercase tracking-widest ${dark ? "text-blue-400" : "text-blue-600"}`}>AI + CMS function calling</p>
         <p className={`mt-1 text-lg font-semibold ${dark ? "text-white" : "text-slate-950"}`}>CMS competitor intelligence</p>
         <p className={`mt-1 text-sm ${dark ? "text-slate-400" : "text-slate-500"}`}>
           Ask about any competitor or provider — the AI calls CMS Provider Data Catalog tools automatically to look up certification, quality scores, and service area data.

@@ -69,10 +69,10 @@ export default function ScenarioCompare({ currentScenario }) {
   ];
 
   return (
-    <div className={`rounded-3xl border p-6 shadow-sm ${dark ? "border-slate-700 bg-slate-800/60" : "border-indigo-200 bg-indigo-50/60"}`}>
+    <div className={`rounded-xl border p-6 shadow-sm ${dark ? "border-slate-700 bg-slate-800/60" : "border-slate-200 bg-slate-50/60"}`}>
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <p className={`text-xs font-medium uppercase tracking-[0.22em] ${dark ? "text-indigo-400" : "text-indigo-700"}`}>Scenario Comparison</p>
+          <p className={`text-xs font-medium uppercase tracking-[0.22em] ${dark ? "text-slate-400" : "text-slate-500"}`}>Scenario Comparison</p>
           <p className={`mt-1 text-sm ${dark ? "text-slate-400" : "text-slate-600"}`}>Compare your current assumptions against presets</p>
         </div>
         <select
@@ -96,9 +96,9 @@ export default function ScenarioCompare({ currentScenario }) {
               <th className="px-4 py-3 text-right text-xs uppercase tracking-wide">Delta</th>
             </tr>
           </thead>
-          <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-indigo-100"}`}>
+          <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-slate-100"}`}>
             {metrics.map((m) => (
-              <tr key={m.key} className={dark ? "hover:bg-slate-700/50" : "hover:bg-indigo-100/50"}>
+              <tr key={m.key} className={dark ? "hover:bg-slate-700/50" : "hover:bg-slate-50"}>
                 <td className={`px-4 py-3 font-semibold ${dark ? "text-white" : "text-slate-950"}`}>{m.label}</td>
                 <td className={`px-4 py-3 text-right ${dark ? "text-slate-300" : "text-slate-700"}`}>{m.fmt(current[m.key])}</td>
                 <td className={`px-4 py-3 text-right ${dark ? "text-slate-300" : "text-slate-700"}`}>{m.fmt(compare[m.key])}</td>

@@ -42,7 +42,7 @@ export default function ScenarioPanel({ scenario, setScenario }) {
     JSON.stringify(scenario.therapyCapture) === JSON.stringify(DEFAULT_SCENARIO.therapyCapture);
 
   return (
-    <div className={`rounded-3xl border p-6 shadow-sm transition-colors duration-300 ${
+    <div className={`rounded-xl border p-6 shadow-sm transition-colors duration-300 ${
       dark
         ? "border-blue-800 bg-blue-950/30"
         : "border-blue-200 bg-blue-50/60"

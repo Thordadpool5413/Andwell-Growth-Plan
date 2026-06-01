@@ -185,7 +185,7 @@ export default function AskPanel({ rows, totals, activeTab }) {
     <div className="fixed bottom-6 right-6 z-50 print:hidden">
       {open ? (
         <div
-          className={`flex w-[26rem] flex-col rounded-3xl border shadow-2xl ${
+          className={`flex w-[26rem] flex-col rounded-xl border shadow-2xl ${
             dark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white shadow-slate-200"
           }`}
         >

@@ -61,7 +61,6 @@ export default {
         brand: {
           blue: "#2563eb",
           green: "#16a34a",
-          purple: "#7c3aed",
           red: "#dc2626",
           amber: "#d97706",
           slate: "#64748b",

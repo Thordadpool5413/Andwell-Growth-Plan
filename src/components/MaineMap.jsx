@@ -483,7 +483,7 @@ function CompetitorMarkers({ visible, dark, competitors }) {
                       {comp.match_confidence != null ? ` (${Math.round(comp.match_confidence * 100)}%)` : ""}
                     </p>
                   )}
-                  {comp.geocode_source === "cms_address" && <p style={{ margin: "3px 0 0", fontSize: 9, color: "#94a3b8" }}>📍 CMS address geocoded</p>}
+                  {comp.geocode_source === "cms_address" && <p style={{ margin: "3px 0 0", fontSize: 9, color: "#94a3b8" }}>CMS address geocoded</p>}
                   {national && <p style={{ margin: "4px 0 0", fontSize: 10, color: "#dc2626", fontWeight: 700 }}>National chain</p>}
                   {overlaps && (() => {
                     const overlapCounties = resolveCounties(comp).filter(cn => ANDWELL_COUNTIES.has(cn));
