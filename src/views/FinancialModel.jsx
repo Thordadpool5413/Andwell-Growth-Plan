@@ -37,6 +37,22 @@ export default function FinancialModel({ rows }) {
   const totalContribution = yearRows.reduce((s, y) => s + y.contribution, 0);
   const revenueGrowth = yearRows[0].revenue > 0 ? ((yearRows[2].revenue - yearRows[0].revenue) / yearRows[0].revenue * 100) : 0;
 
+  const services = [...new Set(rows.map((r) => r.service))];
+  const serviceColors = {
+    "Home Healthcare": COLORS.blue,
+    "Mobile Wound": COLORS.red,
+    "Therapy Care": COLORS.green,
+    "GUIDE": COLORS.purple,
+    "Hospice": "#9333ea",
+  };
+  const serviceStackData = [0, 1, 2].map((index) => {
+    const entry = { year: `Year ${index + 1}` };
+    services.forEach((svc) => {
+      entry[svc] = rows.filter((r) => r.service === svc).reduce((s, r) => s + r.revenue[index], 0);
+    });
+    return entry;
+  });
+
   return (
     <div className="space-y-6">
       <SectionHeader eyebrow="Financial model" icon="💹" title="3-year revenue and contribution projections">
@@ -143,6 +159,21 @@ export default function FinancialModel({ rows }) {
           </ChartContainer>
         </Card>
       </div>
+
+      <Card title="Revenue by service line" eyebrow="3-year stacked breakdown">
+        <ChartContainer height="h-72" caption="Revenue contribution by service line across Years 1–3">
+          <BarChart data={serviceStackData} margin={{ left: 10 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
+            <XAxis dataKey="year" tick={{ fill: dark ? "#94a3b8" : "#475569" }} />
+            <YAxis tickFormatter={(v) => `$${Math.round(v / 1000000)}M`} tick={{ fill: dark ? "#94a3b8" : "#475569" }} />
+            <CustomTooltip formatter={(value) => currency(value)} />
+            <Legend />
+            {services.map((svc) => (
+              <Bar key={svc} dataKey={svc} stackId="a" fill={serviceColors[svc] || COLORS.blue} radius={services.indexOf(svc) === services.length - 1 ? [6, 6, 0, 0] : [0, 0, 0, 0]} />
+            ))}
+          </BarChart>
+        </ChartContainer>
+      </Card>
 
       <Card title="Annual financial detail" eyebrow="Detailed breakdown by year">
         {(() => {

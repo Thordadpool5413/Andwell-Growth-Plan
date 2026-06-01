@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-  Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart,
+  Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart,
   XAxis, YAxis,
 } from "recharts";
 import Card from "../components/Card.jsx";
@@ -293,29 +293,53 @@ export default function ExecutiveView({ rows, totals }) {
         </Card>
       </div>
 
-      {/* Revenue Growth Trajectory */}
-      <Card title="3-Year Revenue Trajectory" eyebrow="Growth Forecast">
-        <div className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <p className={`text-sm mb-2 ${dark ? "text-slate-400" : "text-slate-600"}`}>Year 1</p>
-              <p className="text-3xl font-black text-blue-600">{currency(totals.y1Revenue)}</p>
+      <Card title="3-Year Revenue Trajectory" eyebrow="Growth forecast — modeled projections">
+        <div className="grid gap-4 md:grid-cols-3 mb-6">
+          {[
+            { label: "Year 1", value: totals.y1Revenue, color: dark ? "text-blue-400" : "text-blue-700", accent: "border-l-4 border-l-blue-500" },
+            { label: "Year 2", value: totals.y2Revenue, color: dark ? "text-purple-400" : "text-purple-700", accent: "border-l-4 border-l-purple-500" },
+            { label: "Year 3", value: totals.y3Revenue, color: dark ? "text-emerald-400" : "text-emerald-600", accent: "border-l-4 border-l-emerald-500" },
+          ].map((yr) => (
+            <div key={yr.label} className={`rounded-2xl border p-4 ${yr.accent} ${dark ? "border-slate-700 bg-slate-700/30" : "border-slate-100 bg-slate-50"}`}>
+              <p className={`text-xs font-black uppercase tracking-wide ${dark ? "text-slate-400" : "text-slate-500"}`}>{yr.label}</p>
+              <p className={`mt-1 text-2xl font-black ${yr.color}`}>{currency(yr.value)}</p>
+              {yr.label !== "Year 1" && totals.y1Revenue > 0 && (
+                <p className="mt-0.5 text-xs font-semibold text-emerald-600">
+                  +{((yr.value - totals.y1Revenue) / totals.y1Revenue * 100).toFixed(0)}% vs Y1
+                </p>
+              )}
             </div>
-            <div>
-              <p className={`text-sm mb-2 ${dark ? "text-slate-400" : "text-slate-600"}`}>Year 2</p>
-              <p className="text-3xl font-black text-blue-600">{currency(totals.y2Revenue)}</p>
-            </div>
-            <div>
-              <p className={`text-sm mb-2 ${dark ? "text-slate-400" : "text-slate-600"}`}>Year 3</p>
-              <p className="text-3xl font-black text-blue-600">{currency(totals.y3Revenue)}</p>
-            </div>
-          </div>
-          <div className={`flex items-center gap-2 px-4 py-3 rounded-lg ${dark ? "bg-emerald-900/20 border border-emerald-700/30" : "bg-emerald-50 border border-emerald-200"}`}>
-            <span className={`font-semibold ${dark ? "text-emerald-400" : "text-emerald-600"}`}>↑ Growth</span>
-            <span className={`text-sm ${dark ? "text-emerald-300" : "text-emerald-700"}`}>
-              {totals.y1Revenue > 0 ? ((totals.y3Revenue - totals.y1Revenue) / totals.y1Revenue * 100).toFixed(0) : 0}% 3-year cumulative growth
-            </span>
-          </div>
+          ))}
+        </div>
+        <ChartContainer height="h-64" caption="Source: modeled — CMS beneficiary volumes × capture rates × reimbursement rates">
+          <AreaChart
+            data={[
+              { year: "Year 1", revenue: totals.y1Revenue },
+              { year: "Year 2", revenue: totals.y2Revenue },
+              { year: "Year 3", revenue: totals.y3Revenue },
+            ]}
+            margin={{ left: 10, right: 10, top: 5 }}
+          >
+            <defs>
+              <linearGradient id="execRevGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#2563eb" stopOpacity={0.25} />
+                <stop offset="95%" stopColor="#2563eb" stopOpacity={0.03} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
+            <XAxis dataKey="year" tick={{ fill: dark ? "#94a3b8" : "#475569", fontSize: 12 }} />
+            <YAxis tickFormatter={(v) => `$${Math.round(v / 1000000)}M`} tick={{ fill: dark ? "#94a3b8" : "#475569", fontSize: 11 }} />
+            <Area type="monotone" dataKey="revenue" name="Revenue" stroke="#2563eb" strokeWidth={3} fill="url(#execRevGradient)" dot={{ r: 6, fill: "#2563eb", strokeWidth: 2, stroke: dark ? "#1e293b" : "#fff" }} />
+          </AreaChart>
+        </ChartContainer>
+        <div className={`mt-4 flex items-center gap-3 rounded-xl px-4 py-3 ${dark ? "bg-emerald-900/20 border border-emerald-800/30" : "bg-emerald-50 border border-emerald-200"}`}>
+          <span className={`text-lg font-black ${dark ? "text-emerald-400" : "text-emerald-600"}`}>↑</span>
+          <span className={`text-sm font-black ${dark ? "text-emerald-400" : "text-emerald-700"}`}>
+            {totals.y1Revenue > 0 ? ((totals.y3Revenue - totals.y1Revenue) / totals.y1Revenue * 100).toFixed(0) : 0}% 3-year cumulative growth
+          </span>
+          <span className={`text-xs ${dark ? "text-emerald-500" : "text-emerald-600"}`}>
+            {currency(totals.y1Revenue)} → {currency(totals.y3Revenue)}
+          </span>
         </div>
       </Card>
     </div>

@@ -4,6 +4,7 @@ import DataSourceBanner from "./components/DataSourceBanner.jsx";
 import { buildRows } from "./utils/calculations.js";
 import { DarkModeProvider, useDarkMode } from "./components/DarkModeContext.jsx";
 import { ToastProvider, useToast } from "./components/ToastContainer.jsx";
+import { currency, number } from "./utils/formatters.js";
 import ScenarioPanel from "./components/ScenarioPanel.jsx";
 import ScenarioCompare from "./components/ScenarioCompare.jsx";
 import ScenarioManager from "./components/ScenarioManager.jsx";
@@ -28,10 +29,10 @@ import AskPanel from "./components/AskPanel.jsx";
 import ScenarioSidebar from "./components/ScenarioSidebar.jsx";
 
 const TAB_GROUPS = [
-  { label: "Planning", tabs: ["Executive View", "County Plan", "Referral Plan", "Opportunity Score"] },
-  { label: "Competitive", tabs: ["Competitive View", "Market Dynamics", "Service Lines", "CMS Data"] },
-  { label: "Financial", tabs: ["Financial Model", "Sensitivity"] },
-  { label: "Operations", tabs: ["Staffing Model", "Launch Timeline", "Board Report", "Launch Checklist"] },
+  { label: "Planning", lightColor: "text-blue-600", darkColor: "text-blue-400", tabs: ["Executive View", "County Plan", "Referral Plan", "Opportunity Score"] },
+  { label: "Competitive", lightColor: "text-rose-600", darkColor: "text-rose-400", tabs: ["Competitive View", "Market Dynamics", "Service Lines", "CMS Data"] },
+  { label: "Financial", lightColor: "text-emerald-700", darkColor: "text-emerald-400", tabs: ["Financial Model", "Sensitivity"] },
+  { label: "Operations", lightColor: "text-violet-700", darkColor: "text-violet-400", tabs: ["Staffing Model", "Launch Timeline", "Board Report", "Launch Checklist"] },
 ];
 
 function Dashboard() {
@@ -116,20 +117,50 @@ function Dashboard() {
   return (
     <div className={`min-h-screen transition-colors duration-300 ${dark ? "bg-slate-950 text-slate-100" : "bg-gradient-to-b from-slate-50 to-white text-slate-900"}`}>
       <div className={`px-4 py-6 sm:px-6 lg:px-10 transition-all duration-300 ${showScenarioSidebar ? "2xl:pr-[22rem]" : ""}`}>
-        <header className={`mx-auto mb-6 max-w-7xl rounded-2xl px-6 py-6 shadow-xl transition-colors duration-300 print:hidden ${dark ? "bg-gradient-to-br from-blue-950 via-slate-900 to-slate-950 border border-slate-700" : "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"}`}>
-          <div className="flex items-center justify-between gap-6">
-            <div className="min-w-0">
+        <header className={`mx-auto mb-6 max-w-7xl rounded-2xl px-6 py-5 shadow-xl transition-colors duration-300 print:hidden ${dark ? "bg-gradient-to-br from-blue-950 via-slate-900 to-slate-950 border border-slate-700" : "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"}`}>
+          <div className="flex items-start justify-between gap-6">
+            <div className="min-w-0 flex-1">
               <p className="text-xs font-black uppercase tracking-[0.3em] text-blue-300">Andwell Maine Innovation and Growth Plan</p>
-              <h1 className="mt-2 text-2xl font-black leading-tight tracking-tight text-white md:text-3xl">
+              <h1 className="mt-1.5 text-2xl font-black leading-tight tracking-tight text-white md:text-3xl">
                 Innovation and growth vision with competitor intelligence.
               </h1>
-              <p className="mt-1.5 text-sm text-slate-400">
+              <p className="mt-1 text-sm text-slate-400">
                 County opportunity · referral requirements · CMS market data · competitor intelligence · financial upside · launch validation
               </p>
+              <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Y1 Revenue</p>
+                  <p className="text-xl font-black text-white">{currency(totals.y1Revenue)}</p>
+                </div>
+                <div className="h-8 w-px bg-slate-700" />
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Y1 Starts</p>
+                  <p className="text-xl font-black text-white">{number(totals.y1Starts)}</p>
+                </div>
+                <div className="h-8 w-px bg-slate-700" />
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Y1 Referrals</p>
+                  <p className="text-xl font-black text-white">{number(totals.y1Referrals)}</p>
+                </div>
+                <div className="h-8 w-px bg-slate-700" />
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">3-yr Revenue</p>
+                  <p className="text-xl font-black text-emerald-400">{currency(totals.y1Revenue + totals.y2Revenue + totals.y3Revenue)}</p>
+                </div>
+                {scenarioRestored && (
+                  <>
+                    <div className="h-8 w-px bg-slate-700" />
+                    <div className="flex items-center gap-1.5 rounded-full bg-amber-500/20 px-3 py-1 text-xs font-black text-amber-300 ring-1 ring-amber-500/30">
+                      <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                      Custom scenario active
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
             <button
               onClick={toggle}
-              className={`shrink-0 rounded-full p-3 transition-all duration-300 ${dark ? "bg-slate-700 text-amber-300 hover:bg-slate-600" : "bg-slate-700/50 text-slate-300 hover:bg-slate-600/50"}`}
+              className="shrink-0 rounded-full p-3 transition-all duration-300 bg-slate-700/50 text-slate-300 hover:bg-slate-600/50"
               aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
               title={dark ? "Switch to light mode" : "Switch to dark mode"}
             >
@@ -158,7 +189,7 @@ function Dashboard() {
                       <div className={`mx-2 my-2 w-px self-stretch ${dark ? "bg-slate-700" : "bg-slate-200"}`} />
                     )}
                     <div className="flex flex-col">
-                      <span className={`px-3 pt-1 pb-0.5 text-[10px] font-black uppercase tracking-widest ${dark ? "text-slate-600" : "text-slate-400"}`}>
+                      <span className={`px-3 pt-1 pb-0.5 text-[10px] font-black uppercase tracking-widest ${dark ? group.darkColor : group.lightColor}`}>
                         {group.label}
                       </span>
                       <div className="flex items-center gap-0.5">
@@ -207,6 +238,17 @@ function Dashboard() {
               >
                 {showScenario ? "Hide scenario model" : "⚙ Scenario model"}
               </button>
+              <button
+                onClick={() => setShowInsights((p) => !p)}
+                className={`relative rounded-full px-4 py-2 text-sm font-black transition ${showInsights ? "bg-amber-500 text-white" : dark ? "bg-slate-800 text-amber-400 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-amber-600 ring-1 ring-amber-200 hover:bg-amber-50"}`}
+              >
+                {showInsights ? "Hide insights" : "💡 Insights"}
+                {!showInsights && insights.length > 0 && (
+                  <span className={`absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-black ${dark ? "bg-amber-500 text-white" : "bg-amber-500 text-white"}`}>
+                    {insights.length}
+                  </span>
+                )}
+              </button>
               <div className="ml-auto">
                 <ExportButton targetId="tab-content" filename={`Andwell - ${activeTab}`} />
               </div>
@@ -215,6 +257,7 @@ function Dashboard() {
 
           {showScenario && <div className="print:hidden"><ScenarioPanel scenario={scenario} setScenario={setScenario} /></div>}
           {showCompare && <div className="print:hidden"><ScenarioCompare currentScenario={scenario} /></div>}
+          {showInsights && <div className="print:hidden"><InsightsPanel insights={insights} /></div>}
 
           <div id="tab-content">
             <div

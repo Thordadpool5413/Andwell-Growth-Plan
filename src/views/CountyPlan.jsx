@@ -26,6 +26,7 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiError, setAiError] = useState(null);
   const abortRef = useRef(null);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     abortRef.current?.abort();
@@ -71,8 +72,21 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
             <span className="font-semibold text-blue-600 dark:text-blue-400">Priority 2</span> = staged expansion (months 7–18) ·{" "}
             <span className="font-semibold text-amber-600 dark:text-amber-400">Priority 3</span> = targeted growth (months 13–24)
           </div>
+          <div className="mb-2">
+            <input
+              type="text"
+              placeholder="Search counties…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className={`w-full rounded-xl border px-3 py-2 text-sm transition ${
+                dark
+                  ? "border-slate-600 bg-slate-700 text-slate-200 placeholder-slate-500 focus:border-blue-500 focus:outline-none"
+                  : "border-slate-200 bg-white text-slate-800 placeholder-slate-400 focus:border-blue-400 focus:outline-none"
+              }`}
+            />
+          </div>
           <div className="space-y-2">
-            {rows.map((row, index) => {
+            {rows.filter((r) => !search || r.county.toLowerCase().includes(search.toLowerCase())).map((row, index) => {
               const rowIntel = getCountyIntelligence(row.county, rows);
               const oppScore = getOpportunityScore(row.county, rows);
               const score = oppScore?.score ?? 0;

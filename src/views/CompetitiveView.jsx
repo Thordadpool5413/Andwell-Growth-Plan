@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-  Bar, BarChart, CartesianGrid, Cell,
+  Bar, BarChart, CartesianGrid, Cell, Pie, PieChart,
   XAxis, YAxis, Legend,
 } from "recharts";
 import Card from "../components/Card.jsx";
@@ -128,6 +128,73 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
         <Metric label="Andwell rank" value={summary.andwellRank ? `#${summary.andwellRank}` : "N/A"} detail="Ranked by beneficiary volume in the provider file." color="emerald" sourceType="cms" />
         <Metric label="Andwell provider file share" value={percent(summary.andwellShare)} detail={<span>Not county market share. This is <Abbr term="Provider File Share">provider file share</Abbr>.</span>} color="violet" sourceType="cms" />
       </div>
+
+      {/* National chain vs. local breakdown */}
+      {(() => {
+        const national = providers.filter((p) => isNationalChain(p.name));
+        const local = providers.filter((p) => !isNationalChain(p.name));
+        const nationalBens = national.reduce((s, p) => s + (p.beneficiaries || 0), 0);
+        const localBens = local.reduce((s, p) => s + (p.beneficiaries || 0), 0);
+        const totalBens = nationalBens + localBens;
+        const natPct = totalBens > 0 ? Math.round((nationalBens / totalBens) * 100) : 0;
+        const locPct = 100 - natPct;
+        const pieData = [
+          { name: "National chains", value: nationalBens, fill: "#ef4444" },
+          { name: "Local/regional", value: localBens, fill: "#3b82f6" },
+        ];
+        return (
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className={`rounded-3xl border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+              <p className={`text-xs font-black uppercase tracking-wide mb-3 ${dark ? "text-slate-400" : "text-slate-500"}`}>National chains vs. local providers</p>
+              <div className="flex items-center gap-4">
+                <div style={{ width: 90, height: 90 }}>
+                  <PieChart width={90} height={90}>
+                    <Pie data={pieData} cx={40} cy={40} innerRadius={22} outerRadius={40} dataKey="value" strokeWidth={0}>
+                      {pieData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
+                    </Pie>
+                  </PieChart>
+                </div>
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 text-xs"><span className="h-2 w-2 rounded-full bg-red-500" /><span className={dark ? "text-slate-300" : "text-slate-700"}>National chains</span></span>
+                    <span className={`text-xs font-black ${dark ? "text-red-400" : "text-red-600"}`}>{national.length} providers · {natPct}%</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 text-xs"><span className="h-2 w-2 rounded-full bg-blue-500" /><span className={dark ? "text-slate-300" : "text-slate-700"}>Local/regional</span></span>
+                    <span className={`text-xs font-black ${dark ? "text-blue-400" : "text-blue-700"}`}>{local.length} providers · {locPct}%</span>
+                  </div>
+                  <div className={`mt-1 h-2 w-full overflow-hidden rounded-full ${dark ? "bg-slate-700" : "bg-slate-100"}`}>
+                    <div className="h-full flex">
+                      <div className="h-full bg-red-500 transition-all duration-500" style={{ width: `${natPct}%` }} />
+                      <div className="h-full bg-blue-500 transition-all duration-500" style={{ width: `${locPct}%` }} />
+                    </div>
+                  </div>
+                  <p className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>By provider file beneficiary volume</p>
+                </div>
+              </div>
+            </div>
+            <div className={`rounded-3xl border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+              <p className={`text-xs font-black uppercase tracking-wide mb-3 ${dark ? "text-slate-400" : "text-slate-500"}`}>Top 5 providers by volume</p>
+              <div className="space-y-2">
+                {providers.slice(0, 5).map((p, i) => {
+                  const pct = totalBens > 0 ? (p.beneficiaries / totalBens) * 100 : 0;
+                  const isChain = isNationalChain(p.name);
+                  return (
+                    <div key={p.name} className="flex items-center gap-2">
+                      <span className={`text-[10px] font-black w-4 text-right ${dark ? "text-slate-500" : "text-slate-400"}`}>{i + 1}</span>
+                      <div className={`flex-1 text-xs truncate font-semibold ${dark ? "text-slate-200" : "text-slate-700"}`}>{p.name}</div>
+                      <div className={`w-20 h-2 rounded-full overflow-hidden ${dark ? "bg-slate-700" : "bg-slate-100"}`}>
+                        <div className={`h-full rounded-full ${isChain ? "bg-red-500" : "bg-blue-500"}`} style={{ width: `${Math.min(pct * 5, 100)}%` }} />
+                      </div>
+                      <span className={`text-[10px] font-black w-8 text-right ${isChain ? (dark ? "text-red-400" : "text-red-600") : (dark ? "text-blue-400" : "text-blue-700")}`}>{pct.toFixed(1)}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {threat && (
         <div className={`rounded-3xl border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>

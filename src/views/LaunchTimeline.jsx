@@ -193,7 +193,7 @@ export default function LaunchTimeline({ rows }) {
           </div>
         </div>
 
-        <div className="mt-5 flex flex-wrap gap-4 text-xs border-t pt-4 ${dark ? 'border-slate-700' : 'border-slate-100'}">
+        <div className={`mt-5 flex flex-wrap gap-4 text-xs border-t pt-4 ${dark ? "border-slate-700" : "border-slate-100"}`}>
           {Object.entries(PRIORITY_TIMELINE).map(([label, config]) => (
             <div key={label} className={`flex items-center gap-1.5 ${dark ? "text-slate-400" : "text-slate-600"}`}>
               <span className="h-3 w-6 rounded" style={{ backgroundColor: config.color }} />
