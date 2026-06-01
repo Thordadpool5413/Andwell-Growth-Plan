@@ -213,8 +213,8 @@ function Dashboard() {
                             className={`relative rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-100 whitespace-nowrap ${
                               activeTab === tab
                                 ? dark
-                                  ? "text-slate-100 bg-slate-700/60"
-                                  : "text-slate-800 bg-slate-100"
+                                  ? "text-slate-100"
+                                  : "text-slate-800"
                                 : dark
                                   ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
                                   : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"

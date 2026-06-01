@@ -89,7 +89,7 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
 
   return (
     <div className="space-y-6">
-      <SectionHeader eyebrow="Competitive view" icon="⚔️" title="Named provider competitor layer">
+      <SectionHeader eyebrow="Competitive view" title="Named provider competitor layer">
         Provider file share, CMS-verified competitor matching, and the Andwell comparison grid. Use the comparison grid tab to see each competitor cross-referenced with CMS certification data and website intelligence.
       </SectionHeader>
 
@@ -144,7 +144,7 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
         ];
         return (
           <div className="grid gap-4 md:grid-cols-2">
-            <div className={`rounded-3xl border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+            <div className={`rounded-xl border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
               <p className={`text-xs font-medium uppercase tracking-wide mb-3 ${dark ? "text-slate-400" : "text-slate-500"}`}>National chains vs. local providers</p>
               <div className="flex items-center gap-4">
                 <div style={{ width: 90, height: 90 }}>
@@ -173,7 +173,7 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
                 </div>
               </div>
             </div>
-            <div className={`rounded-3xl border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+            <div className={`rounded-xl border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
               <p className={`text-xs font-medium uppercase tracking-wide mb-3 ${dark ? "text-slate-400" : "text-slate-500"}`}>Top 5 providers by volume</p>
               <div className="space-y-2">
                 {providers.slice(0, 5).map((p, i) => {
@@ -197,7 +197,7 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
       })()}
 
       {threat && (
-        <div className={`rounded-3xl border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+        <div className={`rounded-xl border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
           <div className="flex items-center justify-between">
             <div>
               <p className={`text-sm font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>{selectedCounty} competitive threat score</p>
@@ -218,7 +218,7 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
         </div>
       )}
 
-      <div className={`rounded-2xl border ${dark ? "border-slate-700 bg-slate-800/40" : "border-slate-200 bg-white"}`}>
+      <div className={`rounded-xl border ${dark ? "border-slate-700 bg-slate-800/40" : "border-slate-200 bg-white"}`}>
         <div className={`flex border-b ${dark ? "border-slate-700" : "border-slate-200"}`}>
           {COMPETITIVE_TABS.map((t) => (
             <button
@@ -286,7 +286,7 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
           <Card title={`${selectedCounty} named providers`} eyebrow="County located providers">
             <div className="space-y-3">
               {countyProviders.length ? countyProviders.map((provider) => (
-                <div key={`${provider.service}-${provider.providerName}`} className={`rounded-2xl border p-4 ${provider.isAndwellCmsRecord ? dark ? "border-blue-700 bg-blue-950/50" : "border-blue-300 bg-blue-50" : dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+                <div key={`${provider.service}-${provider.providerName}`} className={`rounded-xl border p-4 ${provider.isAndwellCmsRecord ? dark ? "border-blue-700 bg-blue-950/50" : "border-blue-300 bg-blue-50" : dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className={`font-semibold ${dark ? "text-slate-100" : "text-slate-800"}`}>{provider.providerName}</p>
@@ -308,7 +308,7 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
                   })()}
                 </div>
               )) : (
-                <div className={`rounded-2xl border p-5 ${dark ? "border-amber-800 bg-amber-950/50 text-amber-300" : "border-amber-200 bg-amber-50 text-amber-900"}`}>
+                <div className={`rounded-xl border p-5 ${dark ? "border-amber-800 bg-amber-950/50 text-amber-300" : "border-amber-200 bg-amber-50 text-amber-900"}`}>
                   <p className="font-semibold">No named provider row located in {selectedCounty} for {service}.</p>
                   <p className="mt-2 text-sm leading-6">This does not mean no provider serves the county. It means the uploaded provider file does not have a provider headquarters row located in that county for this selected service.</p>
                 </div>
@@ -325,7 +325,7 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
       {activeTab === "methodology" && (
         <>
           <Card title="Market share build path" eyebrow="What is built versus what is still needed">
-            <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
+            <div className={`overflow-x-auto rounded-xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
               <table className="w-full min-w-[1200px] text-left text-sm">
                 <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
                   <tr>
@@ -352,7 +352,7 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
           </Card>
 
           <Card title="Market share formulas" eyebrow="Formula transparency">
-            <div className={`grid gap-0 rounded-2xl border overflow-hidden ${dark ? "border-slate-700" : "border-slate-200"}`}>
+            <div className={`grid gap-0 rounded-xl border overflow-hidden ${dark ? "border-slate-700" : "border-slate-200"}`}>
               {marketShareFormulaRows.map((row, i) => (
                 <div key={row.metric} className={`grid grid-cols-[1fr_2fr] gap-0 border-b last:border-b-0 ${dark ? "border-slate-700" : "border-slate-200"}`}>
                   <div className={`px-5 py-4 border-r ${dark ? "border-slate-700 bg-slate-800/60" : "border-slate-200 bg-slate-50"}`}>

@@ -114,7 +114,7 @@ export default function OpportunityScore({ rows }) {
 
   return (
     <div className="space-y-6">
-      <SectionHeader eyebrow="Opportunity scoring" icon="🏆" title="County opportunity ranking with factor analysis">
+      <SectionHeader eyebrow="Opportunity scoring" title="County opportunity ranking with factor analysis">
         Composite score (0–100) combining market size (25%), low competition (20%), Andwell presence (15%), revenue efficiency (20%), and growth potential (20%). Higher is better.
       </SectionHeader>
 

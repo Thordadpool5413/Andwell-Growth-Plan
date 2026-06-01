@@ -77,16 +77,7 @@ export default {
         '3xl': '3rem',
         '4xl': '4rem',
       },
-      borderRadius: {
-        xs: '0.25rem',
-        sm: '0.5rem',
-        base: '0.75rem',
-        md: '1rem',
-        lg: '1.5rem',
-        xl: '2rem',
-        '2xl': '2.25rem',
-        '3xl': '2.5rem',
-      },
+
       boxShadow: {
         'elevation-0': '0 0 0 1px rgba(0, 0, 0, 0.05)',
         'elevation-1': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
