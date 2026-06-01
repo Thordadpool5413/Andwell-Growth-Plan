@@ -109,14 +109,58 @@ export default function SensitivityAnalysis({ rows }) {
 
       <div className="grid gap-4 md:grid-cols-3">
         {[
-          { label: "Downside scenario", value: currency(baseRevenue + worstCase), delta: currency(worstCase), color: dark ? "border-l-red-500 bg-red-950/20" : "border-l-red-500 bg-red-50", textColor: dark ? "text-red-400" : "text-red-600", deltaPrefix: "" },
-          { label: "Base scenario", value: currency(baseRevenue), delta: "Model baseline", color: dark ? "border-l-blue-500 bg-blue-950/20" : "border-l-blue-500 bg-blue-50", textColor: dark ? "text-blue-400" : "text-blue-700", deltaPrefix: "" },
-          { label: "Upside scenario", value: currency(baseRevenue + bestCase), delta: `+${currency(bestCase)}`, color: dark ? "border-l-emerald-500 bg-emerald-950/20" : "border-l-emerald-500 bg-emerald-50", textColor: dark ? "text-emerald-400" : "text-emerald-600", deltaPrefix: "+" },
+          {
+            label: "Downside scenario",
+            sublabel: "All variables at low bound",
+            value: currency(baseRevenue + worstCase),
+            delta: currency(worstCase),
+            pctVsBase: baseRevenue > 0 ? ((worstCase / baseRevenue) * 100).toFixed(1) : "0",
+            color: dark ? "border-l-red-500 bg-red-950/20" : "border-l-red-500 bg-red-50",
+            textColor: dark ? "text-red-400" : "text-red-600",
+            borderColor: dark ? "border-slate-700/60" : "border-red-100",
+            icon: "↓",
+            iconColor: dark ? "text-red-400" : "text-red-500",
+          },
+          {
+            label: "Base scenario",
+            sublabel: "Default model assumptions",
+            value: currency(baseRevenue),
+            delta: "Model baseline",
+            pctVsBase: "0",
+            color: dark ? "border-l-blue-500 bg-blue-950/20" : "border-l-blue-500 bg-blue-50",
+            textColor: dark ? "text-blue-400" : "text-blue-700",
+            borderColor: dark ? "border-slate-700/60" : "border-blue-100",
+            icon: "→",
+            iconColor: dark ? "text-blue-400" : "text-blue-600",
+          },
+          {
+            label: "Upside scenario",
+            sublabel: "All variables at high bound",
+            value: currency(baseRevenue + bestCase),
+            delta: `+${currency(bestCase)}`,
+            pctVsBase: baseRevenue > 0 ? ((bestCase / baseRevenue) * 100).toFixed(1) : "0",
+            color: dark ? "border-l-emerald-500 bg-emerald-950/20" : "border-l-emerald-500 bg-emerald-50",
+            textColor: dark ? "text-emerald-400" : "text-emerald-600",
+            borderColor: dark ? "border-slate-700/60" : "border-emerald-100",
+            icon: "↑",
+            iconColor: dark ? "text-emerald-400" : "text-emerald-500",
+          },
         ].map((s) => (
-          <div key={s.label} className={`rounded-2xl border-l-4 border p-5 ${s.color} ${dark ? "border-slate-700" : "border-slate-200"}`}>
-            <p className={`text-xs font-black uppercase tracking-wide ${dark ? "text-slate-400" : "text-slate-500"}`}>{s.label}</p>
-            <p className={`mt-2 text-3xl font-black ${s.textColor}`}>{s.value}</p>
-            <p className={`mt-1 text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>{s.delta}</p>
+          <div key={s.label} className={`rounded-2xl border-l-4 border p-5 ${s.color} ${s.borderColor}`}>
+            <div className="flex items-start justify-between">
+              <p className={`text-xs font-black uppercase tracking-wide ${dark ? "text-slate-400" : "text-slate-500"}`}>{s.label}</p>
+              <span className={`text-lg font-black ${s.iconColor}`}>{s.icon}</span>
+            </div>
+            <p className={`mt-1 text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>{s.sublabel}</p>
+            <p className={`mt-3 text-3xl font-black ${s.textColor}`}>{s.value}</p>
+            <div className="mt-2 flex items-center justify-between">
+              <p className={`text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>{s.delta}</p>
+              {s.pctVsBase !== "0" && (
+                <p className={`text-xs font-black ${s.textColor}`}>
+                  {parseFloat(s.pctVsBase) > 0 ? "+" : ""}{s.pctVsBase}% vs base
+                </p>
+              )}
+            </div>
           </div>
         ))}
       </div>

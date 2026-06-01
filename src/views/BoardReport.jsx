@@ -5,11 +5,13 @@ import Card from "../components/Card.jsx";
 import Badge from "../components/Badge.jsx";
 import Abbr from "../components/Abbr.jsx";
 import AiBadge from "../components/AiBadge.jsx";
+import Metric from "../components/Metric.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
 import { rollupByService, getOpportunityScore, getCompetitiveThreatScore, getMarketPenetration } from "../utils/calculations.js";
 import { streamChat, buildBoardNarrativePrompt, AI_AVAILABLE } from "../utils/ai.js";
 import { currency, number, percent } from "../utils/formatters.js";
+import { useSortableTable, SortTh } from "../hooks/useSortableTable.jsx";
 
 const CMS_LAST_SYNCED = "2026-05-01";
 const CMS_DISPLAY_DATE = "May 2026";
@@ -105,6 +107,8 @@ export default function BoardReport({ rows, totals }) {
 
   const riskCounties = countyStatus.filter((c) => c.threatScore > 60 || c.penetration < 0.02);
   const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+
+  const { sorted: sortedCounties, sortKey: cSortKey, sortDir: cSortDir, toggleSort: cToggleSort } = useSortableTable(countyStatus, "oppScore", "desc");
 
   const generateNarrative = useCallback(() => {
     abortRef.current?.abort();
@@ -206,25 +210,33 @@ export default function BoardReport({ rows, totals }) {
       )}
 
       <div ref={reportRef} className="space-y-6 print:space-y-4">
-        <div className={`rounded-3xl border p-6 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
-          <div className="grid gap-6 md:grid-cols-4">
-            <div>
-              <p className={`text-xs font-semibold uppercase ${dark ? "text-slate-400" : "text-slate-500"}`}>Active counties</p>
-              <p className={`mt-1 text-3xl font-black ${dark ? "text-white" : "text-slate-950"}`}>{counties.length}</p>
-            </div>
-            <div>
-              <p className={`text-xs font-semibold uppercase ${dark ? "text-slate-400" : "text-slate-500"}`}>Year 1 revenue</p>
-              <p className={`mt-1 text-3xl font-black ${dark ? "text-blue-400" : "text-blue-700"}`}>{currency(totals.y1Revenue)}</p>
-            </div>
-            <div>
-              <p className={`text-xs font-semibold uppercase ${dark ? "text-slate-400" : "text-slate-500"}`}>Year 3 revenue</p>
-              <p className={`mt-1 text-3xl font-black ${dark ? "text-emerald-400" : "text-emerald-600"}`}>{currency(totals.y3Revenue)}</p>
-            </div>
-            <div>
-              <p className={`text-xs font-semibold uppercase ${dark ? "text-slate-400" : "text-slate-500"}`}>3-year contribution</p>
-              <p className={`mt-1 text-3xl font-black ${dark ? "text-purple-400" : "text-purple-600"}`}>{currency(totals.totalContribution)}</p>
-            </div>
-          </div>
+        <div className="board-report-cover grid gap-4 md:grid-cols-4">
+          <Metric
+            label="Active counties"
+            value={counties.length}
+            detail="County markets in phased launch plan"
+            color="blue"
+          />
+          <Metric
+            label="Year 1 revenue"
+            value={currency(totals.y1Revenue)}
+            detail="Projected first-year net revenue"
+            sparkData={[totals.y1Revenue, totals.y2Revenue, totals.y3Revenue]}
+            sparkColor={COLORS.blue}
+            color="blue"
+          />
+          <Metric
+            label="Year 3 revenue"
+            value={currency(totals.y3Revenue)}
+            detail="Full-ramp revenue by end of Year 3"
+            color="emerald"
+          />
+          <Metric
+            label="3-year contribution"
+            value={currency(totals.totalContribution)}
+            detail="Cumulative operating contribution margin"
+            color="violet"
+          />
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr] print:break-after-page">
@@ -251,18 +263,18 @@ export default function BoardReport({ rows, totals }) {
             </div>
             <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
               <table className="w-full text-left text-sm">
-                <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
+                <thead className={`sticky top-0 z-10 text-xs uppercase tracking-wide ${dark ? "bg-slate-700/80 text-slate-400 backdrop-blur" : "bg-slate-50 text-slate-500 shadow-sm"}`}>
                   <tr>
-                    <th className="px-4 py-3">County</th>
-                    <th className="px-4 py-3">Priority</th>
-                    <th className="px-4 py-3 text-right">Y1 rev</th>
-                    <th className="px-4 py-3 text-center">Competition</th>
-                    <th className="px-4 py-3 text-center"><Abbr term="Market Penetration">Penetration</Abbr></th>
-                    <th className="px-4 py-3 text-center">Opp score</th>
+                    <SortTh sortKey="county" currentKey={cSortKey} currentDir={cSortDir} onSort={cToggleSort} className="px-4 py-3">County</SortTh>
+                    <SortTh sortKey="launchGroup" currentKey={cSortKey} currentDir={cSortDir} onSort={cToggleSort} className="px-4 py-3">Priority</SortTh>
+                    <SortTh sortKey="y1Rev" currentKey={cSortKey} currentDir={cSortDir} onSort={cToggleSort} className="px-4 py-3 text-right">Y1 rev</SortTh>
+                    <SortTh sortKey="threatScore" currentKey={cSortKey} currentDir={cSortDir} onSort={cToggleSort} className="px-4 py-3 text-center">Competition</SortTh>
+                    <SortTh sortKey="penetration" currentKey={cSortKey} currentDir={cSortDir} onSort={cToggleSort} className="px-4 py-3 text-center"><Abbr term="Market Penetration">Penetration</Abbr></SortTh>
+                    <SortTh sortKey="oppScore" currentKey={cSortKey} currentDir={cSortDir} onSort={cToggleSort} className="px-4 py-3 text-center">Opp score</SortTh>
                   </tr>
                 </thead>
                 <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-slate-100"}`}>
-                  {countyStatus.map((c, i) => (
+                  {sortedCounties.map((c, i) => (
                     <tr key={c.county} className={dark ? i % 2 === 1 ? "bg-slate-800/60 hover:bg-slate-700/50" : "hover:bg-slate-700/50" : i % 2 === 1 ? "bg-slate-50/60 hover:bg-slate-50" : "hover:bg-slate-50"}>
                       <td className={`px-4 py-3 font-black ${dark ? "text-white" : ""}`}>{c.county}</td>
                       <td className="px-4 py-3">

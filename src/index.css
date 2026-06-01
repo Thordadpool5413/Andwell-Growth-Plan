@@ -383,6 +383,8 @@ input, select, textarea {
   body {
     background: white !important;
     color: black !important;
+    font-size: 11pt;
+    line-height: 1.5;
   }
 
   .print\:hidden {
@@ -392,13 +394,14 @@ input, select, textarea {
   .rounded-3xl,
   .rounded-2xl,
   .rounded-xl {
-    border-radius: 8px !important;
+    border-radius: 6px !important;
   }
 
   /* Force light mode for print */
   .bg-slate-950,
   .bg-slate-900,
-  .bg-slate-800 {
+  .bg-slate-800,
+  .bg-slate-700 {
     background-color: white !important;
   }
 
@@ -407,7 +410,54 @@ input, select, textarea {
     color: #0f172a !important;
   }
 
+  /* Page break management */
+  section, .card {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  h1, h2, h3 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  table {
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  /* Chart containers — avoid cutting across page */
+  .recharts-wrapper, .recharts-responsive-container {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Board report cover area */
+  .board-report-cover {
+    page-break-after: always;
+    break-after: always;
+  }
+
+  /* Ensure borders are visible in print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
   @page {
-    margin: 1.5cm;
+    margin: 1.8cm 1.5cm;
+    size: A4;
+  }
+
+  @page :first {
+    margin-top: 2cm;
   }
 }

@@ -13,6 +13,7 @@ import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
 import { getStaffingModel } from "../utils/calculations.js";
 import { currency, number } from "../utils/formatters.js";
+import { useSortableTable, SortTh } from "../hooks/useSortableTable.jsx";
 
 const YEAR_COLORS = {
   "Y1 FTE": COLORS.blue,
@@ -30,6 +31,24 @@ export default function StaffingModel({ rows }) {
     "Y2 FTE": data.y2.fte,
     "Y3 FTE": data.y3.fte,
   }));
+
+  const fteTableRows = useMemo(() =>
+    Object.entries(model.byService).map(([service, data]) => ({
+      service,
+      role: data.role,
+      patientsPerFTE: data.patientsPerFTE,
+      avgSalary: data.avgSalary,
+      y1fte: data.y1.fte,
+      y2fte: data.y2.fte,
+      y3fte: data.y3.fte,
+      y1cost: data.y1.cost,
+      y3cost: data.y3.cost,
+      costPerStart: data.y1.costPerStart,
+      _data: data,
+    })),
+  [model]);
+
+  const { sorted: sortedFte, sortKey: fteSortKey, sortDir: fteSortDir, toggleSort: fteToggleSort } = useSortableTable(fteTableRows, "y1fte", "desc");
 
   const countyChartData = Object.entries(model.byCounty)
     .sort((a, b) => b[1].y3 - a[1].y3)
@@ -85,42 +104,53 @@ export default function StaffingModel({ rows }) {
         ))}
       </div>
 
-      <Card title="FTE breakdown by service line" eyebrow="Staffing detail">
+      <Card title="FTE breakdown by service line" eyebrow="Staffing detail — click column headers to sort">
         <p className={`mb-2 text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>Scroll right to see all columns →</p>
         <div className="relative">
           <div className={`pointer-events-none absolute inset-y-0 right-0 z-10 w-12 rounded-r-2xl bg-gradient-to-l ${dark ? "from-slate-800/90" : "from-white/90"}`} />
           <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
             <table className="w-full text-left text-sm">
-              <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
+              <thead className={`sticky top-0 z-10 text-xs uppercase tracking-wide ${dark ? "bg-slate-700/90 text-slate-400 backdrop-blur" : "bg-slate-50 text-slate-500 shadow-sm"}`}>
                 <tr>
-                  <th className="px-5 py-4">Service line</th>
+                  <SortTh sortKey="service" currentKey={fteSortKey} currentDir={fteSortDir} onSort={fteToggleSort} className="px-5 py-4">Service line</SortTh>
                   <th className="px-5 py-4">Role</th>
-                  <th className="px-5 py-4 text-right" title="Patients per Full-Time Equivalent — how many active patients one staff member is assumed to carry simultaneously">Pts/<Abbr term="FTE">FTE</Abbr></th>
-                  <th className="px-5 py-4 text-right">Avg salary</th>
-                  <th className="px-5 py-4 text-right">Y1 <Abbr term="FTE">FTE</Abbr></th>
-                  <th className="px-5 py-4 text-right">Y2 <Abbr term="FTE">FTE</Abbr></th>
-                  <th className="px-5 py-4 text-right">Y3 <Abbr term="FTE">FTE</Abbr></th>
-                  <th className="px-5 py-4 text-right">Y1 cost</th>
-                  <th className="px-5 py-4 text-right">Y3 cost</th>
-                  <th className="px-5 py-4 text-right">Cost/start</th>
+                  <SortTh sortKey="patientsPerFTE" currentKey={fteSortKey} currentDir={fteSortDir} onSort={fteToggleSort} className="px-5 py-4 text-right" title="Patients per Full-Time Equivalent">Pts/<Abbr term="FTE">FTE</Abbr></SortTh>
+                  <SortTh sortKey="avgSalary" currentKey={fteSortKey} currentDir={fteSortDir} onSort={fteToggleSort} className="px-5 py-4 text-right">Avg salary</SortTh>
+                  <SortTh sortKey="y1fte" currentKey={fteSortKey} currentDir={fteSortDir} onSort={fteToggleSort} className="px-5 py-4 text-right">Y1 <Abbr term="FTE">FTE</Abbr></SortTh>
+                  <SortTh sortKey="y2fte" currentKey={fteSortKey} currentDir={fteSortDir} onSort={fteToggleSort} className="px-5 py-4 text-right">Y2 <Abbr term="FTE">FTE</Abbr></SortTh>
+                  <SortTh sortKey="y3fte" currentKey={fteSortKey} currentDir={fteSortDir} onSort={fteToggleSort} className="px-5 py-4 text-right">Y3 <Abbr term="FTE">FTE</Abbr></SortTh>
+                  <SortTh sortKey="y1cost" currentKey={fteSortKey} currentDir={fteSortDir} onSort={fteToggleSort} className="px-5 py-4 text-right">Y1 cost</SortTh>
+                  <SortTh sortKey="y3cost" currentKey={fteSortKey} currentDir={fteSortDir} onSort={fteToggleSort} className="px-5 py-4 text-right">Y3 cost</SortTh>
+                  <SortTh sortKey="costPerStart" currentKey={fteSortKey} currentDir={fteSortDir} onSort={fteToggleSort} className="px-5 py-4 text-right">Cost/start</SortTh>
                 </tr>
               </thead>
               <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-slate-100"}`}>
-                {Object.entries(model.byService).map(([service, data], i) => (
-                  <tr key={service} className={dark ? i % 2 === 1 ? "bg-slate-800/60 hover:bg-slate-700/50" : "hover:bg-slate-700/50" : i % 2 === 1 ? "bg-slate-50/50 hover:bg-slate-50" : "hover:bg-slate-50"}>
-                    <td className={`px-5 py-4 font-black ${dark ? "text-white" : ""}`}>{service}</td>
-                    <td className={`px-5 py-4 ${dark ? "text-slate-300" : "text-slate-600"}`}>{data.role}</td>
-                    <td className={`px-5 py-4 text-right ${dark ? "text-slate-300" : ""}`}>{data.patientsPerFTE}</td>
-                    <td className={`px-5 py-4 text-right ${dark ? "text-slate-300" : ""}`}>{currency(data.avgSalary)}</td>
-                    <td className={`px-5 py-4 text-right font-black ${dark ? "text-blue-400" : "text-blue-700"}`}>{data.y1.fte}</td>
-                    <td className={`px-5 py-4 text-right ${dark ? "text-slate-300" : ""}`}>{data.y2.fte}</td>
-                    <td className={`px-5 py-4 text-right font-black ${dark ? "text-emerald-400" : "text-emerald-600"}`}>{data.y3.fte}</td>
-                    <td className={`px-5 py-4 text-right ${dark ? "text-slate-300" : ""}`}>{currency(data.y1.cost)}</td>
-                    <td className={`px-5 py-4 text-right ${dark ? "text-slate-300" : ""}`}>{currency(data.y3.cost)}</td>
-                    <td className={`px-5 py-4 text-right font-black ${dark ? "text-amber-400" : "text-amber-600"}`}>{currency(data.y1.costPerStart)}</td>
+                {sortedFte.map((row, i) => (
+                  <tr key={row.service} className={dark ? i % 2 === 1 ? "bg-slate-800/60 hover:bg-slate-700/50" : "hover:bg-slate-700/50" : i % 2 === 1 ? "bg-slate-50/50 hover:bg-slate-50" : "hover:bg-slate-50"}>
+                    <td className={`px-5 py-4 font-black ${dark ? "text-white" : ""}`}>{row.service}</td>
+                    <td className={`px-5 py-4 ${dark ? "text-slate-300" : "text-slate-600"}`}>{row.role}</td>
+                    <td className={`px-5 py-4 text-right ${dark ? "text-slate-300" : ""}`}>{row.patientsPerFTE}</td>
+                    <td className={`px-5 py-4 text-right ${dark ? "text-slate-300" : ""}`}>{currency(row.avgSalary)}</td>
+                    <td className={`px-5 py-4 text-right font-black ${dark ? "text-blue-400" : "text-blue-700"}`}>{row.y1fte}</td>
+                    <td className={`px-5 py-4 text-right ${dark ? "text-slate-300" : ""}`}>{row.y2fte}</td>
+                    <td className={`px-5 py-4 text-right font-black ${dark ? "text-emerald-400" : "text-emerald-600"}`}>{row.y3fte}</td>
+                    <td className={`px-5 py-4 text-right ${dark ? "text-slate-300" : ""}`}>{currency(row.y1cost)}</td>
+                    <td className={`px-5 py-4 text-right ${dark ? "text-slate-300" : ""}`}>{currency(row.y3cost)}</td>
+                    <td className={`px-5 py-4 text-right font-black ${dark ? "text-amber-400" : "text-amber-600"}`}>{currency(row.costPerStart)}</td>
                   </tr>
                 ))}
               </tbody>
+              <tfoot>
+                <tr className={`text-xs font-black border-t-2 ${dark ? "border-slate-600 bg-slate-700/60 text-white" : "border-slate-300 bg-slate-100 text-slate-900"}`}>
+                  <td className="px-5 py-3" colSpan={4}>Totals</td>
+                  <td className={`px-5 py-3 text-right ${dark ? "text-blue-400" : "text-blue-700"}`}>{sortedFte.reduce((s, r) => s + r.y1fte, 0)}</td>
+                  <td className={`px-5 py-3 text-right ${dark ? "text-slate-300" : ""}`}>{sortedFte.reduce((s, r) => s + r.y2fte, 0)}</td>
+                  <td className={`px-5 py-3 text-right ${dark ? "text-emerald-400" : "text-emerald-600"}`}>{sortedFte.reduce((s, r) => s + r.y3fte, 0)}</td>
+                  <td className={`px-5 py-3 text-right ${dark ? "text-slate-300" : ""}`}>{currency(sortedFte.reduce((s, r) => s + r.y1cost, 0))}</td>
+                  <td className={`px-5 py-3 text-right ${dark ? "text-slate-300" : ""}`}>{currency(sortedFte.reduce((s, r) => s + r.y3cost, 0))}</td>
+                  <td className="px-5 py-3 text-right">—</td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         </div>

@@ -160,18 +160,34 @@ export default function FinancialModel({ rows }) {
         </Card>
       </div>
 
-      <Card title="Revenue by service line" eyebrow="3-year stacked breakdown">
-        <ChartContainer height="h-72" caption="Revenue contribution by service line across Years 1–3">
-          <BarChart data={serviceStackData} margin={{ left: 10 }}>
+      <Card title="Revenue by service line" eyebrow="3-year stacked area breakdown">
+        <ChartContainer height="h-72" caption="Revenue contribution by service line across Years 1–3 — stacked area view">
+          <AreaChart data={serviceStackData} margin={{ left: 10, right: 10 }}>
+            <defs>
+              {services.map((svc) => (
+                <linearGradient key={svc} id={`grad-${svc.replace(/\s+/g, "")}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={serviceColors[svc] || COLORS.blue} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={serviceColors[svc] || COLORS.blue} stopOpacity={0.05} />
+                </linearGradient>
+              ))}
+            </defs>
             <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
             <XAxis dataKey="year" tick={{ fill: dark ? "#94a3b8" : "#475569" }} />
             <YAxis tickFormatter={(v) => `$${Math.round(v / 1000000)}M`} tick={{ fill: dark ? "#94a3b8" : "#475569" }} />
             <CustomTooltip formatter={(value) => currency(value)} />
             <Legend />
             {services.map((svc) => (
-              <Bar key={svc} dataKey={svc} stackId="a" fill={serviceColors[svc] || COLORS.blue} radius={services.indexOf(svc) === services.length - 1 ? [6, 6, 0, 0] : [0, 0, 0, 0]} />
+              <Area
+                key={svc}
+                type="monotone"
+                dataKey={svc}
+                stackId="1"
+                stroke={serviceColors[svc] || COLORS.blue}
+                fill={`url(#grad-${svc.replace(/\s+/g, "")})`}
+                strokeWidth={2}
+              />
             ))}
-          </BarChart>
+          </AreaChart>
         </ChartContainer>
       </Card>
 
