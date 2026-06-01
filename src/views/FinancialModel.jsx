@@ -17,9 +17,9 @@ import { currency, number } from "../utils/formatters.js";
 import { exportFinancialCSV } from "../utils/csvExport.js";
 
 const YEAR_BADGES = [
-  { label: "Y1", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300" },
-  { label: "Y2", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300" },
-  { label: "Y3", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300" },
+  { label: "Y1", colorClass: dark => dark ? "bg-slate-700 text-slate-300" : "bg-slate-100 text-slate-600" },
+  { label: "Y2", colorClass: dark => dark ? "bg-slate-700 text-slate-300" : "bg-slate-100 text-slate-600" },
+  { label: "Y3", colorClass: dark => dark ? "bg-slate-700 text-slate-300" : "bg-slate-100 text-slate-600" },
 ];
 
 export default function FinancialModel({ rows }) {
@@ -40,10 +40,10 @@ export default function FinancialModel({ rows }) {
   const services = [...new Set(rows.map((r) => r.service))];
   const serviceColors = {
     "Home Healthcare": COLORS.blue,
-    "Mobile Wound": COLORS.red,
-    "Therapy Care": COLORS.green,
-    "GUIDE": COLORS.purple,
-    "Hospice": "#9333ea",
+    "Mobile Wound":   COLORS.red,
+    "Therapy Care":   COLORS.green,
+    "GUIDE":          COLORS.purple,
+    "Hospice":        "#9333ea",
   };
   const serviceStackData = [0, 1, 2].map((index) => {
     const entry = { year: `Year ${index + 1}` };
@@ -53,9 +53,13 @@ export default function FinancialModel({ rows }) {
     return entry;
   });
 
+  const badgeClass = dark
+    ? "bg-slate-700/60 text-slate-300"
+    : "bg-slate-100 text-slate-600";
+
   return (
     <div className="space-y-6">
-      <SectionHeader eyebrow="Financial model" icon="💹" title="3-year revenue and contribution projections">
+      <SectionHeader eyebrow="Financial model" title="3-year revenue and contribution projections">
         Revenue is modeled from CMS beneficiary volumes multiplied by internal capture rate assumptions and Medicare reimbursement rates. Contribution margin reflects the modeled gross margin per service line. Use the Scenario Model sliders to stress-test different capture and <Abbr term="Conversion Rate">conversion rate</Abbr> assumptions.
       </SectionHeader>
 
@@ -97,7 +101,7 @@ export default function FinancialModel({ rows }) {
       <div className="flex justify-end">
         <button
           onClick={() => exportFinancialCSV(rows)}
-          className={`rounded-full px-4 py-2 text-xs font-black transition ${dark ? "bg-slate-700 text-emerald-400 ring-1 ring-slate-600 hover:bg-slate-600" : "bg-white text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-50"}`}
+          className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors duration-100 ${dark ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"}`}
         >
           Export CSV
         </button>
@@ -113,11 +117,11 @@ export default function FinancialModel({ rows }) {
             <AreaChart data={yearRows} margin={{ left: 10, right: 10 }}>
               <defs>
                 <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={COLORS.blue} stopOpacity={0.25} />
-                  <stop offset="95%" stopColor={COLORS.blue} stopOpacity={0.03} />
+                  <stop offset="5%" stopColor={COLORS.blue} stopOpacity={0.2} />
+                  <stop offset="95%" stopColor={COLORS.blue} stopOpacity={0.02} />
                 </linearGradient>
                 <linearGradient id="contributionGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={COLORS.green} stopOpacity={0.2} />
+                  <stop offset="5%" stopColor={COLORS.green} stopOpacity={0.18} />
                   <stop offset="95%" stopColor={COLORS.green} stopOpacity={0.02} />
                 </linearGradient>
               </defs>
@@ -136,8 +140,8 @@ export default function FinancialModel({ rows }) {
               />
               <CustomTooltip formatter={(value) => currency(value)} />
               <Legend />
-              <Area type="monotone" dataKey="revenue" name="Revenue" stroke={COLORS.blue} strokeWidth={3} fill="url(#revenueGradient)" dot={{ r: 5 }} />
-              <Area type="monotone" dataKey="contribution" name="Contribution" stroke={COLORS.green} strokeWidth={3} strokeDasharray="5 5" fill="url(#contributionGradient)" dot={{ r: 5 }} />
+              <Area type="monotone" dataKey="revenue" name="Revenue" stroke={COLORS.blue} strokeWidth={2} fill="url(#revenueGradient)" dot={{ r: 4 }} />
+              <Area type="monotone" dataKey="contribution" name="Contribution" stroke={COLORS.green} strokeWidth={2} strokeDasharray="5 5" fill="url(#contributionGradient)" dot={{ r: 4 }} />
             </AreaChart>
           </ChartContainer>
         </Card>
@@ -153,8 +157,8 @@ export default function FinancialModel({ rows }) {
               />
               <CustomTooltip formatter={(value) => currency(value)} />
               <Legend />
-              <Bar dataKey="revenue" name="Revenue" fill={COLORS.blue} radius={[8, 8, 0, 0]} />
-              <Bar dataKey="contribution" name="Contribution" fill={COLORS.green} radius={[8, 8, 0, 0]} />
+              <Bar dataKey="revenue" name="Revenue" fill={COLORS.blue} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="contribution" name="Contribution" fill={COLORS.green} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ChartContainer>
         </Card>
@@ -166,8 +170,8 @@ export default function FinancialModel({ rows }) {
             <defs>
               {services.map((svc) => (
                 <linearGradient key={svc} id={`grad-${svc.replace(/\s+/g, "")}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={serviceColors[svc] || COLORS.blue} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={serviceColors[svc] || COLORS.blue} stopOpacity={0.05} />
+                  <stop offset="5%" stopColor={serviceColors[svc] || COLORS.blue} stopOpacity={0.25} />
+                  <stop offset="95%" stopColor={serviceColors[svc] || COLORS.blue} stopOpacity={0.04} />
                 </linearGradient>
               ))}
             </defs>
@@ -197,15 +201,15 @@ export default function FinancialModel({ rows }) {
           const estBacked = rows.filter((r) => !r.basis || !r.basis.toLowerCase().includes("cms")).length;
           return (
             <div className={`mb-3 flex flex-wrap items-center gap-3 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>
-              <span className="font-black">Revenue basis:</span>
+              <span className="font-semibold">Revenue basis:</span>
               <span className="flex items-center gap-1.5"><SourceBadge basis="CMS direct HH market" /> {cmsBacked} county-service line{cmsBacked !== 1 ? "s" : ""} derived from CMS provider file volumes</span>
               {estBacked > 0 && <span className="flex items-center gap-1.5"><SourceBadge basis="Planning proxy" /> {estBacked} derived from internal capture rate proxies</span>}
             </div>
           );
         })()}
-        <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
+        <div className={`overflow-x-auto rounded-lg border ${dark ? "border-slate-700/60" : "border-slate-200"}`}>
           <table className="w-full text-left text-sm">
-            <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
+            <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/40 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
               <tr>
                 <th className="px-5 py-4">Year</th>
                 <th className="px-5 py-4 text-right">Starts</th>
@@ -215,24 +219,23 @@ export default function FinancialModel({ rows }) {
                 <th className="px-5 py-4 text-right">YoY growth</th>
               </tr>
             </thead>
-            <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-slate-100"}`}>
+            <tbody className={`divide-y ${dark ? "divide-slate-700/60" : "divide-slate-100"}`}>
               {yearRows.map((year, i) => {
                 const prevRevenue = i > 0 ? yearRows[i - 1].revenue : 0;
                 const yoyGrowth = prevRevenue > 0 ? ((year.revenue - prevRevenue) / prevRevenue * 100) : 0;
-                const badge = YEAR_BADGES[i];
                 return (
-                  <tr key={year.year} className={dark ? i % 2 === 1 ? "bg-slate-800/60 hover:bg-slate-700/50" : "hover:bg-slate-700/50" : i % 2 === 1 ? "bg-slate-50/50 hover:bg-slate-50" : "hover:bg-slate-50"}>
-                    <td className={`px-5 py-4 font-black ${dark ? "text-white" : ""}`}>
+                  <tr key={year.year} className={dark ? i % 2 === 1 ? "bg-slate-800/40 hover:bg-slate-700/40" : "hover:bg-slate-700/40" : i % 2 === 1 ? "bg-slate-50/60 hover:bg-slate-50" : "hover:bg-slate-50"}>
+                    <td className={`px-5 py-4 font-semibold ${dark ? "text-slate-100" : "text-slate-800"}`}>
                       <div className="flex items-center gap-2">
-                        <span className={`inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-black ${badge.color}`}>{badge.label}</span>
+                        <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium ${badgeClass}`}>Y{i + 1}</span>
                         {year.year}
                       </div>
                     </td>
-                    <td className={`px-5 py-4 text-right ${dark ? "text-slate-300" : ""}`}>{number(year.starts)}</td>
-                    <td className={`px-5 py-4 text-right ${dark ? "text-slate-300" : ""}`}>{number(year.referrals)}</td>
-                    <td className={`px-5 py-4 text-right font-black ${dark ? "text-blue-400" : "text-blue-700"}`}>{currency(year.revenue)}</td>
-                    <td className={`px-5 py-4 text-right font-black ${dark ? "text-emerald-400" : "text-emerald-600"}`}>{currency(year.contribution)}</td>
-                    <td className={`px-5 py-4 text-right font-black ${i === 0 ? (dark ? "text-slate-500" : "text-slate-400") : "text-emerald-600"}`}>
+                    <td className={`px-5 py-4 text-right tabular-nums ${dark ? "text-slate-300" : "text-slate-600"}`}>{number(year.starts)}</td>
+                    <td className={`px-5 py-4 text-right tabular-nums ${dark ? "text-slate-300" : "text-slate-600"}`}>{number(year.referrals)}</td>
+                    <td className={`px-5 py-4 text-right font-semibold tabular-nums ${dark ? "text-blue-400" : "text-blue-700"}`}>{currency(year.revenue)}</td>
+                    <td className={`px-5 py-4 text-right font-semibold tabular-nums ${dark ? "text-emerald-400" : "text-emerald-600"}`}>{currency(year.contribution)}</td>
+                    <td className={`px-5 py-4 text-right font-medium tabular-nums ${i === 0 ? (dark ? "text-slate-500" : "text-slate-400") : (dark ? "text-emerald-400" : "text-emerald-600")}`}>
                       {i === 0 ? "—" : `+${Math.round(yoyGrowth)}%`}
                     </td>
                   </tr>
@@ -240,13 +243,13 @@ export default function FinancialModel({ rows }) {
               })}
             </tbody>
             <tfoot>
-              <tr className={`font-black text-sm border-t-2 ${dark ? "border-slate-600 bg-slate-700/60 text-white" : "border-slate-300 bg-slate-100 text-slate-900"}`}>
+              <tr className={`font-semibold text-sm border-t-2 ${dark ? "border-slate-600 bg-slate-700/40 text-slate-100" : "border-slate-200 bg-slate-50 text-slate-800"}`}>
                 <td className="px-5 py-4">3-Year Total</td>
-                <td className="px-5 py-4 text-right">{number(yearRows.reduce((s, y) => s + y.starts, 0))}</td>
-                <td className="px-5 py-4 text-right">{number(yearRows.reduce((s, y) => s + y.referrals, 0))}</td>
-                <td className={`px-5 py-4 text-right ${dark ? "text-blue-400" : "text-blue-700"}`}>{currency(totalRevenue)}</td>
-                <td className={`px-5 py-4 text-right ${dark ? "text-emerald-400" : "text-emerald-600"}`}>{currency(totalContribution)}</td>
-                <td className="px-5 py-4 text-right text-emerald-600">+{Math.round(revenueGrowth)}%</td>
+                <td className="px-5 py-4 text-right tabular-nums">{number(yearRows.reduce((s, y) => s + y.starts, 0))}</td>
+                <td className="px-5 py-4 text-right tabular-nums">{number(yearRows.reduce((s, y) => s + y.referrals, 0))}</td>
+                <td className={`px-5 py-4 text-right tabular-nums ${dark ? "text-blue-400" : "text-blue-700"}`}>{currency(totalRevenue)}</td>
+                <td className={`px-5 py-4 text-right tabular-nums ${dark ? "text-emerald-400" : "text-emerald-600"}`}>{currency(totalContribution)}</td>
+                <td className={`px-5 py-4 text-right tabular-nums ${dark ? "text-emerald-400" : "text-emerald-600"}`}>+{Math.round(revenueGrowth)}%</td>
               </tr>
             </tfoot>
           </table>
@@ -258,10 +261,10 @@ export default function FinancialModel({ rows }) {
           Each row shows the data provenance for its revenue projection. <SourceBadge basis="CMS direct HH market" /> = derived from CMS provider file beneficiary volumes. <SourceBadge basis="Planning proxy" /> = internal capture rate proxy.
         </p>
         <div className="relative">
-          <div className={`pointer-events-none absolute inset-y-0 right-0 z-10 w-12 rounded-r-2xl bg-gradient-to-l ${dark ? "from-slate-800/90" : "from-white/90"}`} />
-          <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
+          <div className={`pointer-events-none absolute inset-y-0 right-0 z-10 w-12 rounded-r-lg bg-gradient-to-l ${dark ? "from-slate-800/90" : "from-white/90"}`} />
+          <div className={`overflow-x-auto rounded-lg border ${dark ? "border-slate-700/60" : "border-slate-200"}`}>
             <table className="w-full text-left text-sm">
-              <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
+              <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/40 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
                 <tr>
                   <th className="px-5 py-3">County</th>
                   <th className="px-5 py-3">Service</th>
@@ -272,16 +275,16 @@ export default function FinancialModel({ rows }) {
                   <th className="px-5 py-3 text-right">Y1 starts</th>
                 </tr>
               </thead>
-              <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-slate-100"}`}>
+              <tbody className={`divide-y ${dark ? "divide-slate-700/60" : "divide-slate-100"}`}>
                 {rows.map((row, i) => (
-                  <tr key={`${row.county}-${row.service}`} className={dark ? i % 2 === 1 ? "bg-slate-800/60 hover:bg-slate-700/50" : "hover:bg-slate-700/50" : i % 2 === 1 ? "bg-slate-50/50 hover:bg-slate-50" : "hover:bg-slate-50"}>
-                    <td className={`px-5 py-3 font-black ${dark ? "text-white" : ""}`}>{row.county}</td>
+                  <tr key={`${row.county}-${row.service}`} className={dark ? i % 2 === 1 ? "bg-slate-800/40 hover:bg-slate-700/40" : "hover:bg-slate-700/40" : i % 2 === 1 ? "bg-slate-50/60 hover:bg-slate-50" : "hover:bg-slate-50"}>
+                    <td className={`px-5 py-3 font-semibold ${dark ? "text-slate-100" : "text-slate-800"}`}>{row.county}</td>
                     <td className={`px-5 py-3 ${dark ? "text-slate-300" : "text-slate-600"}`}>{row.service}</td>
                     <td className="px-5 py-3"><SourceBadge basis={row.basis} /></td>
-                    <td className={`px-5 py-3 text-right font-black ${dark ? "text-blue-400" : "text-blue-700"}`}>{currency(row.revenue[0])}</td>
-                    <td className={`px-5 py-3 text-right ${dark ? "text-slate-300" : ""}`}>{currency(row.revenue[1])}</td>
-                    <td className={`px-5 py-3 text-right font-black ${dark ? "text-emerald-400" : "text-emerald-600"}`}>{currency(row.revenue[2])}</td>
-                    <td className={`px-5 py-3 text-right ${dark ? "text-slate-300" : ""}`}>{number(row.starts[0])}</td>
+                    <td className={`px-5 py-3 text-right font-semibold tabular-nums ${dark ? "text-blue-400" : "text-blue-700"}`}>{currency(row.revenue[0])}</td>
+                    <td className={`px-5 py-3 text-right tabular-nums ${dark ? "text-slate-300" : "text-slate-600"}`}>{currency(row.revenue[1])}</td>
+                    <td className={`px-5 py-3 text-right font-semibold tabular-nums ${dark ? "text-emerald-400" : "text-emerald-600"}`}>{currency(row.revenue[2])}</td>
+                    <td className={`px-5 py-3 text-right tabular-nums ${dark ? "text-slate-300" : "text-slate-600"}`}>{number(row.starts[0])}</td>
                   </tr>
                 ))}
               </tbody>

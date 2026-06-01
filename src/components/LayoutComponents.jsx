@@ -44,7 +44,7 @@ export function PageHeader({
         {/* Main header */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
-            <h1 className={`text-3xl sm:text-4xl font-black mb-1 ${dark ? "text-white" : "text-slate-900"}`}>
+            <h1 className={`text-3xl sm:text-4xl font-bold mb-1 ${dark ? "text-white" : "text-slate-900"}`}>
               {title}
             </h1>
             {subtitle && (

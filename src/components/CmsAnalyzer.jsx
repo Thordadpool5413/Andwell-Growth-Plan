@@ -54,8 +54,8 @@ export default function CmsAnalyzer() {
   return (
     <div className={`rounded-3xl border p-6 space-y-4 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
       <div>
-        <p className={`text-xs font-black uppercase tracking-widest ${dark ? "text-purple-400" : "text-purple-600"}`}>AI + CMS function calling</p>
-        <p className={`mt-1 text-lg font-black ${dark ? "text-white" : "text-slate-950"}`}>CMS competitor intelligence</p>
+        <p className={`text-xs font-medium uppercase tracking-widest ${dark ? "text-purple-400" : "text-purple-600"}`}>AI + CMS function calling</p>
+        <p className={`mt-1 text-lg font-semibold ${dark ? "text-white" : "text-slate-950"}`}>CMS competitor intelligence</p>
         <p className={`mt-1 text-sm ${dark ? "text-slate-400" : "text-slate-500"}`}>
           Ask about any competitor or provider — the AI calls CMS Provider Data Catalog tools automatically to look up certification, quality scores, and service area data.
         </p>
@@ -85,7 +85,7 @@ export default function CmsAnalyzer() {
         <button
           onClick={() => analyze()}
           disabled={loading || !question.trim()}
-          className="rounded-2xl bg-purple-600 px-5 py-3 text-sm font-black text-white transition hover:bg-purple-700 disabled:opacity-50"
+          className="rounded-xl bg-purple-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-purple-700 disabled:opacity-50"
         >
           {loading ? "…" : "Ask"}
         </button>
@@ -102,7 +102,7 @@ export default function CmsAnalyzer() {
 
       {error && (
         <div className={`rounded-2xl border p-4 text-sm ${dark ? "border-red-800 bg-red-950/50 text-red-300" : "border-red-200 bg-red-50 text-red-700"}`}>
-          <p className="font-black">Error</p>
+          <p className="font-semibold">Error</p>
           <p className="mt-1">{error}</p>
         </div>
       )}
@@ -110,9 +110,9 @@ export default function CmsAnalyzer() {
       {result && (
         <div className={`rounded-2xl border p-5 space-y-3 ${dark ? "border-slate-700 bg-slate-700/30" : "border-slate-200 bg-slate-50"}`}>
           <div className="flex items-center justify-between">
-            <p className={`text-xs font-black uppercase tracking-widest ${dark ? "text-purple-400" : "text-purple-600"}`}>Analysis</p>
+            <p className={`text-xs font-medium uppercase tracking-widest ${dark ? "text-purple-400" : "text-purple-600"}`}>Analysis</p>
             {result.tool_calls_made > 0 && (
-              <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${dark ? "bg-purple-900/50 text-purple-300" : "bg-purple-100 text-purple-700"}`}>
+              <span className={`rounded px-2 py-0.5 text-[10px] font-medium ${dark ? "bg-purple-900/50 text-purple-300" : "bg-purple-100 text-purple-700"}`}>
                 {result.tool_calls_made} CMS tool call{result.tool_calls_made !== 1 ? "s" : ""} made
               </span>
             )}

@@ -8,7 +8,7 @@ export default function AiBadge({ children, onRegenerate, generating, label = "A
     <div className={`rounded-2xl border p-4 ${dark ? "border-violet-800/50 bg-violet-950/30" : "border-violet-200 bg-violet-50"}`}>
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide ${dark ? "bg-violet-700 text-violet-100" : "bg-violet-600 text-white"}`}>
+          <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${dark ? "bg-violet-700 text-violet-100" : "bg-violet-600 text-white"}`}>
             AI
           </span>
           <span className={`text-xs font-semibold ${dark ? "text-violet-300" : "text-violet-700"}`}>{label}</span>

@@ -16,7 +16,7 @@ function SliderRow({ label, value, min, max, step, format, onChange, dark }) {
         onChange={(e) => onChange(Number(e.target.value))}
         className={`h-2 flex-1 cursor-pointer appearance-none rounded-full accent-blue-500 ${dark ? "bg-slate-600" : "bg-slate-200"}`}
       />
-      <span className={`w-16 text-right text-sm font-black ${dark ? "text-white" : "text-slate-950"}`}>{format(value)}</span>
+      <span className={`w-16 text-right text-sm font-bold tabular-nums ${dark ? "text-white" : "text-slate-950"}`}>{format(value)}</span>
     </div>
   );
 }
@@ -49,7 +49,7 @@ export default function ScenarioPanel({ scenario, setScenario }) {
     }`}>
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <p className={`text-xs font-black uppercase tracking-[0.22em] ${dark ? "text-blue-400" : "text-blue-700"}`}>Scenario Controls</p>
+          <p className={`text-xs font-medium uppercase tracking-[0.22em] ${dark ? "text-blue-400" : "text-blue-700"}`}>Scenario Controls</p>
           <p className={`mt-1 text-sm ${dark ? "text-slate-400" : "text-slate-600"}`}>Adjust assumptions to see real-time financial impact across all views</p>
         </div>
         {!isDefault && (
@@ -57,7 +57,7 @@ export default function ScenarioPanel({ scenario, setScenario }) {
             variant="secondary"
             size="sm"
             onClick={() => setScenario(DEFAULT_SCENARIO)}
-            className={`rounded-full px-4 py-2 text-xs font-black shadow-sm ring-1 transition ${
+            className={`rounded-lg px-4 py-2 text-xs font-medium shadow-sm ring-1 transition ${
               dark
                 ? "bg-slate-700 text-slate-200 ring-slate-600 hover:bg-slate-600"
                 : "bg-white text-slate-700 ring-slate-200 hover:bg-slate-50"
@@ -94,7 +94,7 @@ export default function ScenarioPanel({ scenario, setScenario }) {
         />
 
         <div className={`border-t pt-3 ${dark ? "border-blue-800" : "border-blue-200"}`}>
-          <p className={`mb-2 text-xs font-black uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-500"}`}>Home Healthcare capture</p>
+          <p className={`mb-2 text-xs font-medium uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-500"}`}>Home Healthcare capture</p>
           {["Year 1", "Year 2", "Year 3"].map((label, i) => (
             <SliderRow
               key={label}
@@ -111,7 +111,7 @@ export default function ScenarioPanel({ scenario, setScenario }) {
         </div>
 
         <div className={`border-t pt-3 ${dark ? "border-blue-800" : "border-blue-200"}`}>
-          <p className={`mb-2 text-xs font-black uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-500"}`}>Mobile Wound capture</p>
+          <p className={`mb-2 text-xs font-medium uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-500"}`}>Mobile Wound capture</p>
           {["Year 1", "Year 2", "Year 3"].map((label, i) => (
             <SliderRow
               key={label}
@@ -128,7 +128,7 @@ export default function ScenarioPanel({ scenario, setScenario }) {
         </div>
 
         <div className={`border-t pt-3 ${dark ? "border-blue-800" : "border-blue-200"}`}>
-          <p className={`mb-2 text-xs font-black uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-500"}`}>Therapy Care capture</p>
+          <p className={`mb-2 text-xs font-medium uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-500"}`}>Therapy Care capture</p>
           {["Year 1", "Year 2", "Year 3"].map((label, i) => (
             <SliderRow
               key={label}

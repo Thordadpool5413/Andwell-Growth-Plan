@@ -617,7 +617,7 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty, provide
       onClick={onClick}
       aria-label={ariaLabel}
       aria-pressed={active}
-      className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-black transition ${
+      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition ${
         active
           ? `${color} text-white`
           : dark
@@ -636,7 +636,7 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty, provide
           <button
             key={mode.key}
             onClick={() => setHeatmapMode(mode.key)}
-            className={`rounded-full px-3 py-1 text-xs font-black transition ${
+            className={`rounded-lg px-3 py-1 text-xs font-medium transition ${
               heatmapMode === mode.key
                 ? "bg-blue-600 text-white"
                 : dark
@@ -650,14 +650,14 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty, provide
       </div>
 
       <div className={`flex flex-wrap items-center gap-1.5 rounded-xl border px-3 py-2 ${dark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
-        <span className={`mr-1 text-[10px] font-black uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>Layers:</span>
+        <span className={`mr-1 text-[10px] font-medium uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>Layers:</span>
         {toggleBtn("🏥 Hospitals", showHospitals, () => setShowHospitals((p) => !p), "bg-red-600", "Toggle Hospitals layer")}
         {toggleBtn("⏱ Drive-time rings", showRings, () => setShowRings((p) => !p), "bg-emerald-600", "Toggle Drive-time rings layer")}
         {toggleBtn("🟣 Competitors", showCompetitors, () => setShowCompetitors((p) => !p), "bg-purple-600", "Toggle Competitors layer")}
         {showCompetitors && (
           <>
-            <span className={`ml-2 text-[10px] font-black uppercase tracking-widest ${dark ? "text-slate-600" : "text-slate-400"}`}>|</span>
-            <span className={`ml-1 text-[10px] font-black uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>Type:</span>
+            <span className={`ml-2 text-[10px] font-medium uppercase tracking-widest ${dark ? "text-slate-600" : "text-slate-400"}`}>|</span>
+            <span className={`ml-1 text-[10px] font-medium uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>Type:</span>
             {[
               { value: "all", label: "All" },
               { value: "homehealth", label: "Home Health" },
@@ -667,7 +667,7 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty, provide
               <button
                 key={opt.value}
                 onClick={() => setProviderType(opt.value)}
-                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-black transition ${
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition ${
                   providerType === opt.value
                     ? "bg-purple-600 text-white"
                     : dark
@@ -727,7 +727,7 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty, provide
       {showCompetitors && (
         <div className="space-y-2">
           <div className={`flex flex-wrap items-center gap-2 rounded-xl border px-3 py-2 ${dark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
-            <span className={`text-[10px] font-black uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>Filter:</span>
+            <span className={`text-[10px] font-medium uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>Filter:</span>
             <select
               value={compFilter.cmsStatus}
               onChange={(e) => setCompFilter((f) => ({ ...f, cmsStatus: e.target.value }))}

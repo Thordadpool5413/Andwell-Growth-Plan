@@ -41,10 +41,10 @@ function QualityTrendIcon({ ccn, trendMap, dark }) {
     return <span className={`text-[10px] ${dark ? "text-slate-600" : "text-slate-400"}`} title="No trend data yet">→</span>;
   }
   if (trend.direction === "up") {
-    return <span className={`text-[10px] font-black ${dark ? "text-emerald-400" : "text-emerald-600"}`} title="Improving">↑</span>;
+    return <span className={`text-[10px] font-semibold ${dark ? "text-emerald-400" : "text-emerald-600"}`} title="Improving">↑</span>;
   }
   if (trend.direction === "down") {
-    return <span className={`text-[10px] font-black ${dark ? "text-red-400" : "text-red-600"}`} title="Declining">↓</span>;
+    return <span className={`text-[10px] font-semibold ${dark ? "text-red-400" : "text-red-600"}`} title="Declining">↓</span>;
   }
   return null;
 }
@@ -153,15 +153,15 @@ function pickBestMeasure(measures) {
 function QualityBadge({ score, starRating, dark }) {
   const star = starRating != null ? parseFloat(starRating) : null;
   if (star != null) {
-    if (star >= 4) return <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${dark ? "bg-emerald-900/50 text-emerald-300" : "bg-emerald-50 text-emerald-700"}`}>High quality</span>;
-    if (star >= 3) return <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${dark ? "bg-amber-900/50 text-amber-300" : "bg-amber-50 text-amber-700"}`}>Avg</span>;
-    return <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${dark ? "bg-red-900/50 text-red-300" : "bg-red-50 text-red-700"}`}>Below avg</span>;
+    if (star >= 4) return <span className={`rounded px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide ${dark ? "bg-emerald-900/50 text-emerald-300" : "bg-emerald-50 text-emerald-700"}`}>High quality</span>;
+    if (star >= 3) return <span className={`rounded px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide ${dark ? "bg-amber-900/50 text-amber-300" : "bg-amber-50 text-amber-700"}`}>Avg</span>;
+    return <span className={`rounded px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide ${dark ? "bg-red-900/50 text-red-300" : "bg-red-50 text-red-700"}`}>Below avg</span>;
   }
   if (score == null) return null;
   const pct = Math.round(Math.min(Math.max(score, 0), 1) * 100);
-  if (pct >= 80) return <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${dark ? "bg-emerald-900/50 text-emerald-300" : "bg-emerald-50 text-emerald-700"}`}>High quality</span>;
-  if (pct >= 60) return <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${dark ? "bg-amber-900/50 text-amber-300" : "bg-amber-50 text-amber-700"}`}>Avg</span>;
-  return <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide ${dark ? "bg-red-900/50 text-red-300" : "bg-red-50 text-red-700"}`}>Below avg</span>;
+  if (pct >= 80) return <span className={`rounded px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide ${dark ? "bg-emerald-900/50 text-emerald-300" : "bg-emerald-50 text-emerald-700"}`}>High quality</span>;
+  if (pct >= 60) return <span className={`rounded px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide ${dark ? "bg-amber-900/50 text-amber-300" : "bg-amber-50 text-amber-700"}`}>Avg</span>;
+  return <span className={`rounded px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide ${dark ? "bg-red-900/50 text-red-300" : "bg-red-50 text-red-700"}`}>Below avg</span>;
 }
 
 function QualityScoreBar({ score, starRating, measureName, measureValue, nationalBenchmark, dark, isAndwell, compact = false }) {
@@ -209,7 +209,7 @@ function QualityScoreBar({ score, starRating, measureName, measureValue, nationa
             style={{ width: `${pct ?? 0}%` }}
           />
         </div>
-        <span className={`text-[10px] font-black tabular-nums ${labelColor}`}>
+        <span className={`text-[10px] font-medium tabular-nums ${labelColor}`}>
           {pct != null ? `${pct}%` : "—"}
         </span>
       </div>
@@ -219,10 +219,10 @@ function QualityScoreBar({ score, starRating, measureName, measureValue, nationa
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between gap-1">
-        <span className={`text-[10px] font-black uppercase tracking-wide truncate ${dark ? "text-slate-400" : "text-slate-500"}`}>
+        <span className={`text-[10px] font-medium uppercase tracking-wide truncate ${dark ? "text-slate-400" : "text-slate-500"}`}>
           {displayLabel}
         </span>
-        <span className={`text-[10px] font-black tabular-nums shrink-0 ${labelColor}`}>
+        <span className={`text-[10px] font-medium tabular-nums shrink-0 ${labelColor}`}>
           {pct != null ? `${pct}%` : "—"}
         </span>
       </div>
@@ -238,10 +238,10 @@ function QualityScoreBar({ score, starRating, measureName, measureValue, nationa
             Natl. avg: {national}%
           </span>
           {pct > national && (
-            <span className={`text-[9px] font-black ${dark ? "text-emerald-500" : "text-emerald-600"}`}>↑ above avg</span>
+            <span className={`text-[9px] font-semibold ${dark ? "text-emerald-500" : "text-emerald-600"}`}>↑ above avg</span>
           )}
           {pct < national && (
-            <span className={`text-[9px] font-black ${dark ? "text-amber-500" : "text-amber-600"}`}>↓ below avg</span>
+            <span className={`text-[9px] font-semibold ${dark ? "text-amber-500" : "text-amber-600"}`}>↓ below avg</span>
           )}
         </div>
       )}
@@ -293,7 +293,7 @@ function SortableMatrix({ competitors, dark, providerType }) {
     else { setSortKey(key); setSortAsc(true); }
   };
 
-  const thCls = `px-4 py-3 text-left text-[11px] font-black uppercase tracking-wide cursor-pointer select-none whitespace-nowrap ${dark ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-800"}`;
+  const thCls = `px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wide cursor-pointer select-none whitespace-nowrap ${dark ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-800"}`;
   const arrow = (key) => sortKey === key ? (sortAsc ? " ↑" : " ↓") : "";
 
   const cmsStatus = (c) => {
@@ -303,7 +303,7 @@ function SortableMatrix({ competitors, dark, providerType }) {
   };
 
   return (
-    <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-200"}`}>
+    <div className={`overflow-x-auto rounded-lg border ${dark ? "border-slate-700/60" : "border-slate-200"}`}>
       <table className="w-full text-sm min-w-[900px]">
         <thead className={dark ? "bg-slate-800" : "bg-slate-50"}>
           <tr>
@@ -312,7 +312,7 @@ function SortableMatrix({ competitors, dark, providerType }) {
                 {sk.label}{arrow(sk.key)}
               </th>
             ))}
-            <th className={`px-4 py-3 text-left text-[11px] font-black uppercase tracking-wide ${dark ? "text-slate-400" : "text-slate-500"}`}>Evidence</th>
+            <th className={`px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wide ${dark ? "text-slate-400" : "text-slate-500"}`}>Evidence</th>
           </tr>
         </thead>
         <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-slate-100"}`}>
@@ -323,7 +323,7 @@ function SortableMatrix({ competitors, dark, providerType }) {
             return (
               <React.Fragment key={comp.id || comp.name}>
                 <tr className={dark ? "hover:bg-slate-800/50" : "hover:bg-slate-50"}>
-                  <td className={`px-4 py-3 font-black ${dark ? "text-white" : "text-slate-950"}`}>
+                  <td className={`px-4 py-3 font-semibold ${dark ? "text-slate-100" : "text-slate-800"}`}>
                     {comp.name}
                     {comp.parent_company && (
                       <p className={`text-[10px] font-normal ${dark ? "text-slate-400" : "text-slate-500"}`}>{comp.parent_company}</p>
@@ -337,22 +337,22 @@ function SortableMatrix({ competitors, dark, providerType }) {
                   </td>
                   <td className="px-4 py-3">
                     {national
-                      ? <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${dark ? "bg-red-900/40 text-red-300" : "bg-red-50 text-red-700"}`}>National</span>
-                      : <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${dark ? "bg-emerald-900/30 text-emerald-400" : "bg-emerald-50 text-emerald-700"}`}>Regional</span>
+                      ? <span className={`rounded px-2 py-0.5 text-[10px] font-medium ${dark ? "bg-red-900/40 text-red-300" : "bg-red-50 text-red-700"}`}>National</span>
+                      : <span className={`rounded px-2 py-0.5 text-[10px] font-medium ${dark ? "bg-emerald-900/30 text-emerald-400" : "bg-emerald-50 text-emerald-700"}`}>Regional</span>
                     }
                   </td>
                   <td className="px-4 py-3">
                     {hasHospiceCert(comp)
-                      ? <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${dark ? "bg-emerald-900/30 text-emerald-400" : "bg-emerald-50 text-emerald-700"}`}>Yes</span>
+                      ? <span className={`rounded px-2 py-0.5 text-[10px] font-medium ${dark ? "bg-emerald-900/30 text-emerald-400" : "bg-emerald-50 text-emerald-700"}`}>Yes</span>
                       : <span className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>—</span>}
                   </td>
                   <td className="px-4 py-3">
                     {hasHHCert(comp)
-                      ? <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${dark ? "bg-emerald-900/30 text-emerald-400" : "bg-emerald-50 text-emerald-700"}`}>Yes</span>
+                      ? <span className={`rounded px-2 py-0.5 text-[10px] font-medium ${dark ? "bg-emerald-900/30 text-emerald-400" : "bg-emerald-50 text-emerald-700"}`}>Yes</span>
                       : <span className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>—</span>}
                   </td>
                   <td className={`px-4 py-3 text-[11px] ${dark ? "text-slate-300" : "text-slate-600"}`}>
-                    {getHealthSystem(comp) ? <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${dark ? "bg-amber-900/30 text-amber-300" : "bg-amber-50 text-amber-700"}`}>{getHealthSystem(comp)}</span> : <span className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>None</span>}
+                    {getHealthSystem(comp) ? <span className={`rounded px-2 py-0.5 text-[10px] font-medium ${dark ? "bg-amber-900/30 text-amber-300" : "bg-amber-50 text-amber-700"}`}>{getHealthSystem(comp)}</span> : <span className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>None</span>}
                   </td>
                   <td className={`px-4 py-3 text-[11px] ${dark ? "text-slate-400" : "text-slate-500"}`}>
                     {comp.estimated_beneficiaries ? comp.estimated_beneficiaries.toLocaleString() : "—"}
@@ -361,7 +361,7 @@ function SortableMatrix({ competitors, dark, providerType }) {
                     <div className="flex flex-col gap-1 min-w-[120px]">
                       <div className="flex items-center gap-1.5">
                         {comp.quality_star_rating ? (
-                          <span className={`text-[11px] font-black ${dark ? "text-amber-300" : "text-amber-600"}`}>{parseFloat(comp.quality_star_rating).toFixed(1)} ★</span>
+                          <span className={`text-[11px] font-semibold ${dark ? "text-amber-300" : "text-amber-600"}`}>{parseFloat(comp.quality_star_rating).toFixed(1)} ★</span>
                         ) : null}
                         {comp.cms_certification_number && (
                           <QualityTrendIcon ccn={comp.cms_certification_number} trendMap={trendMap} dark={dark} />
@@ -389,7 +389,7 @@ function SortableMatrix({ competitors, dark, providerType }) {
                         <div>
                           <button
                             onClick={() => setCountiesOpenId(open ? null : cid)}
-                            className={`rounded-full px-2 py-0.5 text-[10px] font-black transition ${dark ? "bg-indigo-900/40 text-indigo-300 hover:bg-indigo-800/50" : "bg-indigo-50 text-indigo-700 hover:bg-indigo-100"}`}
+                            className={`rounded px-2 py-0.5 text-[10px] font-medium transition ${dark ? "bg-indigo-900/40 text-indigo-300 hover:bg-indigo-800/50" : "bg-indigo-50 text-indigo-700 hover:bg-indigo-100"}`}
                             title="Click to view county list"
                           >
                             {counties.length} {counties.length === 1 ? "county" : "counties"} {open ? "▲" : "▼"}
@@ -409,7 +409,7 @@ function SortableMatrix({ competitors, dark, providerType }) {
                   <td className="px-4 py-3">
                     <button
                       onClick={() => setExpandedId(expanded ? null : (comp.id || comp.name))}
-                      className={`rounded-lg px-2.5 py-1 text-[10px] font-black transition ${dark ? "bg-slate-700 text-slate-300 hover:bg-slate-600" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                      className={`rounded-lg px-2.5 py-1 text-[10px] font-medium transition ${dark ? "bg-slate-700 text-slate-300 hover:bg-slate-600" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
                     >
                       {expanded ? "Hide" : "View"}
                     </button>
@@ -500,7 +500,7 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, a
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <label className={`text-[11px] font-black uppercase tracking-wide shrink-0 ${dark ? "text-slate-400" : "text-slate-500"}`}>
+        <label className={`text-[11px] font-medium uppercase tracking-wide shrink-0 ${dark ? "text-slate-400" : "text-slate-500"}`}>
           Sort by
         </label>
         <select
@@ -518,8 +518,8 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, a
         <div className="w-48 shrink-0">
           <div className={`rounded-2xl border-2 p-4 ${dark ? "border-blue-700 bg-blue-950/30" : "border-blue-400 bg-blue-50"}`}>
             <div className="mb-3">
-              <p className={`text-[10px] font-black uppercase tracking-wide ${dark ? "text-blue-400" : "text-blue-600"}`}>Andwell</p>
-              <p className={`text-sm font-black mt-0.5 leading-5 ${dark ? "text-white" : "text-slate-950"}`}>Andwell Health Partners</p>
+              <p className={`text-[10px] font-medium uppercase tracking-wide ${dark ? "text-blue-400" : "text-blue-600"}`}>Andwell</p>
+              <p className={`text-sm font-semibold mt-0.5 leading-5 ${dark ? "text-slate-100" : "text-slate-800"}`}>Andwell Health Partners</p>
               <p className={`text-[10px] mt-0.5 ${dark ? "text-blue-400" : "text-blue-600"}`}>Maine-born, Maine-focused</p>
             </div>
             <div className="space-y-2">
@@ -555,14 +555,14 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, a
               <div className="mb-3">
                 <div className="flex flex-wrap gap-1 mb-1">
                   {national && (
-                    <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase ${dark ? "bg-red-900/40 text-red-400" : "bg-red-50 text-red-600"}`}>National</span>
+                    <span className={`rounded px-1.5 py-0.5 text-[9px] font-medium uppercase ${dark ? "bg-red-900/40 text-red-400" : "bg-red-50 text-red-600"}`}>National</span>
                   )}
                   {comp.cms_only && (
-                    <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase ${dark ? "bg-violet-900/40 text-violet-400" : "bg-violet-50 text-violet-600"}`}>CMS discovered</span>
+                    <span className={`rounded px-1.5 py-0.5 text-[9px] font-medium uppercase ${dark ? "bg-violet-900/40 text-violet-400" : "bg-violet-50 text-violet-600"}`}>CMS discovered</span>
                   )}
                   <QualityBadge score={comp.quality_snapshot_score} starRating={comp.quality_star_rating} dark={dark} />
                 </div>
-                <p className={`text-sm font-black leading-5 ${dark ? "text-white" : "text-slate-950"}`}>{comp.name}</p>
+                <p className={`text-sm font-semibold leading-5 ${dark ? "text-slate-100" : "text-slate-800"}`}>{comp.name}</p>
                 {comp.parent_company && <p className={`text-[10px] mt-0.5 ${dark ? "text-slate-400" : "text-slate-500"}`}>{comp.parent_company}</p>}
                 <div className="mt-1.5">
                   <VerificationBadge status={status} size="xs" />
@@ -581,7 +581,7 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, a
                           {countyList.length > 0 ? (
                             <button
                               onClick={() => setCountiesOpenId(open ? null : cid)}
-                              className={`rounded-full px-2 py-0.5 text-[10px] font-black transition ${dark ? "bg-indigo-900/40 text-indigo-300 hover:bg-indigo-800/50" : "bg-indigo-50 text-indigo-700 hover:bg-indigo-100"}`}
+                              className={`rounded px-2 py-0.5 text-[10px] font-medium transition ${dark ? "bg-indigo-900/40 text-indigo-300 hover:bg-indigo-800/50" : "bg-indigo-50 text-indigo-700 hover:bg-indigo-100"}`}
                               title="Click to view county list"
                             >
                               {countyList.length} {countyList.length === 1 ? "county" : "counties"} {open ? "▲" : "▼"}
@@ -609,7 +609,7 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, a
               <div className={`mt-3 pt-3 border-t ${dark ? "border-slate-700" : "border-slate-100"}`}>
                 {comp.quality_star_rating != null && (
                   <div className="mb-1.5 flex items-center gap-1.5">
-                    <span className={`text-xs font-black ${dark ? "text-amber-300" : "text-amber-600"}`}>{parseFloat(comp.quality_star_rating).toFixed(1)} ★</span>
+                    <span className={`text-xs font-semibold tabular-nums ${dark ? "text-amber-300" : "text-amber-600"}`}>{parseFloat(comp.quality_star_rating).toFixed(1)} ★</span>
                     {comp.cms_certification_number && (
                       <QualityTrendIcon ccn={comp.cms_certification_number} trendMap={trendMap} dark={dark} />
                     )}
@@ -630,7 +630,7 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, a
               {expanded && <CmsEvidenceCard competitor={comp} />}
               <button
                 onClick={() => setExpandedId(expanded ? null : (comp.id || comp.name))}
-                className={`mt-3 w-full rounded-xl py-1.5 text-[10px] font-black uppercase tracking-wide transition ${dark ? "bg-slate-700 text-slate-300 hover:bg-slate-600" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                className={`mt-3 w-full rounded-lg py-1.5 text-[10px] font-medium uppercase tracking-wide transition ${dark ? "bg-slate-700 text-slate-300 hover:bg-slate-600" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
               >
                 {expanded ? "Hide" : "CMS evidence"}
               </button>
@@ -723,7 +723,7 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
           <button
             key={f.id}
             onClick={() => { setFilter(f.id); setPage(0); }}
-            className={`rounded-full px-3 py-1.5 text-xs font-black transition ${filter === f.id ? "bg-blue-600 text-white" : dark ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"}`}
+            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${filter === f.id ? "bg-blue-600 text-white" : dark ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"}`}
           >
             {f.label}
           </button>
@@ -733,7 +733,7 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
             <button
               key={m.id}
               onClick={() => setViewMode(m.id)}
-              className={`rounded-full px-3 py-1.5 text-xs font-black transition ${viewMode === m.id ? dark ? "bg-slate-100 text-slate-950" : "bg-slate-950 text-white" : dark ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"}`}
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${viewMode === m.id ? dark ? "bg-slate-100 text-slate-950" : "bg-slate-950 text-white" : dark ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"}`}
             >
               {m.label}
             </button>
@@ -749,7 +749,7 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
 
       {error && (
         <div className={`rounded-2xl border p-6 ${dark ? "border-amber-800 bg-amber-950/50 text-amber-300" : "border-amber-200 bg-amber-50 text-amber-900"}`}>
-          <p className="font-black">CMS data not yet synced</p>
+          <p className="font-semibold">CMS data not yet synced</p>
           <p className="mt-1 text-sm">Run a CMS sync from the CMS Data tab → CMS Data Connection → Sync & Crawl to populate competitor intelligence.</p>
         </div>
       )}
@@ -760,12 +760,12 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2">
               <button disabled={page === 0} onClick={() => setPage((p) => p - 1)}
-                className={`rounded-full px-4 py-2 text-xs font-black transition disabled:opacity-40 ${dark ? "bg-slate-800 text-slate-300 hover:bg-slate-700" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"}`}>
+                className={`rounded-lg px-4 py-2 text-xs font-medium transition disabled:opacity-40 ${dark ? "bg-slate-800 text-slate-300 hover:bg-slate-700" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"}`}>
                 ← Prev
               </button>
               <span className={`text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{page + 1} / {totalPages}</span>
               <button disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)}
-                className={`rounded-full px-4 py-2 text-xs font-black transition disabled:opacity-40 ${dark ? "bg-slate-800 text-slate-300 hover:bg-slate-700" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"}`}>
+                className={`rounded-lg px-4 py-2 text-xs font-medium transition disabled:opacity-40 ${dark ? "bg-slate-800 text-slate-300 hover:bg-slate-700" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"}`}>
                 Next →
               </button>
             </div>
@@ -779,7 +779,7 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
 
       {!loading && !error && (
         <div className={`rounded-2xl border p-4 text-xs ${dark ? "border-slate-700 bg-slate-800/50 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-500"}`}>
-          <p className="font-black mb-1">Data sources and limitations</p>
+          <p className="font-semibold mb-1">Data sources and limitations</p>
           <p>CMS verification uses the CMS Provider Data Catalog (public, no key required). Website intelligence is extracted via server-side page crawling. Match confidence is based on name normalization and location scoring. "Needs Review" means no matching CMS record was found yet — it does not confirm the provider is not Medicare-certified. Run CMS Sync + Crawl to populate all columns.</p>
         </div>
       )}

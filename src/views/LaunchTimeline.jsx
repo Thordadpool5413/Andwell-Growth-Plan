@@ -77,7 +77,7 @@ export default function LaunchTimeline({ rows }) {
 
   return (
     <div className="space-y-6">
-      <SectionHeader eyebrow="Launch timeline" icon="🗓️" title="Priority-phased rollout with milestones">
+      <SectionHeader eyebrow="Launch timeline" title="Priority-phased rollout with milestones">
         Visual timeline showing the Priority 1→2→3 rollout sequence. Each county bar shows its active launch window. Milestones mark key execution gates.
       </SectionHeader>
 
@@ -90,7 +90,7 @@ export default function LaunchTimeline({ rows }) {
 
       <Card title="Gantt timeline" eyebrow="24-month rollout view">
         <div className={`mb-4 flex flex-wrap items-center gap-3 rounded-xl border px-3 py-2 text-xs ${dark ? "border-slate-700 bg-slate-800/60 text-slate-400" : "border-slate-100 bg-slate-50 text-slate-500"}`}>
-          <span className="font-black">Timeline start:</span>
+          <span className="font-semibold">Timeline start:</span>
           <select
             value={startMonthIdx}
             onChange={(e) => setStartMonthIdx(Number(e.target.value))}
@@ -151,7 +151,7 @@ export default function LaunchTimeline({ rows }) {
                 <div key={phase}>
                   <div className="flex items-center gap-2 mb-2">
                     <span className={`inline-block h-2.5 w-2.5 rounded-full ${phaseStatus.dot}`} />
-                    <p className={`text-xs font-black uppercase tracking-wide ${dark ? "text-slate-300" : "text-slate-700"}`}>
+                    <p className={`text-xs font-semibold uppercase tracking-wide ${dark ? "text-slate-300" : "text-slate-700"}`}>
                       {phase}
                     </p>
                     <span className={`text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>({phaseCounties.length} counties)</span>
@@ -167,7 +167,7 @@ export default function LaunchTimeline({ rows }) {
                           </div>
                           <div className={`flex-1 relative h-8 rounded-lg ${dark ? "bg-slate-800/80" : "bg-slate-100"}`}>
                             <div
-                              className="absolute inset-y-1 rounded-md flex items-center px-2 text-[10px] font-black text-white shadow-sm"
+                              className="absolute inset-y-1 rounded-md flex items-center px-2 text-[10px] font-medium text-white shadow-sm"
                               style={{ left: `${leftPct}%`, width: `${widthPct}%`, backgroundColor: county.color }}
                             >
                               <span className="truncate">{county.service}</span>
@@ -215,12 +215,12 @@ export default function LaunchTimeline({ rows }) {
             const phaseStarts = phaseCounties.reduce((s, c) => s + c.starts[0], 0);
             const statusStyle = PHASE_STATUS_STYLES[config.status] || PHASE_STATUS_STYLES.planning;
             return (
-              <div key={label} className={`rounded-2xl border p-5 ${dark ? "border-slate-700 bg-slate-700/30" : "border-slate-100 bg-slate-50"}`}>
+              <div key={label} className={`rounded-xl border p-5 ${dark ? "border-slate-700/60 bg-slate-700/20" : "border-slate-200 bg-slate-50"}`}>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="h-3 w-3 rounded-full" style={{ backgroundColor: config.color }} />
-                  <p className={`font-black ${dark ? "text-white" : "text-slate-950"}`}>{label}</p>
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: config.color }} />
+                  <p className={`font-semibold text-sm ${dark ? "text-slate-100" : "text-slate-800"}`}>{label}</p>
                 </div>
-                <div className={`mb-3 flex items-center gap-1.5 text-xs`}>
+                <div className="mb-3 flex items-center gap-1.5 text-xs">
                   <span className={`h-1.5 w-1.5 rounded-full ${statusStyle.dot}`} />
                   <span className={dark ? "text-slate-400" : "text-slate-500"}>{statusStyle.label}</span>
                   <span className={`ml-1 ${dark ? "text-slate-500" : "text-slate-400"}`}>M{config.startMonth}–M{config.endMonth}</span>
@@ -228,15 +228,15 @@ export default function LaunchTimeline({ rows }) {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className={dark ? "text-slate-400" : "text-slate-500"}>Counties</span>
-                    <span className="font-black">{phaseCounties.length}</span>
+                    <span className="font-medium tabular-nums">{phaseCounties.length}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className={dark ? "text-slate-400" : "text-slate-500"}>Y1 starts</span>
-                    <span className="font-black">{number(phaseStarts)}</span>
+                    <span className="font-medium tabular-nums">{number(phaseStarts)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className={dark ? "text-slate-400" : "text-slate-500"}>Y1 revenue</span>
-                    <span className={`font-black ${dark ? "text-blue-400" : "text-blue-700"}`}>{currency(phaseRevenue)}</span>
+                    <span className={`font-semibold tabular-nums ${dark ? "text-blue-400" : "text-blue-700"}`}>{currency(phaseRevenue)}</span>
                   </div>
                 </div>
               </div>
