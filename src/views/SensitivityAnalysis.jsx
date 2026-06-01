@@ -24,7 +24,7 @@ function TornadoBar({ variable, maxRange, dark }) {
     <div className={`rounded-lg border p-4 ${dark ? "border-slate-700/60 bg-slate-700/20" : "border-slate-100 bg-slate-50"}`}>
       <div className="flex items-center justify-between mb-2">
         <p className={`font-semibold text-sm ${dark ? "text-slate-100" : "text-slate-800"}`}>{variable.label}</p>
-        <p className={`text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>
+        <p className={`text-xs tabular-nums ${dark ? "text-slate-400" : "text-slate-500"}`}>
           Range: {currency(variable.range)}
         </p>
       </div>
@@ -52,10 +52,10 @@ function TornadoBar({ variable, maxRange, dark }) {
           <rect x={center - highWidth} y="8" width={highWidth} height="14" rx="4" fill="#ef4444" opacity="0.85" />
         )}
         <line x1={center} y1="4" x2={center} y2="26" stroke={dark ? "#94a3b8" : "#475569"} strokeWidth="1.5" />
-        <text x={Math.max(lowX - 4, 2)} y="46" textAnchor="end" fontSize="10" fill={dark ? "#94a3b8" : "#64748b"}>
+        <text x={Math.max(lowX - 4, 2)} y="46" textAnchor="end" fontSize="10" fill={dark ? "#94a3b8" : "#64748b"} style={{ fontVariantNumeric: "tabular-nums" }}>
           {formatVal(variable.low)} → {currency(variable.lowDelta)}
         </text>
-        <text x={Math.min(center + highWidth + 4, barWidth - 2)} y="46" textAnchor="start" fontSize="10" fill={dark ? "#94a3b8" : "#64748b"}>
+        <text x={Math.min(center + highWidth + 4, barWidth - 2)} y="46" textAnchor="start" fontSize="10" fill={dark ? "#94a3b8" : "#64748b"} style={{ fontVariantNumeric: "tabular-nums" }}>
           {formatVal(variable.high)} → +{currency(variable.highDelta)}
         </text>
       </svg>
@@ -148,9 +148,9 @@ export default function SensitivityAnalysis({ rows }) {
             <p className={`mt-0.5 text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>{s.sublabel}</p>
             <p className={`mt-3 text-2xl font-bold tabular-nums ${s.textColor}`}>{s.value}</p>
             <div className="mt-2 flex items-center justify-between">
-              <p className={`text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>{s.delta}</p>
+              <p className={`text-xs tabular-nums ${dark ? "text-slate-500" : "text-slate-400"}`}>{s.delta}</p>
               {s.pctVsBase !== "0" && (
-                <p className={`text-xs font-medium ${s.textColor}`}>
+                <p className={`text-xs font-medium tabular-nums ${s.textColor}`}>
                   {parseFloat(s.pctVsBase) > 0 ? "+" : ""}{s.pctVsBase}% vs base
                 </p>
               )}

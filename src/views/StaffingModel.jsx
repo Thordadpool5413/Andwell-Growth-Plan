@@ -92,7 +92,7 @@ export default function StaffingModel({ rows }) {
               </div>
               <div className="flex justify-between mt-1">
                 <span className={dark ? "text-slate-400" : "text-slate-500"}>Pts/<Abbr term="FTE">FTE</Abbr></span>
-                <span className="font-semibold">{data.patientsPerFTE}</span>
+                <span className="font-semibold tabular-nums">{data.patientsPerFTE}</span>
               </div>
             </div>
           </div>
@@ -162,7 +162,7 @@ export default function StaffingModel({ rows }) {
               <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
               <XAxis dataKey="service" tick={{ fontSize: 11, fill: dark ? "#94a3b8" : "#475569" }} />
               <YAxis
-                tick={{ fill: dark ? "#94a3b8" : "#475569" }}
+                tick={{ fill: dark ? "#94a3b8" : "#475569", fontVariantNumeric: "tabular-nums" }}
                 label={{ value: "FTEs", angle: -90, position: "insideLeft", offset: -8, fontSize: 10, fill: dark ? "#64748b" : "#94a3b8" }}
               />
               <CustomTooltip />
@@ -177,7 +177,7 @@ export default function StaffingModel({ rows }) {
           <ChartContainer height="h-80" caption="Source: scenario model — Y1/Y2/Y3 FTE targets by county">
             <BarChart data={countyChartData} layout="vertical" margin={{ left: 10 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
-              <XAxis type="number" tick={{ fill: dark ? "#94a3b8" : "#475569" }} />
+              <XAxis type="number" tick={{ fill: dark ? "#94a3b8" : "#475569", fontVariantNumeric: "tabular-nums" }} />
               <YAxis type="category" dataKey="county" width={100} tick={{ fontSize: 11, fill: dark ? "#94a3b8" : "#475569" }} />
               <CustomTooltip />
               <Legend />

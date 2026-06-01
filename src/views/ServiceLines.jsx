@@ -14,7 +14,7 @@ function MarginBar({ margin, dark }) {
     <div>
       <div className="flex items-center justify-between mb-1">
         <span className={`text-[10px] font-medium uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-400"}`}>Margin</span>
-        <span className={`text-xs font-medium ${pct > 0 ? (dark ? "text-emerald-400" : "text-emerald-700") : (dark ? "text-slate-500" : "text-slate-400")}`}>
+        <span className={`text-xs font-medium tabular-nums ${pct > 0 ? (dark ? "text-emerald-400" : "text-emerald-700") : (dark ? "text-slate-500" : "text-slate-400")}`}>
           {pct > 0 ? `${pct}%` : "Validate"}
         </span>
       </div>
@@ -66,7 +66,7 @@ export default function ServiceLines() {
         <div className={`rounded-xl border-l-4 border-l-emerald-500 border p-4 ${dark ? "border-slate-700/60 bg-slate-800/60" : "border-slate-200 bg-white"}`}>
           <p className={`text-[11px] font-medium uppercase tracking-[0.1em] ${dark ? "text-slate-400" : "text-slate-500"}`}>Active service lines</p>
           <p className={`mt-1.5 text-3xl font-bold tabular-nums ${dark ? "text-slate-100" : "text-slate-900"}`}>{activeLines.length}</p>
-          <p className={`mt-1 text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>of {Object.keys(services).length} total — {Object.keys(services).length - activeLines.length} pending validation</p>
+          <p className={`mt-1 text-xs tabular-nums ${dark ? "text-slate-500" : "text-slate-400"}`}>of {Object.keys(services).length} total — {Object.keys(services).length - activeLines.length} pending validation</p>
         </div>
         <div className={`rounded-xl border-l-4 border-l-blue-500 border p-4 ${dark ? "border-slate-700/60 bg-slate-800/60" : "border-slate-200 bg-white"}`}>
           <p className={`text-[11px] font-medium uppercase tracking-[0.1em] ${dark ? "text-slate-400" : "text-slate-500"}`}>Avg reimbursement</p>
@@ -114,7 +114,7 @@ export default function ServiceLines() {
                 </div>
                 <div>
                   <p className={`font-medium uppercase tracking-wide text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>Conversion</p>
-                  <p className={`mt-0.5 font-medium ${dark ? "text-slate-300" : "text-slate-600"}`}>{percent(meta.conversion)} baseline</p>
+                  <p className={`mt-0.5 font-medium tabular-nums ${dark ? "text-slate-300" : "text-slate-600"}`}>{percent(meta.conversion)} baseline</p>
                 </div>
               </div>
 

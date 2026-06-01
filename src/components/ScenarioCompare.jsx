@@ -100,8 +100,8 @@ export default function ScenarioCompare({ currentScenario }) {
             {metrics.map((m) => (
               <tr key={m.key} className={dark ? "hover:bg-slate-700/50" : "hover:bg-slate-50"}>
                 <td className={`px-4 py-3 font-semibold ${dark ? "text-white" : "text-slate-950"}`}>{m.label}</td>
-                <td className={`px-4 py-3 text-right ${dark ? "text-slate-300" : "text-slate-700"}`}>{m.fmt(current[m.key])}</td>
-                <td className={`px-4 py-3 text-right ${dark ? "text-slate-300" : "text-slate-700"}`}>{m.fmt(compare[m.key])}</td>
+                <td className={`px-4 py-3 text-right tabular-nums ${dark ? "text-slate-300" : "text-slate-700"}`}>{m.fmt(current[m.key])}</td>
+                <td className={`px-4 py-3 text-right tabular-nums ${dark ? "text-slate-300" : "text-slate-700"}`}>{m.fmt(compare[m.key])}</td>
                 <td className="px-4 py-3 text-right">
                   <DeltaCell base={current[m.key]} compare={compare[m.key]} format={m.fmt} />
                 </td>

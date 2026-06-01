@@ -129,7 +129,7 @@ export default function FinancialModel({ rows }) {
               <XAxis dataKey="year" tick={{ fill: dark ? "#94a3b8" : "#475569" }} />
               <YAxis
                 tickFormatter={(value) => `$${Math.round(value / 1000000)}M`}
-                tick={{ fill: dark ? "#94a3b8" : "#475569" }}
+                tick={{ fill: dark ? "#94a3b8" : "#475569", fontVariantNumeric: "tabular-nums" }}
                 label={{ value: "Revenue / Contribution ($)", angle: -90, position: "insideLeft", offset: -8, fontSize: 10, fill: dark ? "#64748b" : "#94a3b8" }}
               />
               <ReferenceLine
@@ -152,7 +152,7 @@ export default function FinancialModel({ rows }) {
               <XAxis dataKey="year" tick={{ fill: dark ? "#94a3b8" : "#475569" }} />
               <YAxis
                 tickFormatter={(value) => `$${Math.round(value / 1000000)}M`}
-                tick={{ fill: dark ? "#94a3b8" : "#475569" }}
+                tick={{ fill: dark ? "#94a3b8" : "#475569", fontVariantNumeric: "tabular-nums" }}
                 label={{ value: "Dollars ($)", angle: -90, position: "insideLeft", offset: -8, fontSize: 10, fill: dark ? "#64748b" : "#94a3b8" }}
               />
               <CustomTooltip formatter={(value) => currency(value)} />
@@ -177,7 +177,7 @@ export default function FinancialModel({ rows }) {
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
             <XAxis dataKey="year" tick={{ fill: dark ? "#94a3b8" : "#475569" }} />
-            <YAxis tickFormatter={(v) => `$${Math.round(v / 1000000)}M`} tick={{ fill: dark ? "#94a3b8" : "#475569" }} />
+            <YAxis tickFormatter={(v) => `$${Math.round(v / 1000000)}M`} tick={{ fill: dark ? "#94a3b8" : "#475569", fontVariantNumeric: "tabular-nums" }} />
             <CustomTooltip formatter={(value) => currency(value)} />
             <Legend />
             {services.map((svc) => (
