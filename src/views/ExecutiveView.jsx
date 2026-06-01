@@ -296,7 +296,7 @@ export default function ExecutiveView({ rows, totals }) {
       {/* Revenue Growth Trajectory */}
       <Card title="3-Year Revenue Trajectory" eyebrow="Growth Forecast">
         <div className="space-y-4">
-          <div className="grid-3">
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <p className={`text-sm mb-2 ${dark ? "text-slate-400" : "text-slate-600"}`}>Year 1</p>
               <p className="text-3xl font-black text-blue-600">{currency(totals.y1Revenue)}</p>
@@ -310,10 +310,10 @@ export default function ExecutiveView({ rows, totals }) {
               <p className="text-3xl font-black text-blue-600">{currency(totals.y3Revenue)}</p>
             </div>
           </div>
-          <div className={`flex items-center gap-2 px-4 py-3 rounded-lg ${dark ? "bg-success-900/20 border border-success-700/30" : "bg-success-50 border border-success-200"}`}>
-            <span className="text-success-600 font-semibold">↑ Growth</span>
-            <span className={`text-sm ${dark ? "text-success-300" : "text-success-700"}`}>
-              ${((totals.y3Revenue - totals.y1Revenue) / totals.y1Revenue * 100).toFixed(0)}% 3-year cumulative growth
+          <div className={`flex items-center gap-2 px-4 py-3 rounded-lg ${dark ? "bg-emerald-900/20 border border-emerald-700/30" : "bg-emerald-50 border border-emerald-200"}`}>
+            <span className={`font-semibold ${dark ? "text-emerald-400" : "text-emerald-600"}`}>↑ Growth</span>
+            <span className={`text-sm ${dark ? "text-emerald-300" : "text-emerald-700"}`}>
+              {totals.y1Revenue > 0 ? ((totals.y3Revenue - totals.y1Revenue) / totals.y1Revenue * 100).toFixed(0) : 0}% 3-year cumulative growth
             </span>
           </div>
         </div>
