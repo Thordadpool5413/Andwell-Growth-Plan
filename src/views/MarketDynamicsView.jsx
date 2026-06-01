@@ -773,8 +773,8 @@ export default function MarketDynamicsView({ setActiveTab }) {
                 </svg>
                 <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-white">Market Intel</h3>
                 {AI_AVAILABLE && (
-                  <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide bg-violet-600/30 text-violet-300 border border-violet-500/30">
-                    <span className={`h-1.5 w-1.5 rounded-full ${aiLoading ? "bg-violet-400 animate-pulse" : "bg-violet-400"}`} />
+                  <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide bg-blue-600/30 text-blue-300 border border-blue-500/30">
+                    <span className={`h-1.5 w-1.5 rounded-full ${aiLoading ? "bg-blue-400 animate-pulse" : "bg-blue-400"}`} />
                     AI
                   </span>
                 )}
@@ -807,7 +807,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
                 <div className="rounded-xl border border-white/10 bg-white/5 p-4">
                   <p className="text-sm font-medium opacity-90 leading-relaxed">
                     {aiSummary}
-                    {aiLoading && <span className="inline-block w-1.5 h-3.5 ml-0.5 bg-violet-400 animate-pulse rounded-sm align-middle" />}
+                    {aiLoading && <span className="inline-block w-1.5 h-3.5 ml-0.5 bg-blue-400 animate-pulse rounded-sm align-middle" />}
                   </p>
                 </div>
               )}

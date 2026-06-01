@@ -126,7 +126,7 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
         <Metric label={`${service} providers`} value={summary.providers} detail="Named Maine provider rows loaded." color="blue" sourceType="cms" />
         <Metric label="Total beneficiaries" value={number(summary.beneficiaries)} detail="Provider file beneficiary volume." color="blue" sourceType="cms" />
         <Metric label="Andwell rank" value={summary.andwellRank ? `#${summary.andwellRank}` : "N/A"} detail="Ranked by beneficiary volume in the provider file." color="emerald" sourceType="cms" />
-        <Metric label="Andwell provider file share" value={percent(summary.andwellShare)} detail={<span>Not county market share. This is <Abbr term="Provider File Share">provider file share</Abbr>.</span>} color="violet" sourceType="cms" />
+        <Metric label="Andwell provider file share" value={percent(summary.andwellShare)} detail={<span>Not county market share. This is <Abbr term="Provider File Share">provider file share</Abbr>.</span>} color="slate" sourceType="cms" />
       </div>
 
       {/* National chain vs. local breakdown */}

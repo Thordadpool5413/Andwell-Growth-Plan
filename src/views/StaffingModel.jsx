@@ -174,7 +174,7 @@ export default function StaffingModel({ rows }) {
           </ChartContainer>
         </Card>
         <Card title="FTE distribution by county" eyebrow="Geographic staffing">
-          <ChartContainer height="h-80">
+          <ChartContainer height="h-80" caption="Source: scenario model — Y1/Y2/Y3 FTE targets by county">
             <BarChart data={countyChartData} layout="vertical" margin={{ left: 10 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
               <XAxis type="number" tick={{ fill: dark ? "#94a3b8" : "#475569" }} />

@@ -214,11 +214,11 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
                   onClick={generateSummary}
                   className={`w-full rounded-xl border-2 border-dashed py-3 text-sm font-medium transition ${
                     dark
-                      ? "border-violet-700 text-violet-400 hover:border-violet-500 hover:bg-violet-950/30"
-                      : "border-violet-200 text-violet-600 hover:border-violet-400 hover:bg-violet-50"
+                      ? "border-slate-600 text-slate-400 hover:border-slate-500 hover:bg-slate-800/50"
+                      : "border-slate-300 text-slate-600 hover:border-slate-400 hover:bg-slate-50"
                   }`}
                 >
-                  ✦ Generate AI Summary
+                  Generate AI Summary
                 </button>
               )}
               {(aiText || aiGenerating) && (
@@ -231,7 +231,7 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
                     <p className={`text-sm leading-7 ${dark ? "text-slate-200" : "text-slate-700"}`}>
                       {aiText}
                       {aiGenerating && (
-                        <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-violet-400" />
+                        <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-blue-400" />
                       )}
                     </p>
                   ) : (

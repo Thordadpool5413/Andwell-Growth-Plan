@@ -146,7 +146,7 @@ export default function FinancialModel({ rows }) {
           </ChartContainer>
         </Card>
         <Card title="Year over year breakdown" eyebrow="Revenue vs. contribution by year">
-          <ChartContainer height="h-96">
+          <ChartContainer height="h-96" caption="Source: scenario model — revenue vs. operating contribution margin by year">
             <BarChart data={yearRows} margin={{ left: 10 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
               <XAxis dataKey="year" tick={{ fill: dark ? "#94a3b8" : "#475569" }} />

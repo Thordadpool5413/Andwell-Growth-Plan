@@ -146,7 +146,7 @@ function QualityTrendChart({ dark }) {
           Only one snapshot recorded so far. Trend lines appear after two or more syncs on different days.
         </div>
       ) : (
-        <ChartContainer height="h-64">
+        <ChartContainer height="h-64" caption="Source: CMS Care Compare — star rating history per sync run">
           <LineChart data={chartData} margin={{ left: 8, right: 16, top: 4, bottom: 4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
             <XAxis dataKey="date" tick={{ fontSize: 10, fill: dark ? "#94a3b8" : "#475569" }} />
@@ -491,7 +491,7 @@ function HHVBPTab({ dark }) {
 
       {chartData.length > 0 && (
         <Card title="Total Performance Score — All Maine HHAs" eyebrow="HHVBP dataset 56d7-4994 · hover a bar for domain breakdown">
-          <ChartContainer height="h-96">
+          <ChartContainer height="h-96" caption="Source: CMS HHVBP dataset 56d7-4994 — Total Performance Score across all Maine HHAs">
             <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 60, bottom: 16, top: 4 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
               <XAxis
@@ -722,7 +722,7 @@ export default function CmsData() {
           <div className="grid gap-4 md:grid-cols-4">
             <Metric label="CMS counties loaded" value={rows.length} detail="County market rows from CMS 2022 PUF included in this model." color="blue" />
             <Metric label="HH users" value={number(rows.reduce((sum, row) => sum + row.hh.users, 0))} detail="Medicare home health users across all loaded counties." color="emerald" />
-            <Metric label="Hospice users" value={number(rows.reduce((sum, row) => sum + row.hos.users, 0))} detail="Medicare hospice users across all loaded counties." color="violet" />
+            <Metric label="Hospice users" value={number(rows.reduce((sum, row) => sum + row.hos.users, 0))} detail="Medicare hospice users across all loaded counties." color="blue" />
             <Metric label="Total HH payments" value={currency(totalHHPay)} detail="Aggregate Medicare home health payments across all counties." color="indigo" />
           </div>
 
@@ -736,7 +736,7 @@ export default function CmsData() {
           </div>
 
           <Card title="HH users vs. Hospice users by county" eyebrow="CMS 2022 PUF — beneficiary volumes">
-            <ChartContainer height="h-96">
+            <ChartContainer height="h-96" caption="Source: CMS Medicare Provider Utilization 2022 PUF — beneficiary counts by county">
                 <ComposedChart data={rows} margin={{ left: 10, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
                   <XAxis

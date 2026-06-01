@@ -63,7 +63,7 @@ export default {
           green: "#16a34a",
           purple: "#7c3aed",
           red: "#dc2626",
-          amber: "#f59e0b",
+          amber: "#d97706",
           slate: "#64748b",
         },
       },

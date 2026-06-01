@@ -558,7 +558,7 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, a
                     <span className={`rounded px-1.5 py-0.5 text-[9px] font-medium uppercase ${dark ? "bg-red-900/40 text-red-400" : "bg-red-50 text-red-600"}`}>National</span>
                   )}
                   {comp.cms_only && (
-                    <span className={`rounded px-1.5 py-0.5 text-[9px] font-medium uppercase ${dark ? "bg-violet-900/40 text-violet-400" : "bg-violet-50 text-violet-600"}`}>CMS discovered</span>
+                    <span className={`rounded px-1.5 py-0.5 text-[9px] font-medium uppercase ${dark ? "bg-blue-900/40 text-blue-400" : "bg-blue-50 text-blue-600"}`}>CMS discovered</span>
                   )}
                   <QualityBadge score={comp.quality_snapshot_score} starRating={comp.quality_star_rating} dark={dark} />
                 </div>

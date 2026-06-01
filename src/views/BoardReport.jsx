@@ -156,11 +156,11 @@ export default function BoardReport({ rows, totals }) {
               disabled={narrativeGenerating}
               className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-100 disabled:opacity-50 ${
                 dark
-                  ? "bg-violet-700 text-white hover:bg-violet-600"
-                  : "bg-violet-600 text-white hover:bg-violet-500"
+                  ? "bg-blue-700 text-white hover:bg-blue-600"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
               }`}
             >
-              {narrativeGenerating ? "Drafting…" : "✦ Draft narrative"}
+              {narrativeGenerating ? "Drafting…" : "Draft narrative"}
             </button>
           )}
           <button
@@ -185,7 +185,7 @@ export default function BoardReport({ rows, totals }) {
               <p className={`text-sm leading-7 whitespace-pre-wrap ${dark ? "text-slate-200" : "text-slate-700"}`}>
                 {narrativeText}
                 {narrativeGenerating && (
-                  <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-violet-400" />
+                  <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-blue-400" />
                 )}
               </p>
               {!narrativeGenerating && (
@@ -235,7 +235,7 @@ export default function BoardReport({ rows, totals }) {
             label="3-year contribution"
             value={currency(totals.totalContribution)}
             detail="Cumulative operating contribution margin"
-            color="violet"
+            color="blue"
           />
         </div>
 
@@ -258,7 +258,6 @@ export default function BoardReport({ rows, totals }) {
               </div>
             </div>
             <div className={`mb-3 flex items-start gap-2 rounded-xl border px-3 py-2.5 text-xs ${dark ? "border-amber-900/40 bg-amber-950/30 text-amber-300" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
-              <span className="mt-0.5 shrink-0 text-amber-500">⚠</span>
               <span><span className="font-semibold"><Abbr term="Provider File Share">Provider file share</Abbr> ≠ market share.</span> Revenue figures are modeled from <Abbr term="CMS">CMS</Abbr> provider file beneficiary volume — a proxy for relative market position, not independently verified county market share. True market share requires county-attributed claims data not available in this dataset.</span>
             </div>
             <div className={`overflow-x-auto rounded-lg border ${dark ? "border-slate-700/60" : "border-slate-200"}`}>
@@ -309,7 +308,7 @@ export default function BoardReport({ rows, totals }) {
 
           <div className="space-y-6">
             <Card title="Y1 service mix" eyebrow="Revenue breakdown">
-              <ChartContainer height="h-52">
+              <ChartContainer height="h-52" caption="Source: scenario model — Y1 projected revenue by service line">
                 <PieChart>
                   <Pie data={serviceMix} dataKey="revenue" nameKey="service" cx="50%" cy="50%" outerRadius={80} label={({ service, revenue }) => `${service}: ${currency(revenue)}`}>
                     {serviceMix.map((entry) => (

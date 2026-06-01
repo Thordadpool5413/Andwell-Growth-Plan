@@ -120,8 +120,7 @@ input, select, textarea {
   .container-sidebar {
     @apply w-72 border-r flex flex-col h-full overflow-y-auto sticky top-0;
     border-color: var(--color-border);
-    background: linear-gradient(180deg, rgba(17, 24, 39, 0.4) 0%, rgba(10, 14, 39, 0.2) 100%);
-    backdrop-filter: blur(10px);
+    background: var(--color-bg-secondary);
   }
 
   .container-main {
@@ -131,8 +130,7 @@ input, select, textarea {
   .container-header {
     @apply border-b px-8 py-5 flex items-center justify-between sticky top-0 z-30;
     border-color: var(--color-border);
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(12px);
+    background: var(--color-bg-primary);
   }
 
   .container-content {
@@ -143,17 +141,15 @@ input, select, textarea {
     @apply max-w-7xl mx-auto px-8 py-8;
   }
 
-  /* Card - Premium styling */
+  /* Card - flat analytical surface */
   .card {
-    @apply rounded-lg border p-6 transition-all duration-300;
+    @apply rounded-lg border p-6 transition-colors duration-150;
     border-color: var(--color-border);
-    background: linear-gradient(135deg, rgba(31, 41, 55, 0.4) 0%, rgba(15, 23, 42, 0.2) 100%);
-    backdrop-filter: blur(8px);
+    background: var(--color-bg-secondary);
   }
 
   .card:hover {
     border-color: var(--color-border-light);
-    background: linear-gradient(135deg, rgba(31, 41, 55, 0.6) 0%, rgba(15, 23, 42, 0.4) 100%);
   }
 
   .card-title {
@@ -168,14 +164,13 @@ input, select, textarea {
 
   /* Metric Card */
   .metric {
-    @apply rounded-lg border p-5 transition-all duration-300;
+    @apply rounded-lg border p-5 transition-colors duration-150;
     border-color: var(--color-border);
-    background: linear-gradient(135deg, rgba(31, 41, 55, 0.35) 0%, rgba(15, 23, 42, 0.15) 100%);
+    background: var(--color-bg-secondary);
   }
 
   .metric:hover {
     border-color: var(--color-border-light);
-    background: linear-gradient(135deg, rgba(31, 41, 55, 0.5) 0%, rgba(15, 23, 42, 0.3) 100%);
   }
 
   .metric-label {

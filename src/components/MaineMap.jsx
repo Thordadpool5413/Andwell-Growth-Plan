@@ -484,7 +484,7 @@ function CompetitorMarkers({ visible, dark, competitors }) {
                     </p>
                   )}
                   {comp.geocode_source === "cms_address" && <p style={{ margin: "3px 0 0", fontSize: 9, color: "#94a3b8" }}>📍 CMS address geocoded</p>}
-                  {national && <p style={{ margin: "4px 0 0", fontSize: 10, color: "#dc2626", fontWeight: 700 }}>⚠ National chain</p>}
+                  {national && <p style={{ margin: "4px 0 0", fontSize: 10, color: "#dc2626", fontWeight: 700 }}>National chain</p>}
                   {overlaps && (() => {
                     const overlapCounties = resolveCounties(comp).filter(cn => ANDWELL_COUNTIES.has(cn));
                     return (
@@ -653,7 +653,7 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty, provide
         <span className={`mr-1 text-[10px] font-medium uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>Layers:</span>
         {toggleBtn("Hospitals", showHospitals, () => setShowHospitals((p) => !p), "bg-red-600", "Toggle Hospitals layer")}
         {toggleBtn("Drive-time rings", showRings, () => setShowRings((p) => !p), "bg-emerald-600", "Toggle Drive-time rings layer")}
-        {toggleBtn("Competitors", showCompetitors, () => setShowCompetitors((p) => !p), "bg-purple-600", "Toggle Competitors layer")}
+        {toggleBtn("Competitors", showCompetitors, () => setShowCompetitors((p) => !p), "bg-blue-600", "Toggle Competitors layer")}
         {showCompetitors && (
           <>
             <span className={`ml-2 text-[10px] font-medium uppercase tracking-widest ${dark ? "text-slate-600" : "text-slate-400"}`}>|</span>
@@ -669,7 +669,7 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty, provide
                 onClick={() => setProviderType(opt.value)}
                 className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition ${
                   providerType === opt.value
-                    ? "bg-purple-600 text-white"
+                    ? "bg-blue-600 text-white"
                     : dark
                       ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700"
                       : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
@@ -808,7 +808,7 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty, provide
               </div>
             ))}
             <span className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>
-              · dashed border = Andwell overlap county · 📍 = CMS address geocoded · click pin for details
+              · dashed border = Andwell overlap county · CMS address geocoded pins · click pin for details
             </span>
           </div>
         </div>

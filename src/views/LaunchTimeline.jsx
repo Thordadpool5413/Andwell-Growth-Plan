@@ -20,13 +20,13 @@ function monthOffsetToLabel(offset, startYear, startMonth) {
 
 const PRIORITY_TIMELINE = {
   "Priority 1": { startMonth: 1, endMonth: 12, color: COLORS.blue, phase: "Phase 1 — Immediate launch", status: "planning" },
-  "Priority 2": { startMonth: 7, endMonth: 18, color: COLORS.purple, phase: "Phase 2 — Staged expansion", status: "preparing" },
+  "Priority 2": { startMonth: 7, endMonth: 18, color: COLORS.slate, phase: "Phase 2 — Staged expansion", status: "preparing" },
   "Priority 3": { startMonth: 13, endMonth: 24, color: COLORS.amber, phase: "Phase 3 — Targeted growth", status: "active" },
 };
 
 const PHASE_STATUS_STYLES = {
   planning: { bg: dark => dark ? "bg-blue-950/50" : "bg-blue-50", dot: "bg-blue-500", label: "Planning" },
-  preparing: { bg: dark => dark ? "bg-purple-950/50" : "bg-purple-50", dot: "bg-purple-500", label: "Preparing" },
+  preparing: { bg: dark => dark ? "bg-slate-800/60" : "bg-slate-50", dot: "bg-slate-500", label: "Preparing" },
   active: { bg: dark => dark ? "bg-amber-950/50" : "bg-amber-50", dot: "bg-amber-500", label: "Targeted" },
 };
 

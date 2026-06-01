@@ -93,21 +93,7 @@ export function EnhancedNavBar({
   const { dark } = useDarkMode();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const tabIcons = {
-    "Executive View": "📊",
-    "County Plan": "📍",
-    "Referral Plan": "📞",
-    "Competitive View": "🎯",
-    "Service Lines": "🏥",
-    "CMS Data": "💾",
-    "Financial Model": "💰",
-    "Staffing Model": "👥",
-    "Sensitivity": "⚙️",
-    "Opportunity Score": "⭐",
-    "Launch Timeline": "🗓️",
-    "Board Report": "📋",
-    "Launch Checklist": "✓",
-  };
+  const tabIcons = {};
 
   return (
     <nav className={`
