@@ -26,7 +26,7 @@ export default function FilterPanel({
   return (
     <div
       className={`
-        rounded-2xl border p-4 shadow-sm
+        rounded-xl border p-4 shadow-sm
         ${dark
           ? "border-slate-700 bg-slate-800"
           : "border-slate-200 bg-white"}

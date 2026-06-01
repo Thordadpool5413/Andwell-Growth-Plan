@@ -100,7 +100,7 @@ function QualityTrendChart({ dark }) {
   if (loading) return null;
   if (!history.length) {
     return (
-      <div className={`rounded-2xl border p-5 text-center text-sm ${dark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-500"}`}>
+      <div className={`rounded-xl border p-5 text-center text-sm ${dark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-500"}`}>
         No historical snapshots yet. Run a quality sync to start capturing trend data.
       </div>
     );
@@ -225,11 +225,11 @@ function QualityRatingsTab({ dark }) {
     setSyncing(false);
   };
 
-  if (loading) return <div className={`rounded-2xl border p-8 text-center ${dark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-white text-slate-500"}`}>Loading quality data…</div>;
+  if (loading) return <div className={`rounded-xl border p-8 text-center ${dark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-white text-slate-500"}`}>Loading quality data…</div>;
 
   if (!data.length) {
     return (
-      <div className={`rounded-2xl border p-8 text-center space-y-4 ${dark ? "border-amber-800/40 bg-amber-950/20" : "border-amber-200 bg-amber-50"}`}>
+      <div className={`rounded-xl border p-8 text-center space-y-4 ${dark ? "border-amber-800/40 bg-amber-950/20" : "border-amber-200 bg-amber-50"}`}>
         <p className={`font-semibold ${dark ? "text-amber-300" : "text-amber-900"}`}>No quality data yet</p>
         <p className={`text-sm ${dark ? "text-amber-400" : "text-amber-700"}`}>Run a quality sync to pull live CMS star ratings for all 19 Maine home health agencies.</p>
         <button onClick={runSync} disabled={syncing}
@@ -274,7 +274,7 @@ function QualityRatingsTab({ dark }) {
       )}
 
       <Card title="Maine Home Health Agency Rankings" eyebrow={`CMS Quality Star Ratings — dataset 6jpm-sxkc · ${data.length} agencies`}>
-        <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
+        <div className={`overflow-x-auto rounded-xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
           <table className="w-full text-left text-sm">
             <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
               <tr>
@@ -412,7 +412,7 @@ function HHVBPTab({ dark }) {
     setSyncing(false);
   };
 
-  if (loading) return <div className={`rounded-2xl border p-8 text-center ${dark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-white text-slate-500"}`}>Loading HHVBP data…</div>;
+  if (loading) return <div className={`rounded-xl border p-8 text-center ${dark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-white text-slate-500"}`}>Loading HHVBP data…</div>;
 
   const andwellRow = data.find((r) => r.ccn === ANDWELL_CCN || r.is_andwell);
   const chartData = data.filter((r) => r.total_performance_score != null).map((r) => ({
@@ -431,7 +431,7 @@ function HHVBPTab({ dark }) {
 
   if (!data.length) {
     return (
-      <div className={`rounded-2xl border p-8 text-center space-y-4 ${dark ? "border-amber-800/40 bg-amber-950/20" : "border-amber-200 bg-amber-50"}`}>
+      <div className={`rounded-xl border p-8 text-center space-y-4 ${dark ? "border-amber-800/40 bg-amber-950/20" : "border-amber-200 bg-amber-50"}`}>
         <p className={`font-semibold ${dark ? "text-amber-300" : "text-amber-900"}`}>No HHVBP data yet</p>
         <p className={`text-sm ${dark ? "text-amber-400" : "text-amber-700"}`}>Run a quality sync to pull Value-Based Purchasing scores.</p>
         <button onClick={runSync} disabled={syncing}
@@ -537,7 +537,7 @@ function HHVBPTab({ dark }) {
 
       {andwellRow && (
         <Card title="Andwell Achievement Points by Measure" eyebrow="HHVBP measure breakdown">
-          <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
+          <div className={`overflow-x-auto rounded-xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
             <table className="w-full text-sm">
               <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
                 <tr>
@@ -605,11 +605,11 @@ function HospiceQualityTab({ dark }) {
     setSyncing(false);
   };
 
-  if (loading) return <div className={`rounded-2xl border p-8 text-center ${dark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-white text-slate-500"}`}>Loading hospice quality data…</div>;
+  if (loading) return <div className={`rounded-xl border p-8 text-center ${dark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-white text-slate-500"}`}>Loading hospice quality data…</div>;
 
   if (!data.length) {
     return (
-      <div className={`rounded-2xl border p-8 text-center space-y-4 ${dark ? "border-amber-800/40 bg-amber-950/20" : "border-amber-200 bg-amber-50"}`}>
+      <div className={`rounded-xl border p-8 text-center space-y-4 ${dark ? "border-amber-800/40 bg-amber-950/20" : "border-amber-200 bg-amber-50"}`}>
         <p className={`font-semibold ${dark ? "text-amber-300" : "text-amber-900"}`}>No hospice quality data yet</p>
         <p className={`text-sm ${dark ? "text-amber-400" : "text-amber-700"}`}>Run a quality sync to pull Maine hospice CAHPS survey scores.</p>
         <button onClick={runSync} disabled={syncing}
@@ -637,7 +637,7 @@ function HospiceQualityTab({ dark }) {
       {syncMsg && <p className={`text-xs ${dark ? "text-slate-400" : "text-slate-600"}`}>{syncMsg}</p>}
 
       <Card title="Maine Hospice CAHPS Quality Scores" eyebrow={`CMS Hospice CAHPS dataset gxki-hrr8 · ${data.length} providers`}>
-        <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
+        <div className={`overflow-x-auto rounded-xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
           <table className="w-full text-left text-sm">
             <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
               <tr>
@@ -757,7 +757,7 @@ export default function CmsData() {
           </Card>
 
           <Card title="Provider density and revenue efficiency" eyebrow="Market intelligence">
-            <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
+            <div className={`overflow-x-auto rounded-xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
               <table className="w-full text-left text-sm">
                 <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
                   <tr>

@@ -25,7 +25,7 @@ export function MetricCard({
 
   return (
     <div className={`
-      rounded-2xl border p-6 shadow-shadow-md transition-all duration-300
+      rounded-xl border p-6 shadow-shadow-md transition-all duration-300
       ${statusColors[status] || statusColors.neutral}
       ${className}
     `}>
@@ -112,7 +112,7 @@ export function ComparisonMetric({
 
   return (
     <div className={`
-      rounded-2xl border p-6 shadow-shadow-md
+      rounded-xl border p-6 shadow-shadow-md
       ${dark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"}
       ${className}
     `}>

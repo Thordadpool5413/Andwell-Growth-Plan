@@ -516,7 +516,7 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, a
       <div className="overflow-x-auto pb-2">
       <div className="flex gap-3" style={{ minWidth: `${(paged.length + 1) * 200}px` }}>
         <div className="w-48 shrink-0">
-          <div className={`rounded-2xl border-2 p-4 ${dark ? "border-blue-700 bg-blue-950/30" : "border-blue-400 bg-blue-50"}`}>
+          <div className={`rounded-xl border-2 p-4 ${dark ? "border-blue-700 bg-blue-950/30" : "border-blue-400 bg-blue-50"}`}>
             <div className="mb-3">
               <p className={`text-[10px] font-medium uppercase tracking-wide ${dark ? "text-blue-400" : "text-blue-600"}`}>Andwell</p>
               <p className={`text-sm font-semibold mt-0.5 leading-5 ${dark ? "text-slate-100" : "text-slate-800"}`}>Andwell Health Partners</p>
@@ -551,7 +551,7 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, a
             ? dark ? "border-emerald-800/40" : "border-emerald-200"
             : dark ? "border-slate-700" : "border-slate-200";
           return (
-            <div key={comp.id || comp.name} className={`w-48 shrink-0 rounded-2xl border p-4 ${borderCls} ${dark ? "bg-slate-800/50" : "bg-white"}`}>
+            <div key={comp.id || comp.name} className={`w-48 shrink-0 rounded-xl border p-4 ${borderCls} ${dark ? "bg-slate-800/50" : "bg-white"}`}>
               <div className="mb-3">
                 <div className="flex flex-wrap gap-1 mb-1">
                   {national && (
@@ -639,7 +639,7 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, a
         })}
 
         {paged.length === 0 && (
-          <div className={`flex-1 rounded-2xl border p-8 text-center ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+          <div className={`flex-1 rounded-xl border p-8 text-center ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
             <p className={`text-sm ${dark ? "text-slate-400" : "text-slate-500"}`}>No competitors match this filter.</p>
           </div>
         )}
@@ -742,13 +742,13 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
       </div>
 
       {loading && (
-        <div className={`rounded-2xl border p-8 text-center ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+        <div className={`rounded-xl border p-8 text-center ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
           <p className={`text-sm font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>Loading competitor intelligence…</p>
         </div>
       )}
 
       {error && (
-        <div className={`rounded-2xl border p-6 ${dark ? "border-amber-800 bg-amber-950/50 text-amber-300" : "border-amber-200 bg-amber-50 text-amber-900"}`}>
+        <div className={`rounded-xl border p-6 ${dark ? "border-amber-800 bg-amber-950/50 text-amber-300" : "border-amber-200 bg-amber-50 text-amber-900"}`}>
           <p className="font-semibold">CMS data not yet synced</p>
           <p className="mt-1 text-sm">Run a CMS sync from the CMS Data tab → CMS Data Connection → Sync & Crawl to populate competitor intelligence.</p>
         </div>
@@ -778,7 +778,7 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
       )}
 
       {!loading && !error && (
-        <div className={`rounded-2xl border p-4 text-xs ${dark ? "border-slate-700 bg-slate-800/50 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-500"}`}>
+        <div className={`rounded-xl border p-4 text-xs ${dark ? "border-slate-700 bg-slate-800/50 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-500"}`}>
           <p className="font-semibold mb-1">Data sources and limitations</p>
           <p>CMS verification uses the CMS Provider Data Catalog (public, no key required). Website intelligence is extracted via server-side page crawling. Match confidence is based on name normalization and location scoring. "Needs Review" means no matching CMS record was found yet — it does not confirm the provider is not Medicare-certified. Run CMS Sync + Crawl to populate all columns.</p>
         </div>

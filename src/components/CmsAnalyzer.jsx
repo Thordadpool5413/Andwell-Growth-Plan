@@ -80,7 +80,7 @@ export default function CmsAnalyzer() {
           onChange={(e) => setQuestion(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && analyze()}
           placeholder="Ask about any Maine competitor or provider..."
-          className={`flex-1 rounded-2xl border px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500 ${dark ? "border-slate-600 bg-slate-700 text-white placeholder-slate-500" : "border-slate-200 bg-slate-50 text-slate-950 placeholder-slate-400"}`}
+          className={`flex-1 rounded-xl border px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500 ${dark ? "border-slate-600 bg-slate-700 text-white placeholder-slate-500" : "border-slate-200 bg-slate-50 text-slate-950 placeholder-slate-400"}`}
         />
         <button
           onClick={() => analyze()}
@@ -92,7 +92,7 @@ export default function CmsAnalyzer() {
       </div>
 
       {loading && (
-        <div className={`rounded-2xl border p-4 ${dark ? "border-slate-700 bg-slate-700/30" : "border-slate-100 bg-slate-50"}`}>
+        <div className={`rounded-xl border p-4 ${dark ? "border-slate-700 bg-slate-700/30" : "border-slate-100 bg-slate-50"}`}>
           <div className="flex items-center gap-3">
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-purple-500 border-t-transparent" />
             <p className={`text-sm font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>Calling CMS tools...</p>
@@ -101,14 +101,14 @@ export default function CmsAnalyzer() {
       )}
 
       {error && (
-        <div className={`rounded-2xl border p-4 text-sm ${dark ? "border-red-800 bg-red-950/50 text-red-300" : "border-red-200 bg-red-50 text-red-700"}`}>
+        <div className={`rounded-xl border p-4 text-sm ${dark ? "border-red-800 bg-red-950/50 text-red-300" : "border-red-200 bg-red-50 text-red-700"}`}>
           <p className="font-semibold">Error</p>
           <p className="mt-1">{error}</p>
         </div>
       )}
 
       {result && (
-        <div className={`rounded-2xl border p-5 space-y-3 ${dark ? "border-slate-700 bg-slate-700/30" : "border-slate-200 bg-slate-50"}`}>
+        <div className={`rounded-xl border p-5 space-y-3 ${dark ? "border-slate-700 bg-slate-700/30" : "border-slate-200 bg-slate-50"}`}>
           <div className="flex items-center justify-between">
             <p className={`text-xs font-medium uppercase tracking-widest ${dark ? "text-purple-400" : "text-purple-600"}`}>Analysis</p>
             {result.tool_calls_made > 0 && (

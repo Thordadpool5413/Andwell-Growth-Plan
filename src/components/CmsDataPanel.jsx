@@ -20,7 +20,7 @@ async function getCmsToken() {
 
 function StatBox({ label, value, sub, dark }) {
   return (
-    <div className={`rounded-2xl border p-4 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+    <div className={`rounded-xl border p-4 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
       <p className={`text-xs font-medium uppercase tracking-wide ${dark ? "text-slate-400" : "text-slate-500"}`}>{label}</p>
       <p className={`mt-1 text-3xl font-bold tabular-nums ${dark ? "text-white" : "text-slate-950"}`}>{value}</p>
       {sub && <p className={`mt-0.5 text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>{sub}</p>}
@@ -143,7 +143,7 @@ export default function CmsDataPanel() {
             <StatBox label="Competitors verified" value={stats?.competitorMatches ?? "—"} sub="CMS-matched records" dark={dark} />
           </div>
 
-          <div className={`rounded-2xl border p-6 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+          <div className={`rounded-xl border p-6 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
             <p className={`text-sm font-semibold mb-3 ${dark ? "text-white" : "text-slate-950"}`}>CMS Provider Data Catalog</p>
             <div className="grid gap-3 md:grid-cols-2 text-sm">
               {[
@@ -169,7 +169,7 @@ export default function CmsDataPanel() {
 
           {/* Match-status breakdown */}
           {stats?.matchStatusBreakdown?.length > 0 && (
-            <div className={`rounded-2xl border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+            <div className={`rounded-xl border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
               <p className={`text-sm font-semibold mb-3 ${dark ? "text-white" : "text-slate-950"}`}>Verification status breakdown</p>
               <div className="flex flex-wrap gap-2">
                 {stats.matchStatusBreakdown.map((row) => (
@@ -185,7 +185,7 @@ export default function CmsDataPanel() {
 
           {/* Failed sync messages */}
           {stats?.failedSyncs?.length > 0 && (
-            <div className={`rounded-2xl border p-5 ${dark ? "border-red-900/50 bg-red-950/20" : "border-red-200 bg-red-50"}`}>
+            <div className={`rounded-xl border p-5 ${dark ? "border-red-900/50 bg-red-950/20" : "border-red-200 bg-red-50"}`}>
               <p className={`text-sm font-semibold mb-2 ${dark ? "text-red-300" : "text-red-800"}`}>Failed sync events</p>
               {stats.failedSyncs.map((f, i) => (
                 <div key={i} className={`mt-1.5 text-xs ${dark ? "text-red-400" : "text-red-700"}`}>
@@ -199,7 +199,7 @@ export default function CmsDataPanel() {
 
           {/* Dataset list with dictionary links */}
           {stats?.datasetList?.length > 0 && (
-            <div className={`rounded-2xl border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+            <div className={`rounded-xl border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
               <p className={`text-sm font-semibold mb-3 ${dark ? "text-white" : "text-slate-950"}`}>Discovered datasets</p>
               <div className="space-y-2">
                 {stats.datasetList.map((ds) => (
@@ -220,7 +220,7 @@ export default function CmsDataPanel() {
             </div>
           )}
 
-          <div className={`rounded-2xl border p-5 text-xs leading-6 ${dark ? "border-slate-700 bg-slate-800/50 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
+          <div className={`rounded-xl border p-5 text-xs leading-6 ${dark ? "border-slate-700 bg-slate-800/50 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
             <p className="font-semibold mb-1">Data provenance and limitations</p>
             <p>Provider records are sourced from the CMS Provider Data Catalog via the public DKAN API. Records reflect Medicare certification status only. CMS data does not include Medicaid-only or private-pay providers. Match confidence scores are computed from name normalization and location proximity — review flagged records before treating as definitive competitive intelligence.</p>
           </div>
@@ -230,18 +230,18 @@ export default function CmsDataPanel() {
       {activePanel === "competitors" && (
         <div className="space-y-3">
           {loadingComps && (
-            <div className={`rounded-2xl border p-6 text-center ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+            <div className={`rounded-xl border p-6 text-center ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
               <p className={`text-sm ${dark ? "text-slate-400" : "text-slate-500"}`}>Loading competitor records…</p>
             </div>
           )}
           {!loadingComps && competitors.length === 0 && (
-            <div className={`rounded-2xl border p-6 text-center ${dark ? "border-amber-800 bg-amber-950/20" : "border-amber-200 bg-amber-50"}`}>
+            <div className={`rounded-xl border p-6 text-center ${dark ? "border-amber-800 bg-amber-950/20" : "border-amber-200 bg-amber-50"}`}>
               <p className={`text-sm font-semibold ${dark ? "text-amber-300" : "text-amber-900"}`}>No competitor records yet</p>
               <p className={`mt-1 text-xs ${dark ? "text-amber-400" : "text-amber-700"}`}>Run a CMS Sync from the Sync & Crawl tab to populate data.</p>
             </div>
           )}
           {!loadingComps && competitors.map((comp) => (
-            <div key={comp.id || comp.name} className={`rounded-2xl border p-4 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+            <div key={comp.id || comp.name} className={`rounded-xl border p-4 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className={`font-semibold truncate ${dark ? "text-slate-100" : "text-slate-800"}`}>{comp.name}</p>
@@ -283,7 +283,7 @@ export default function CmsDataPanel() {
 
       {activePanel === "sync" && (
         <div className="space-y-4">
-          <div className={`rounded-2xl border p-6 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+          <div className={`rounded-xl border p-6 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
             <p className={`font-semibold mb-4 ${dark ? "text-white" : "text-slate-950"}`}>CMS Data Sync</p>
             <div className="flex flex-wrap items-center gap-3">
               <select
@@ -308,7 +308,7 @@ export default function CmsDataPanel() {
             </p>
           </div>
 
-          <div className={`rounded-2xl border p-6 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+          <div className={`rounded-xl border p-6 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
             <p className={`font-semibold mb-4 ${dark ? "text-white" : "text-slate-950"}`}>Competitor Website Crawl</p>
             <button
               onClick={runCrawl}
@@ -323,7 +323,7 @@ export default function CmsDataPanel() {
           </div>
 
           {syncResult && (
-            <div className={`rounded-2xl border p-5 text-sm ${syncResult.error ? (dark ? "border-red-800 bg-red-950/30 text-red-300" : "border-red-200 bg-red-50 text-red-800") : (dark ? "border-emerald-800 bg-emerald-950/30 text-emerald-300" : "border-emerald-200 bg-emerald-50 text-emerald-800")}`}>
+            <div className={`rounded-xl border p-5 text-sm ${syncResult.error ? (dark ? "border-red-800 bg-red-950/30 text-red-300" : "border-red-200 bg-red-50 text-red-800") : (dark ? "border-emerald-800 bg-emerald-950/30 text-emerald-300" : "border-emerald-200 bg-emerald-50 text-emerald-800")}`}>
               <p className="font-semibold mb-2">{syncResult.error ? "Sync error" : "Sync complete"}</p>
               <pre className="text-xs overflow-auto whitespace-pre-wrap">{JSON.stringify(syncResult, null, 2)}</pre>
             </div>

@@ -16,7 +16,7 @@ export function AdvancedScenarioComparison({
   if (scenarios.length < 2) {
     return (
       <div className={`
-        rounded-2xl border p-12 text-center
+        rounded-xl border p-12 text-center
         ${dark ? "bg-slate-800 border-slate-700" : "bg-slate-50 border-slate-200"}
       `}>
         <p className={dark ? "text-slate-400" : "text-slate-600"}>

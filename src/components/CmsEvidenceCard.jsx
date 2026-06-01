@@ -89,7 +89,7 @@ export default function CmsEvidenceCard({ competitor, compact = false }) {
   }
 
   return (
-    <div className={`rounded-2xl border p-4 transition-all ${border} ${dark ? "bg-slate-800/50" : "bg-white"}`}>
+    <div className={`rounded-xl border p-4 transition-all ${border} ${dark ? "bg-slate-800/50" : "bg-white"}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className={`font-semibold truncate ${dark ? "text-slate-100" : "text-slate-800"}`}>

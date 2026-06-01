@@ -95,7 +95,7 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
                 <button
                   key={row.county}
                   onClick={() => setSelectedCounty(row.county)}
-                  className={`w-full rounded-2xl border p-3 text-left transition ${
+                  className={`w-full rounded-xl border p-3 text-left transition ${
                     isSelected
                       ? dark ? "border-blue-500 bg-blue-950/50" : "border-blue-500 bg-blue-50"
                       : dark ? "border-slate-700 bg-slate-800 hover:border-blue-600" : "border-slate-200 bg-white hover:border-blue-300"

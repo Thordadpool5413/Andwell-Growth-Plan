@@ -386,8 +386,6 @@ input, select, textarea {
     display: none !important;
   }
 
-  .rounded-3xl,
-  .rounded-2xl,
   .rounded-xl {
     border-radius: 6px !important;
   }

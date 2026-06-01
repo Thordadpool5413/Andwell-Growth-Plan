@@ -87,7 +87,7 @@ function CommandCard({ children, style = {}, className = "", onClick }) {
   return (
     <div
       style={{ ...commandCard, ...(hovered ? commandCardHover : {}), ...style }}
-      className={`rounded-2xl ${className}`}
+      className={`rounded-xl ${className}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={onClick}
@@ -465,7 +465,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
 
       {/* ── County + Service Filter Bar ─────────────────────── */}
       <div
-        className="rounded-2xl p-4 flex flex-col gap-3"
+        className="rounded-xl p-4 flex flex-col gap-3"
         style={{ background: surfMed, border: `1px solid ${divider}` }}
       >
         {/* County pills */}
@@ -533,7 +533,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
 
         {/* 1 — Andwell Dominance */}
         <div
-          className="rounded-2xl p-5 relative group"
+          className="rounded-xl p-5 relative group"
           style={{ ...card({ borderLeft: `4px solid ${C.primary}` }) }}
         >
           <div className="flex justify-between items-start mb-3">
@@ -555,7 +555,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
 
         {/* 2 — Aggregated Competition / County Providers */}
         <div
-          className="rounded-2xl p-5 relative group"
+          className="rounded-xl p-5 relative group"
           style={{ ...card({ borderLeft: `4px solid ${C.secondary}` }) }}
         >
           <div className="flex justify-between items-start mb-3">
@@ -579,7 +579,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
 
         {/* 3 — Strategic Velocity / County HH Rate */}
         <div
-          className="rounded-2xl p-5 relative group"
+          className="rounded-xl p-5 relative group"
           style={{ ...card({ borderLeft: `4px solid ${C.tertiaryC}` }) }}
         >
           <div className="flex justify-between items-start mb-3">
@@ -601,7 +601,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
 
         {/* 4 — Data Confidence / County FFS Population */}
         <div
-          className="rounded-2xl p-5 relative group"
+          className="rounded-xl p-5 relative group"
           style={{ ...card({ borderTop: `4px solid ${C.primary}` }) }}
         >
           <div className="flex justify-between items-start mb-3">
@@ -642,7 +642,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
 
         {/* ── Competitor table — 8 cols ─────────────────────── */}
         <section
-          className="lg:col-span-8 rounded-2xl overflow-hidden relative"
+          className="lg:col-span-8 rounded-xl overflow-hidden relative"
           style={card()}
         >
           {/* dot-matrix background */}
@@ -757,7 +757,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
 
           {/* Market Intel — inverse-surface dark card */}
           <div
-            className="rounded-2xl p-5 relative overflow-hidden"
+            className="rounded-xl p-5 relative overflow-hidden"
             style={{
               background: C.inverseSurf,
               color: C.inverseOn,
@@ -949,7 +949,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
         </CommandCard>
 
         {/* Geographic Opportunity Density */}
-        <div className="rounded-2xl overflow-hidden relative min-h-[380px]" style={{ boxShadow: commandCard.boxShadow }}>
+        <div className="rounded-xl overflow-hidden relative min-h-[380px]" style={{ boxShadow: commandCard.boxShadow }}>
           <img
             src="/maine-map.png"
             alt="Maine geographic opportunity density map"

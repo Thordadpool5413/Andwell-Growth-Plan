@@ -272,7 +272,7 @@ export default function AskPanel({ rows, totals, activeTab }) {
                   <div key={i} className={msg.role === "user" ? "flex justify-end" : ""}>
                     {msg.role === "user" ? (
                       <div
-                        className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
+                        className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${
                           dark ? "bg-violet-700 text-white" : "bg-violet-600 text-white"
                         }`}
                       >
@@ -280,7 +280,7 @@ export default function AskPanel({ rows, totals, activeTab }) {
                       </div>
                     ) : (
                       <div
-                        className={`rounded-2xl border px-3 py-2.5 ${
+                        className={`rounded-xl border px-3 py-2.5 ${
                           dark ? "border-violet-800/50 bg-violet-950/30" : "border-violet-200 bg-violet-50"
                         }`}
                       >

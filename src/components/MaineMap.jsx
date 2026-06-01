@@ -606,7 +606,7 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty, provide
 
   if (!API_KEY) {
     return (
-      <div className={`flex h-64 items-center justify-center rounded-2xl border text-sm font-semibold ${dark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-500"}`}>
+      <div className={`flex h-64 items-center justify-center rounded-xl border text-sm font-semibold ${dark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-500"}`}>
         Google Maps API key not configured (VITE_GOOGLE_MAPS_API_KEY)
       </div>
     );
