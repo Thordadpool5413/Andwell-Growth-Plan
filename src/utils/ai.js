@@ -246,6 +246,7 @@ export async function callCmsAnalyze(question) {
 
 export function buildMarketSummaryPrompt({ velocityRows, andwellDominance, amedisysCombinedShare, northernLight, totalCompetitors, nationalChainCount }) {
   const topCompetitors = velocityRows.slice(0, 5).map((r) =>
+    `• ${r.name}: momentum ${r.momentum}%, region ${r.primaryRegion}, status ${r.status}${r.national ? " (national chain)" : ""}, provider share ${r.providerShare != null ? (r.providerShare * 100).toFixed(1) + "%" : "N/A"}`
     `• ${r.name}: momentum ${r.momentum}%, region ${r.region}, status ${r.status}${r.national ? " (national chain)" : ""}, provider share ${r.providerShare != null ? (r.providerShare * 100).toFixed(1) + "%" : "N/A"}`
   ).join("\n");
 
@@ -266,6 +267,7 @@ Competitor landscape:
 - Total named competitors in CMS file: ${totalCompetitors}
 - National chain competitors: ${nationalChainCount}
 - Amedisys combined Maine share: ${amedisysCombinedShare > 0 ? (amedisysCombinedShare * 100).toFixed(1) + "%" : "active in Penobscot"}
+${northernLight ? `- Northern Light Home Care momentum score: ${northernLight.momentum}%, primary region: ${northernLight.primaryRegion}` : ""}
 ${northernLight ? `- Northern Light Home Care momentum score: ${northernLight.momentum}%, primary region: ${northernLight.region}` : ""}
 
 Top competitors by momentum score:
