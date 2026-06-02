@@ -185,7 +185,7 @@ export default function AskPanel({ rows, totals, activeTab }) {
     <div className="fixed bottom-6 right-6 z-50 print:hidden">
       {open ? (
         <div
-          className={`flex w-[26rem] flex-col rounded-3xl border shadow-2xl ${
+          className={`flex w-[26rem] flex-col rounded-xl border shadow-2xl ${
             dark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white shadow-slate-200"
           }`}
         >
@@ -196,13 +196,13 @@ export default function AskPanel({ rows, totals, activeTab }) {
           >
             <div className="flex items-center gap-2 min-w-0">
               <span
-                className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide ${
+                className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${
                   dark ? "bg-violet-700 text-violet-100" : "bg-violet-600 text-white"
                 }`}
               >
                 AI
               </span>
-              <span className={`text-sm font-black truncate ${dark ? "text-white" : "text-slate-900"}`}>
+              <span className={`text-sm font-semibold truncate ${dark ? "text-white" : "text-slate-900"}`}>
                 Ask the data
                 <span className={`ml-1.5 font-semibold ${dark ? "text-violet-400" : "text-violet-600"}`}>
                   — {tabLabel}
@@ -272,7 +272,7 @@ export default function AskPanel({ rows, totals, activeTab }) {
                   <div key={i} className={msg.role === "user" ? "flex justify-end" : ""}>
                     {msg.role === "user" ? (
                       <div
-                        className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
+                        className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${
                           dark ? "bg-violet-700 text-white" : "bg-violet-600 text-white"
                         }`}
                       >
@@ -280,7 +280,7 @@ export default function AskPanel({ rows, totals, activeTab }) {
                       </div>
                     ) : (
                       <div
-                        className={`rounded-2xl border px-3 py-2.5 ${
+                        className={`rounded-xl border px-3 py-2.5 ${
                           dark ? "border-violet-800/50 bg-violet-950/30" : "border-violet-200 bg-violet-50"
                         }`}
                       >
@@ -335,7 +335,7 @@ export default function AskPanel({ rows, totals, activeTab }) {
               <button
                 onClick={handleAsk}
                 disabled={!question.trim() || generating}
-                className="mr-1 rounded-xl bg-violet-600 px-3 py-2 text-sm font-black text-white transition hover:bg-violet-500 disabled:opacity-40"
+                className="mr-1 rounded-lg bg-violet-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-violet-500 disabled:opacity-40"
               >
                 →
               </button>
@@ -350,9 +350,9 @@ export default function AskPanel({ rows, totals, activeTab }) {
         <button
           key={pulseKey}
           onClick={() => setOpen(true)}
-          className="ask-panel-pulse flex items-center gap-2 rounded-full bg-violet-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-violet-500/25 transition hover:scale-105 hover:bg-violet-500"
+          className="ask-panel-pulse flex items-center gap-2 rounded-lg bg-violet-600 px-5 py-3 text-sm font-medium text-white shadow-lg shadow-violet-500/25 transition hover:scale-105 hover:bg-violet-500"
         >
-          <span className="rounded-sm bg-violet-500/40 px-1 text-[10px] font-black uppercase">AI</span>
+          <span className="rounded-sm bg-violet-500/40 px-1 text-[10px] font-medium uppercase">AI</span>
           Ask the data
         </button>
       )}

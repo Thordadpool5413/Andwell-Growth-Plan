@@ -42,7 +42,7 @@ function StarRating({ value, dark }) {
     : value >= 3 ? (dark ? "text-yellow-400" : "text-yellow-500")
     : (dark ? "text-slate-400" : "text-slate-400");
   return (
-    <span className={`font-black text-sm ${colorCls}`}>
+    <span className={`font-semibold text-sm ${colorCls}`}>
       {stars.join("")} <span className="text-xs font-normal">({value})</span>
     </span>
   );
@@ -50,12 +50,12 @@ function StarRating({ value, dark }) {
 
 function TrendIcon({ direction, prev, current, dark }) {
   if (!direction || direction === "flat") {
-    return <span className={`text-[11px] font-black ${dark ? "text-slate-500" : "text-slate-400"}`} title="No change">→</span>;
+    return <span className={`text-[11px] font-medium ${dark ? "text-slate-500" : "text-slate-400"}`} title="No change">→</span>;
   }
   if (direction === "up") {
     const diff = prev != null && current != null ? (parseFloat(current) - parseFloat(prev)).toFixed(1) : null;
     return (
-      <span className={`text-[11px] font-black ${dark ? "text-emerald-400" : "text-emerald-600"}`} title={diff ? `+${diff} from previous` : "Improving"}>
+      <span className={`text-[11px] font-semibold ${dark ? "text-emerald-400" : "text-emerald-600"}`} title={diff ? `+${diff} from previous` : "Improving"}>
         ↑{diff ? ` +${diff}` : ""}
       </span>
     );
@@ -63,7 +63,7 @@ function TrendIcon({ direction, prev, current, dark }) {
   if (direction === "down") {
     const diff = prev != null && current != null ? (parseFloat(current) - parseFloat(prev)).toFixed(1) : null;
     return (
-      <span className={`text-[11px] font-black ${dark ? "text-red-400" : "text-red-600"}`} title={diff ? `${diff} from previous` : "Declining"}>
+      <span className={`text-[11px] font-semibold ${dark ? "text-red-400" : "text-red-600"}`} title={diff ? `${diff} from previous` : "Declining"}>
         ↓{diff ? ` ${diff}` : ""}
       </span>
     );
@@ -100,7 +100,7 @@ function QualityTrendChart({ dark }) {
   if (loading) return null;
   if (!history.length) {
     return (
-      <div className={`rounded-2xl border p-5 text-center text-sm ${dark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-500"}`}>
+      <div className={`rounded-xl border p-5 text-center text-sm ${dark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-500"}`}>
         No historical snapshots yet. Run a quality sync to start capturing trend data.
       </div>
     );
@@ -133,7 +133,7 @@ function QualityTrendChart({ dark }) {
             <button
               key={ag.ccn}
               onClick={() => toggleCcn(ag.ccn)}
-              className={`rounded-full px-2.5 py-1 text-[10px] font-black transition border ${active ? "opacity-100" : "opacity-40"}`}
+              className={`rounded px-2.5 py-1 text-[10px] font-medium transition border ${active ? "opacity-100" : "opacity-40"}`}
               style={{ borderColor: color, color: active ? color : undefined, backgroundColor: active ? `${color}18` : "transparent" }}
             >
               {isAndwell ? "★ " : ""}{(ag.provider_name || ag.ccn).replace("Home Care", "HC").replace("Health", "Hlth").slice(0, 22)}
@@ -146,7 +146,7 @@ function QualityTrendChart({ dark }) {
           Only one snapshot recorded so far. Trend lines appear after two or more syncs on different days.
         </div>
       ) : (
-        <ChartContainer height="h-64">
+        <ChartContainer height="h-64" caption="Source: CMS Care Compare — star rating history per sync run">
           <LineChart data={chartData} margin={{ left: 8, right: 16, top: 4, bottom: 4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
             <XAxis dataKey="date" tick={{ fontSize: 10, fill: dark ? "#94a3b8" : "#475569" }} />
@@ -225,15 +225,15 @@ function QualityRatingsTab({ dark }) {
     setSyncing(false);
   };
 
-  if (loading) return <div className={`rounded-2xl border p-8 text-center ${dark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-white text-slate-500"}`}>Loading quality data…</div>;
+  if (loading) return <div className={`rounded-xl border p-8 text-center ${dark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-white text-slate-500"}`}>Loading quality data…</div>;
 
   if (!data.length) {
     return (
-      <div className={`rounded-2xl border p-8 text-center space-y-4 ${dark ? "border-amber-800/40 bg-amber-950/20" : "border-amber-200 bg-amber-50"}`}>
-        <p className={`font-black ${dark ? "text-amber-300" : "text-amber-900"}`}>No quality data yet</p>
+      <div className={`rounded-xl border p-8 text-center space-y-4 ${dark ? "border-amber-800/40 bg-amber-950/20" : "border-amber-200 bg-amber-50"}`}>
+        <p className={`font-semibold ${dark ? "text-amber-300" : "text-amber-900"}`}>No quality data yet</p>
         <p className={`text-sm ${dark ? "text-amber-400" : "text-amber-700"}`}>Run a quality sync to pull live CMS star ratings for all 19 Maine home health agencies.</p>
         <button onClick={runSync} disabled={syncing}
-          className="rounded-full px-6 py-2.5 text-sm font-black bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition">
+          className="rounded-lg px-5 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition">
           {syncing ? "Syncing…" : "Sync CMS Quality Data"}
         </button>
         {syncMsg && <p className={`text-xs ${dark ? "text-slate-400" : "text-slate-600"}`}>{syncMsg}</p>}
@@ -251,30 +251,30 @@ function QualityRatingsTab({ dark }) {
           {synced && <FreshnessChip lastSynced={synced} label="Quality data" syncType="CMS 6jpm-sxkc" />}
         </div>
         <button onClick={runSync} disabled={syncing}
-          className={`rounded-full px-4 py-2 text-xs font-black transition disabled:opacity-50 ${dark ? "bg-slate-700 text-blue-300 ring-1 ring-slate-600 hover:bg-slate-600" : "bg-white text-blue-700 ring-1 ring-blue-200 hover:bg-blue-50"}`}>
+          className={`rounded-lg px-4 py-2 text-xs font-medium transition disabled:opacity-50 ${dark ? "bg-slate-700 text-blue-300 ring-1 ring-slate-600 hover:bg-slate-600" : "bg-white text-blue-700 ring-1 ring-blue-200 hover:bg-blue-50"}`}>
           {syncing ? "Syncing…" : "↻ Refresh"}
         </button>
       </div>
       {syncMsg && <p className={`text-xs ${dark ? "text-slate-400" : "text-slate-600"}`}>{syncMsg}</p>}
 
       {andwellRow && (
-        <div className={`rounded-2xl border-l-4 border-l-emerald-500 border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-emerald-50"}`}>
+        <div className={`rounded-xl border-l-4 border-l-emerald-500 border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-emerald-50"}`}>
           <div className="flex items-center gap-3 flex-wrap">
-            <span className={`rounded-full px-3 py-1 text-xs font-black ${dark ? "bg-emerald-800 text-emerald-300" : "bg-emerald-600 text-white"}`}>Your agency</span>
-            <p className={`font-black text-lg ${dark ? "text-white" : "text-slate-950"}`}>{andwellRow.provider_name}</p>
+            <span className={`rounded px-3 py-1 text-xs font-medium ${dark ? "bg-emerald-800 text-emerald-300" : "bg-emerald-600 text-white"}`}>Your agency</span>
+            <p className={`font-semibold text-base ${dark ? "text-slate-100" : "text-slate-800"}`}>{andwellRow.provider_name}</p>
             <StarRating value={andwellRow.star_rating != null ? parseFloat(andwellRow.star_rating) : null} dark={dark} />
           </div>
           <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-            <div><p className={dark ? "text-slate-400" : "text-slate-500"}>Timely care</p><p className="font-black">{andwellRow.timely_care_pct != null ? `${parseFloat(andwellRow.timely_care_pct).toFixed(1)}%` : "—"}</p></div>
-            <div><p className={dark ? "text-slate-400" : "text-slate-500"}>Medicare cost index</p><p className="font-black">{andwellRow.medicare_spend_ratio != null ? parseFloat(andwellRow.medicare_spend_ratio).toFixed(2) : "—"}</p></div>
-            <div><p className={dark ? "text-slate-400" : "text-slate-500"}>PPR rate</p><p className="font-black">{andwellRow.ppr_rate != null ? `${parseFloat(andwellRow.ppr_rate).toFixed(2)}%` : "—"}</p></div>
-            <div><p className={dark ? "text-slate-400" : "text-slate-500"}>State avg star</p><p className="font-black">{stateAvg.toFixed(2)}</p></div>
+            <div><p className={`text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>Timely care</p><p className="font-semibold tabular-nums">{andwellRow.timely_care_pct != null ? `${parseFloat(andwellRow.timely_care_pct).toFixed(1)}%` : "—"}</p></div>
+            <div><p className={`text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>Medicare cost index</p><p className="font-semibold tabular-nums">{andwellRow.medicare_spend_ratio != null ? parseFloat(andwellRow.medicare_spend_ratio).toFixed(2) : "—"}</p></div>
+            <div><p className={`text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>PPR rate</p><p className="font-semibold tabular-nums">{andwellRow.ppr_rate != null ? `${parseFloat(andwellRow.ppr_rate).toFixed(2)}%` : "—"}</p></div>
+            <div><p className={`text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>State avg star</p><p className="font-semibold tabular-nums">{stateAvg.toFixed(2)}</p></div>
           </div>
         </div>
       )}
 
       <Card title="Maine Home Health Agency Rankings" eyebrow={`CMS Quality Star Ratings — dataset 6jpm-sxkc · ${data.length} agencies`}>
-        <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
+        <div className={`overflow-x-auto rounded-xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
           <table className="w-full text-left text-sm">
             <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
               <tr>
@@ -297,11 +297,11 @@ function QualityRatingsTab({ dark }) {
                   <tr key={row.ccn} className={isAndwell
                     ? dark ? "bg-blue-950/40 border-l-4 border-l-emerald-500" : "bg-emerald-50 border-l-4 border-l-emerald-500"
                     : dark ? "hover:bg-slate-700/40" : "hover:bg-slate-50"}>
-                    <td className={`px-4 py-3 font-black ${dark ? "text-slate-400" : "text-slate-500"}`}>{i + 1}</td>
-                    <td className={`px-4 py-3 ${dark ? "text-white" : "text-slate-950"}`}>
-                      <span className="font-black">{row.provider_name || row.ccn}</span>
+                    <td className={`px-4 py-3 font-medium tabular-nums ${dark ? "text-slate-400" : "text-slate-500"}`}>{i + 1}</td>
+                    <td className={`px-4 py-3 ${dark ? "text-slate-100" : "text-slate-800"}`}>
+                      <span className="font-semibold">{row.provider_name || row.ccn}</span>
                       {isAndwell && (
-                        <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-black ${dark ? "bg-emerald-800 text-emerald-300" : "bg-emerald-600 text-white"}`}>Your agency</span>
+                        <span className={`ml-2 rounded px-2 py-0.5 text-[10px] font-medium ${dark ? "bg-emerald-800 text-emerald-300" : "bg-emerald-600 text-white"}`}>Your agency</span>
                       )}
                     </td>
                     <td className={`px-4 py-3 font-mono text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{row.ccn}</td>
@@ -312,7 +312,7 @@ function QualityRatingsTab({ dark }) {
                     </td>
                     <td className={`px-4 py-3 text-right ${dark ? "text-slate-300" : "text-slate-700"}`}>{row.timely_care_pct != null ? `${parseFloat(row.timely_care_pct).toFixed(1)}%` : "—"}</td>
                     <td className={`px-4 py-3 text-right ${dark ? "text-slate-300" : "text-slate-700"}`}>{row.walking_improve_pct != null ? `${parseFloat(row.walking_improve_pct).toFixed(1)}%` : "—"}</td>
-                    <td className={`px-4 py-3 text-right font-black ${row.medicare_spend_ratio != null && parseFloat(row.medicare_spend_ratio) < 1.0 ? dark ? "text-emerald-400" : "text-emerald-600" : dark ? "text-slate-300" : "text-slate-700"}`}>
+                    <td className={`px-4 py-3 text-right font-semibold tabular-nums ${row.medicare_spend_ratio != null && parseFloat(row.medicare_spend_ratio) < 1.0 ? dark ? "text-emerald-400" : "text-emerald-600" : dark ? "text-slate-300" : "text-slate-700"}`}>
                       {row.medicare_spend_ratio != null ? parseFloat(row.medicare_spend_ratio).toFixed(2) : "—"}
                     </td>
                     <td className={`px-4 py-3 text-right ${dark ? "text-slate-300" : "text-slate-700"}`}>{row.ppr_rate != null ? `${parseFloat(row.ppr_rate).toFixed(2)}%` : "—"}</td>
@@ -321,7 +321,7 @@ function QualityRatingsTab({ dark }) {
               })}
               <tr className={`font-semibold ${dark ? "bg-slate-700/30 text-slate-300" : "bg-slate-100 text-slate-600"}`}>
                 <td className="px-4 py-3" colSpan={4}>State average</td>
-                <td className="px-4 py-3"><span className={`font-black ${dark ? "text-slate-300" : "text-slate-700"}`}>{stateAvg.toFixed(2)} ★</span></td>
+                <td className="px-4 py-3"><span className={`font-semibold tabular-nums ${dark ? "text-slate-300" : "text-slate-700"}`}>{stateAvg.toFixed(2)} ★</span></td>
                 <td className="px-4 py-3">—</td>
                 <td className="px-4 py-3 text-right">—</td>
                 <td className="px-4 py-3 text-right">—</td>
@@ -348,7 +348,7 @@ function HHVBPTooltip({ active, payload, dark }) {
     : "bg-white border-slate-200 text-slate-900";
   return (
     <div className={`rounded-xl border p-3 text-xs shadow-lg max-w-[220px] space-y-1.5 ${containerCls}`}>
-      <p className="font-black text-sm leading-tight">{d.name}</p>
+      <p className="font-semibold text-sm leading-tight">{d.name}</p>
       <p>TPS: <strong>{d.tps.toFixed(1)}</strong>{d.payAdj ? <span className="ml-2 text-emerald-500 font-bold">{d.payAdj}</span> : null}</p>
       <div className={`border-t pt-1 ${dark ? "border-slate-700" : "border-slate-100"}`}>
         <p className={`font-bold mb-0.5 ${dark ? "text-slate-400" : "text-slate-500"}`}>Clinical Outcomes</p>
@@ -412,7 +412,7 @@ function HHVBPTab({ dark }) {
     setSyncing(false);
   };
 
-  if (loading) return <div className={`rounded-2xl border p-8 text-center ${dark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-white text-slate-500"}`}>Loading HHVBP data…</div>;
+  if (loading) return <div className={`rounded-xl border p-8 text-center ${dark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-white text-slate-500"}`}>Loading HHVBP data…</div>;
 
   const andwellRow = data.find((r) => r.ccn === ANDWELL_CCN || r.is_andwell);
   const chartData = data.filter((r) => r.total_performance_score != null).map((r) => ({
@@ -431,11 +431,11 @@ function HHVBPTab({ dark }) {
 
   if (!data.length) {
     return (
-      <div className={`rounded-2xl border p-8 text-center space-y-4 ${dark ? "border-amber-800/40 bg-amber-950/20" : "border-amber-200 bg-amber-50"}`}>
-        <p className={`font-black ${dark ? "text-amber-300" : "text-amber-900"}`}>No HHVBP data yet</p>
+      <div className={`rounded-xl border p-8 text-center space-y-4 ${dark ? "border-amber-800/40 bg-amber-950/20" : "border-amber-200 bg-amber-50"}`}>
+        <p className={`font-semibold ${dark ? "text-amber-300" : "text-amber-900"}`}>No HHVBP data yet</p>
         <p className={`text-sm ${dark ? "text-amber-400" : "text-amber-700"}`}>Run a quality sync to pull Value-Based Purchasing scores.</p>
         <button onClick={runSync} disabled={syncing}
-          className="rounded-full px-6 py-2.5 text-sm font-black bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition">
+          className="rounded-lg px-5 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition">
           {syncing ? "Syncing…" : "Sync HHVBP Data"}
         </button>
         {syncMsg && <p className={`text-xs ${dark ? "text-slate-400" : "text-slate-600"}`}>{syncMsg}</p>}
@@ -460,30 +460,30 @@ function HHVBPTab({ dark }) {
           {synced && <FreshnessChip lastSynced={synced} label="HHVBP data" syncType="CMS 56d7-4994" />}
         </div>
         <button onClick={runSync} disabled={syncing}
-          className={`rounded-full px-4 py-2 text-xs font-black transition disabled:opacity-50 ${dark ? "bg-slate-700 text-blue-300 ring-1 ring-slate-600 hover:bg-slate-600" : "bg-white text-blue-700 ring-1 ring-blue-200 hover:bg-blue-50"}`}>
+          className={`rounded-lg px-4 py-2 text-xs font-medium transition disabled:opacity-50 ${dark ? "bg-slate-700 text-blue-300 ring-1 ring-slate-600 hover:bg-slate-600" : "bg-white text-blue-700 ring-1 ring-blue-200 hover:bg-blue-50"}`}>
           {syncing ? "Syncing…" : "↻ Refresh"}
         </button>
       </div>
       {syncMsg && <p className={`text-xs ${dark ? "text-slate-400" : "text-slate-600"}`}>{syncMsg}</p>}
 
       {andwellRow && (
-        <div className={`rounded-2xl border-l-4 border-l-emerald-500 border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-emerald-50"}`}>
+        <div className={`rounded-xl border-l-4 border-l-emerald-500 border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-emerald-50"}`}>
           <div className="flex items-center gap-3 flex-wrap mb-3">
-            <span className={`rounded-full px-3 py-1 text-xs font-black ${dark ? "bg-emerald-800 text-emerald-300" : "bg-emerald-600 text-white"}`}>Andwell HHVBP</span>
-            <p className={`font-black text-lg ${dark ? "text-white" : "text-slate-950"}`}>{andwellRow.provider_name}</p>
+            <span className={`rounded px-3 py-1 text-xs font-medium ${dark ? "bg-emerald-800 text-emerald-300" : "bg-emerald-600 text-white"}`}>Andwell HHVBP</span>
+            <p className={`font-semibold text-base ${dark ? "text-slate-100" : "text-slate-800"}`}>{andwellRow.provider_name}</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
             <div>
               <p className={dark ? "text-slate-400" : "text-slate-500"}>Total Performance Score</p>
-              <p className={`text-2xl font-black ${dark ? "text-white" : "text-slate-950"}`}>{andwellRow.total_performance_score != null ? parseFloat(andwellRow.total_performance_score).toFixed(1) : "—"}</p>
+              <p className={`text-2xl font-bold tabular-nums ${dark ? "text-slate-100" : "text-slate-900"}`}>{andwellRow.total_performance_score != null ? parseFloat(andwellRow.total_performance_score).toFixed(1) : "—"}</p>
             </div>
             <div>
               <p className={dark ? "text-slate-400" : "text-slate-500"}>2026 Payment Adjustment</p>
-              <p className={`text-2xl font-black ${dark ? "text-emerald-400" : "text-emerald-600"}`}>{andwellRow.payment_adjustment_pct || "—"}</p>
+              <p className={`text-2xl font-bold tabular-nums ${dark ? "text-emerald-400" : "text-emerald-600"}`}>{andwellRow.payment_adjustment_pct || "—"}</p>
             </div>
             <div>
               <p className={dark ? "text-slate-400" : "text-slate-500"}>Payment Year</p>
-              <p className={`text-2xl font-black ${dark ? "text-white" : "text-slate-950"}`}>{andwellRow.payment_year || "—"}</p>
+              <p className={`text-2xl font-bold tabular-nums ${dark ? "text-slate-100" : "text-slate-900"}`}>{andwellRow.payment_year || "—"}</p>
             </div>
           </div>
         </div>
@@ -491,7 +491,7 @@ function HHVBPTab({ dark }) {
 
       {chartData.length > 0 && (
         <Card title="Total Performance Score — All Maine HHAs" eyebrow="HHVBP dataset 56d7-4994 · hover a bar for domain breakdown">
-          <ChartContainer height="h-96">
+          <ChartContainer height="h-96" caption="Source: CMS HHVBP dataset 56d7-4994 — Total Performance Score across all Maine HHAs">
             <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 60, bottom: 16, top: 4 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
               <XAxis
@@ -537,7 +537,7 @@ function HHVBPTab({ dark }) {
 
       {andwellRow && (
         <Card title="Andwell Achievement Points by Measure" eyebrow="HHVBP measure breakdown">
-          <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
+          <div className={`overflow-x-auto rounded-xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
             <table className="w-full text-sm">
               <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
                 <tr>
@@ -549,7 +549,7 @@ function HHVBPTab({ dark }) {
                 {MEASURE_LABELS.map(({ key, label }) => (
                   <tr key={key} className={dark ? "hover:bg-slate-700/40" : "hover:bg-slate-50"}>
                     <td className={`px-4 py-3 ${dark ? "text-slate-300" : "text-slate-700"}`}>{label}</td>
-                    <td className={`px-4 py-3 text-right font-black ${andwellRow[key] != null ? dark ? "text-emerald-400" : "text-emerald-700" : dark ? "text-slate-500" : "text-slate-400"}`}>
+                    <td className={`px-4 py-3 text-right font-semibold tabular-nums ${andwellRow[key] != null ? dark ? "text-emerald-400" : "text-emerald-700" : dark ? "text-slate-500" : "text-slate-400"}`}>
                       {andwellRow[key] != null ? parseFloat(andwellRow[key]).toFixed(2) : "—"}
                     </td>
                   </tr>
@@ -605,15 +605,15 @@ function HospiceQualityTab({ dark }) {
     setSyncing(false);
   };
 
-  if (loading) return <div className={`rounded-2xl border p-8 text-center ${dark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-white text-slate-500"}`}>Loading hospice quality data…</div>;
+  if (loading) return <div className={`rounded-xl border p-8 text-center ${dark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-white text-slate-500"}`}>Loading hospice quality data…</div>;
 
   if (!data.length) {
     return (
-      <div className={`rounded-2xl border p-8 text-center space-y-4 ${dark ? "border-amber-800/40 bg-amber-950/20" : "border-amber-200 bg-amber-50"}`}>
-        <p className={`font-black ${dark ? "text-amber-300" : "text-amber-900"}`}>No hospice quality data yet</p>
+      <div className={`rounded-xl border p-8 text-center space-y-4 ${dark ? "border-amber-800/40 bg-amber-950/20" : "border-amber-200 bg-amber-50"}`}>
+        <p className={`font-semibold ${dark ? "text-amber-300" : "text-amber-900"}`}>No hospice quality data yet</p>
         <p className={`text-sm ${dark ? "text-amber-400" : "text-amber-700"}`}>Run a quality sync to pull Maine hospice CAHPS survey scores.</p>
         <button onClick={runSync} disabled={syncing}
-          className="rounded-full px-6 py-2.5 text-sm font-black bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition">
+          className="rounded-lg px-5 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition">
           {syncing ? "Syncing…" : "Sync Hospice Quality Data"}
         </button>
         {syncMsg && <p className={`text-xs ${dark ? "text-slate-400" : "text-slate-600"}`}>{syncMsg}</p>}
@@ -630,14 +630,14 @@ function HospiceQualityTab({ dark }) {
           {synced && <FreshnessChip lastSynced={synced} label="Hospice quality" syncType="CMS gxki-hrr8" />}
         </div>
         <button onClick={runSync} disabled={syncing}
-          className={`rounded-full px-4 py-2 text-xs font-black transition disabled:opacity-50 ${dark ? "bg-slate-700 text-blue-300 ring-1 ring-slate-600 hover:bg-slate-600" : "bg-white text-blue-700 ring-1 ring-blue-200 hover:bg-blue-50"}`}>
+          className={`rounded-lg px-4 py-2 text-xs font-medium transition disabled:opacity-50 ${dark ? "bg-slate-700 text-blue-300 ring-1 ring-slate-600 hover:bg-slate-600" : "bg-white text-blue-700 ring-1 ring-blue-200 hover:bg-blue-50"}`}>
           {syncing ? "Syncing…" : "↻ Refresh"}
         </button>
       </div>
       {syncMsg && <p className={`text-xs ${dark ? "text-slate-400" : "text-slate-600"}`}>{syncMsg}</p>}
 
       <Card title="Maine Hospice CAHPS Quality Scores" eyebrow={`CMS Hospice CAHPS dataset gxki-hrr8 · ${data.length} providers`}>
-        <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
+        <div className={`overflow-x-auto rounded-xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
           <table className="w-full text-left text-sm">
             <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
               <tr>
@@ -656,10 +656,10 @@ function HospiceQualityTab({ dark }) {
                 const starRating = measures["RATING_BBV"]?.star_rating ?? measures["RATING_MBV"]?.star_rating ?? null;
                 return (
                   <tr key={row.ccn} className={dark ? "hover:bg-slate-700/40" : "hover:bg-slate-50"}>
-                    <td className={`px-4 py-3 font-black ${dark ? "text-white" : "text-slate-950"}`}>{row.provider_name || row.ccn}</td>
+                    <td className={`px-4 py-3 font-semibold ${dark ? "text-slate-100" : "text-slate-800"}`}>{row.provider_name || row.ccn}</td>
                     <td className={`px-4 py-3 font-mono text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{row.ccn}</td>
-                    <td className={`px-4 py-3 text-right font-black ${dark ? "text-slate-300" : "text-slate-700"}`}>{overallScore != null ? `${parseFloat(overallScore).toFixed(1)}%` : "—"}</td>
-                    <td className={`px-4 py-3 text-right font-black ${dark ? "text-slate-300" : "text-slate-700"}`}>{emoScore != null ? `${parseFloat(emoScore).toFixed(1)}%` : "—"}</td>
+                    <td className={`px-4 py-3 text-right font-semibold tabular-nums ${dark ? "text-slate-300" : "text-slate-700"}`}>{overallScore != null ? `${parseFloat(overallScore).toFixed(1)}%` : "—"}</td>
+                    <td className={`px-4 py-3 text-right font-semibold tabular-nums ${dark ? "text-slate-300" : "text-slate-700"}`}>{emoScore != null ? `${parseFloat(emoScore).toFixed(1)}%` : "—"}</td>
                     <td className="px-4 py-3">{starRating ? <StarRating value={parseFloat(starRating)} dark={dark} /> : <span className={dark ? "text-slate-500" : "text-slate-400"}>N/A</span>}</td>
                   </tr>
                 );
@@ -710,7 +710,7 @@ export default function CmsData() {
           <button
             key={t.id}
             onClick={() => setActiveTab(t.id)}
-            className={`rounded-full px-5 py-2 text-sm font-black transition ${activeTab === t.id ? "bg-blue-600 text-white" : dark ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"}`}
+            className={`rounded-lg px-5 py-2 text-sm font-medium transition ${activeTab === t.id ? "bg-blue-600 text-white" : dark ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"}`}
           >
             {t.label}
           </button>
@@ -722,21 +722,21 @@ export default function CmsData() {
           <div className="grid gap-4 md:grid-cols-4">
             <Metric label="CMS counties loaded" value={rows.length} detail="County market rows from CMS 2022 PUF included in this model." color="blue" />
             <Metric label="HH users" value={number(rows.reduce((sum, row) => sum + row.hh.users, 0))} detail="Medicare home health users across all loaded counties." color="emerald" />
-            <Metric label="Hospice users" value={number(rows.reduce((sum, row) => sum + row.hos.users, 0))} detail="Medicare hospice users across all loaded counties." color="violet" />
+            <Metric label="Hospice users" value={number(rows.reduce((sum, row) => sum + row.hos.users, 0))} detail="Medicare hospice users across all loaded counties." color="blue" />
             <Metric label="Total HH payments" value={currency(totalHHPay)} detail="Aggregate Medicare home health payments across all counties." color="indigo" />
           </div>
 
           <div className="flex justify-end">
             <button
               onClick={() => exportCmsCSV(cmsCountyMarket)}
-              className={`rounded-full px-4 py-2 text-xs font-black transition ${dark ? "bg-slate-700 text-emerald-400 ring-1 ring-slate-600 hover:bg-slate-600" : "bg-white text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-50"}`}
+              className={`rounded-lg px-4 py-2 text-xs font-medium transition ${dark ? "bg-slate-700 text-emerald-400 ring-1 ring-slate-600 hover:bg-slate-600" : "bg-white text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-50"}`}
             >
               Export CSV
             </button>
           </div>
 
           <Card title="HH users vs. Hospice users by county" eyebrow="CMS 2022 PUF — beneficiary volumes">
-            <ChartContainer height="h-96">
+            <ChartContainer height="h-96" caption="Source: CMS Medicare Provider Utilization 2022 PUF — beneficiary counts by county">
                 <ComposedChart data={rows} margin={{ left: 10, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
                   <XAxis
@@ -757,7 +757,7 @@ export default function CmsData() {
           </Card>
 
           <Card title="Provider density and revenue efficiency" eyebrow="Market intelligence">
-            <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
+            <div className={`overflow-x-auto rounded-xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
               <table className="w-full text-left text-sm">
                 <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
                   <tr>
@@ -773,12 +773,12 @@ export default function CmsData() {
                 <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-slate-100"}`}>
                   {rows.map((row) => (
                     <tr key={row.county} className={dark ? "hover:bg-slate-700/50" : "hover:bg-slate-50"}>
-                      <td className={`px-5 py-4 font-black ${dark ? "text-white" : ""}`}>{row.county}</td>
+                      <td className={`px-5 py-4 font-semibold ${dark ? "text-slate-100" : "text-slate-800"}`}>{row.county}</td>
                       <td className={`px-5 py-4 text-right ${dark ? "text-slate-300" : ""}`}>{number(row.ffs)}</td>
                       <td className={`px-5 py-4 text-right ${dark ? "text-slate-300" : ""}`}>{row.hh.prov}</td>
-                      <td className={`px-5 py-4 text-right font-black ${row.providerDensity > 3 ? "text-amber-600" : dark ? "text-emerald-400" : "text-emerald-600"}`}>{row.providerDensity}/10K</td>
+                      <td className={`px-5 py-4 text-right font-semibold tabular-nums ${row.providerDensity > 3 ? "text-amber-600" : dark ? "text-emerald-400" : "text-emerald-600"}`}>{row.providerDensity}/10K</td>
                       <td className={`px-5 py-4 text-right ${dark ? "text-slate-300" : ""}`}>{(row.hh.rate * 100).toFixed(1)}%</td>
-                      <td className={`px-5 py-4 text-right font-black ${dark ? "text-blue-400" : "text-blue-700"}`}>{currency(row.revenuePerUser)}</td>
+                      <td className={`px-5 py-4 text-right font-semibold tabular-nums ${dark ? "text-blue-400" : "text-blue-700"}`}>{currency(row.revenuePerUser)}</td>
                       <td className={`px-5 py-4 text-right ${dark ? "text-slate-300" : ""}`}>{currency(row.hh.pay)}</td>
                     </tr>
                   ))}

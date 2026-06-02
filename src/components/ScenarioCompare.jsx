@@ -34,7 +34,7 @@ function DeltaCell({ base, compare, format }) {
   if (diff === 0) return <span className="text-slate-400">—</span>;
   const positive = diff > 0;
   return (
-    <span className={positive ? "font-black text-emerald-600" : "font-black text-red-500"}>
+    <span className={positive ? "font-bold tabular-nums text-emerald-600" : "font-bold tabular-nums text-red-500"}>
       {positive ? "+" : ""}{format(diff)}
     </span>
   );
@@ -69,16 +69,16 @@ export default function ScenarioCompare({ currentScenario }) {
   ];
 
   return (
-    <div className={`rounded-3xl border p-6 shadow-sm ${dark ? "border-slate-700 bg-slate-800/60" : "border-indigo-200 bg-indigo-50/60"}`}>
+    <div className={`rounded-xl border p-6 shadow-sm ${dark ? "border-slate-700 bg-slate-800/60" : "border-slate-200 bg-slate-50/60"}`}>
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <p className={`text-xs font-black uppercase tracking-[0.22em] ${dark ? "text-indigo-400" : "text-indigo-700"}`}>Scenario Comparison</p>
+          <p className={`text-xs font-medium uppercase tracking-[0.22em] ${dark ? "text-slate-400" : "text-slate-500"}`}>Scenario Comparison</p>
           <p className={`mt-1 text-sm ${dark ? "text-slate-400" : "text-slate-600"}`}>Compare your current assumptions against presets</p>
         </div>
         <select
           value={compareKey}
           onChange={(e) => setCompareKey(e.target.value)}
-          className={`rounded-xl px-4 py-2 text-sm font-black shadow-sm ${dark ? "bg-slate-700 text-white border-slate-600" : "bg-white text-slate-700 border-slate-200"} border`}
+          className={`rounded-lg px-4 py-2 text-sm font-medium shadow-sm ${dark ? "bg-slate-700 text-white border-slate-600" : "bg-white text-slate-700 border-slate-200"} border`}
         >
           {Object.keys(PRESET_SCENARIOS).map((key) => (
             <option key={key} value={key}>{key}</option>
@@ -96,12 +96,12 @@ export default function ScenarioCompare({ currentScenario }) {
               <th className="px-4 py-3 text-right text-xs uppercase tracking-wide">Delta</th>
             </tr>
           </thead>
-          <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-indigo-100"}`}>
+          <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-slate-100"}`}>
             {metrics.map((m) => (
-              <tr key={m.key} className={dark ? "hover:bg-slate-700/50" : "hover:bg-indigo-100/50"}>
-                <td className={`px-4 py-3 font-black ${dark ? "text-white" : "text-slate-950"}`}>{m.label}</td>
-                <td className={`px-4 py-3 text-right ${dark ? "text-slate-300" : "text-slate-700"}`}>{m.fmt(current[m.key])}</td>
-                <td className={`px-4 py-3 text-right ${dark ? "text-slate-300" : "text-slate-700"}`}>{m.fmt(compare[m.key])}</td>
+              <tr key={m.key} className={dark ? "hover:bg-slate-700/50" : "hover:bg-slate-50"}>
+                <td className={`px-4 py-3 font-semibold ${dark ? "text-white" : "text-slate-950"}`}>{m.label}</td>
+                <td className={`px-4 py-3 text-right tabular-nums ${dark ? "text-slate-300" : "text-slate-700"}`}>{m.fmt(current[m.key])}</td>
+                <td className={`px-4 py-3 text-right tabular-nums ${dark ? "text-slate-300" : "text-slate-700"}`}>{m.fmt(compare[m.key])}</td>
                 <td className="px-4 py-3 text-right">
                   <DeltaCell base={current[m.key]} compare={compare[m.key]} format={m.fmt} />
                 </td>

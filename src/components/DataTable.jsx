@@ -45,7 +45,7 @@ export default function DataTable({
   }
 
   return (
-    <div className={`rounded-2xl border overflow-hidden ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"} ${className}`}>
+    <div className={`rounded-xl border overflow-hidden ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"} ${className}`}>
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">

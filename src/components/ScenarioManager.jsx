@@ -117,7 +117,7 @@ export default function ScenarioManager() {
       {isListOpen && scenarios.length > 0 && (
         <div
           className={`
-            rounded-2xl border p-4 space-y-2 max-h-64 overflow-y-auto animate-slide-in
+            rounded-xl border p-4 space-y-2 max-h-64 overflow-y-auto animate-slide-in
             ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-slate-50"}
           `}
         >

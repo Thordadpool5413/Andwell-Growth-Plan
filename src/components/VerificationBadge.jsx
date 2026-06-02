@@ -18,7 +18,7 @@ export default function VerificationBadge({ status, showLabel = true, size = "sm
   const dotSize = size === "xs" ? "h-1.5 w-1.5" : "h-2 w-2";
 
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full font-black ${textSize} ${padding} ${config.bg}`}>
+    <span className={`inline-flex items-center gap-1 rounded font-medium ${textSize} ${padding} ${config.bg}`}>
       <span className={`${dotSize} rounded-full flex-shrink-0 ${config.dot}`} />
       {showLabel ? status : config.icon}
     </span>
