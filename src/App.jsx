@@ -27,6 +27,7 @@ import BoardReport from "./views/BoardReport.jsx";
 import LaunchChecklist from "./views/LaunchChecklist.jsx";
 import AskPanel from "./components/AskPanel.jsx";
 import ScenarioSidebar from "./components/ScenarioSidebar.jsx";
+import { ArrowRightLeft, Download, Lightbulb, MoonStar, SlidersHorizontal, Sparkles, SunMedium } from "lucide-react";
 
 const TAB_GROUPS = [
   { label: "Planning", tabs: ["Executive View", "County Plan", "Referral Plan", "Opportunity Score"] },
@@ -117,6 +118,12 @@ function Dashboard() {
     () => (insights.recommendations?.length || 0) + (insights.anomalies?.length || 0) + (insights.risks?.length || 0),
     [insights],
   );
+  const headerMetrics = useMemo(() => ([
+    { label: "Year 1 revenue", value: currency(totals.y1Revenue), detail: "Modeled revenue run-rate" },
+    { label: "Year 1 starts", value: number(totals.y1Starts), detail: "Projected patient starts" },
+    { label: "Year 1 referrals", value: number(totals.y1Referrals), detail: "Required gross referrals" },
+    { label: "3-year revenue", value: currency(totals.y1Revenue + totals.y2Revenue + totals.y3Revenue), detail: "Cumulative modeled upside" },
+  ]), [totals]);
   const handleNavigate = useCallback(({ tab, county }) => {
     if (county) setSelectedCounty(county);
     if (tab) {
@@ -137,72 +144,87 @@ function Dashboard() {
   }, [addToast]);
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${dark ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-900"}`}>
+    <div className={`dashboard-shell min-h-screen transition-colors duration-300 ${dark ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-900"}`}>
       <div className={`px-4 py-6 sm:px-6 lg:px-10 transition-all duration-300 ${showScenarioSidebar ? "2xl:pr-[22rem]" : ""}`}>
 
         {/* ── Header ── */}
-        <header className={`mx-auto mb-6 max-w-7xl rounded-xl px-6 py-5 shadow-lg transition-colors duration-300 print:hidden ${dark ? "bg-slate-900 border border-slate-800" : "bg-slate-900"}`}>
-          <div className="flex items-start justify-between gap-6">
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500">
-                Andwell Maine — Innovation and Growth Plan
-              </p>
-              <h1 className="mt-1 text-xl font-semibold leading-tight tracking-tight text-white md:text-2xl">
-                Home Health and Hospice Market Intelligence Dashboard
-              </h1>
-              <p className="mt-0.5 text-xs text-slate-500">
-                County opportunity · referral requirements · CMS market data · competitor intelligence · financial upside · launch validation
-              </p>
-
-              {/* KPI strip */}
-              <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2">
-                <div>
-                  <p className="text-[10px] font-medium uppercase tracking-widest text-slate-500">Y1 Revenue</p>
-                  <p className="mt-0.5 text-lg font-bold tabular-nums text-white">{currency(totals.y1Revenue)}</p>
-                </div>
-                <div className="h-7 w-px bg-slate-700" />
-                <div>
-                  <p className="text-[10px] font-medium uppercase tracking-widest text-slate-500">Y1 Starts</p>
-                  <p className="mt-0.5 text-lg font-bold tabular-nums text-white">{number(totals.y1Starts)}</p>
-                </div>
-                <div className="h-7 w-px bg-slate-700" />
-                <div>
-                  <p className="text-[10px] font-medium uppercase tracking-widest text-slate-500">Y1 Referrals</p>
-                  <p className="mt-0.5 text-lg font-bold tabular-nums text-white">{number(totals.y1Referrals)}</p>
-                </div>
-                <div className="h-7 w-px bg-slate-700" />
-                <div>
-                  <p className="text-[10px] font-medium uppercase tracking-widest text-slate-500">3-Year Revenue</p>
-                  <p className="mt-0.5 text-lg font-bold tabular-nums text-white">{currency(totals.y1Revenue + totals.y2Revenue + totals.y3Revenue)}</p>
-                </div>
-                {scenarioRestored && (
-                  <>
-                    <div className="h-7 w-px bg-slate-700" />
-                    <div className="flex items-center gap-1.5 rounded border border-amber-700/50 bg-amber-900/30 px-2.5 py-1 text-[11px] font-medium text-amber-300">
+        <header className={`relative mx-auto mb-6 max-w-7xl overflow-hidden rounded-[28px] border shadow-[0_24px_80px_-28px_rgba(15,23,42,0.55)] transition-colors duration-300 print:hidden ${
+          dark ? "border-slate-800/80 bg-slate-900/90" : "border-slate-200 bg-white/90"
+        }`}>
+          <div className="pointer-events-none absolute inset-0">
+            <div className={`absolute inset-x-0 top-0 h-32 ${dark ? "bg-gradient-to-r from-blue-500/12 via-violet-500/10 to-cyan-400/10" : "bg-gradient-to-r from-blue-100 via-violet-100 to-cyan-100"}`} />
+            <div className={`absolute -right-16 -top-16 h-48 w-48 rounded-full blur-3xl ${dark ? "bg-blue-500/10" : "bg-blue-200/70"}`} />
+            <div className={`absolute -bottom-16 left-1/3 h-40 w-40 rounded-full blur-3xl ${dark ? "bg-violet-500/10" : "bg-violet-200/70"}`} />
+          </div>
+          <div className="relative px-6 py-6 lg:px-8">
+            <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] ${
+                    dark ? "border-blue-500/20 bg-blue-500/10 text-blue-200" : "border-blue-200 bg-blue-50 text-blue-700"
+                  }`}>
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Strategic planning workspace
+                  </span>
+                  <span className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-medium uppercase tracking-[0.18em] ${
+                    dark ? "bg-slate-800/90 text-slate-400" : "bg-slate-100 text-slate-500"
+                  }`}>
+                    {activeTab}
+                  </span>
+                  {scenarioRestored && (
+                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] ${
+                      dark ? "border-amber-500/25 bg-amber-500/10 text-amber-200" : "border-amber-200 bg-amber-50 text-amber-700"
+                    }`}>
                       <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
                       Custom scenario active
-                    </div>
-                  </>
-                )}
+                    </span>
+                  )}
+                </div>
+                <p className={`mt-4 text-[11px] font-semibold uppercase tracking-[0.24em] ${dark ? "text-slate-500" : "text-slate-400"}`}>
+                  Andwell Maine — Innovation and Growth Plan
+                </p>
+                <h1 className={`mt-2 max-w-3xl text-2xl font-semibold leading-tight tracking-tight md:text-[2rem] ${dark ? "text-white" : "text-slate-950"}`}>
+                  Home Health and Hospice Market Intelligence Dashboard
+                </h1>
+                <p className={`mt-3 max-w-3xl text-sm leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>
+                  County opportunity, referral planning, competitor intelligence, and modeled financial upside in one executive workspace.
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[28rem] xl:max-w-[32rem]">
+                {headerMetrics.map((metric) => (
+                  <div
+                    key={metric.label}
+                    className={`rounded-2xl border px-4 py-3 backdrop-blur-sm ${
+                      dark
+                        ? "border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                        : "border-slate-200 bg-white/80 shadow-sm shadow-slate-200/60"
+                    }`}
+                  >
+                    <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${dark ? "text-slate-500" : "text-slate-400"}`}>
+                      {metric.label}
+                    </p>
+                    <p className={`mt-2 text-xl font-bold tabular-nums ${dark ? "text-white" : "text-slate-900"}`}>
+                      {metric.value}
+                    </p>
+                    <p className={`mt-1 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{metric.detail}</p>
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* Dark mode toggle */}
             <button
               onClick={toggle}
-              className="shrink-0 rounded-lg p-2.5 transition-colors duration-200 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200"
+              className={`absolute right-6 top-6 inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition-colors duration-200 ${
+                dark
+                  ? "border-slate-700 bg-slate-800/90 text-slate-300 hover:border-slate-600 hover:bg-slate-700"
+                  : "border-slate-200 bg-white/90 text-slate-600 hover:bg-slate-50"
+              }`}
               aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
               title={dark ? "Switch to light mode" : "Switch to dark mode"}
             >
-              {dark ? (
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                  <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                  <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clipRule="evenodd" />
-                </svg>
-              )}
+              {dark ? <SunMedium className="h-4 w-4" /> : <MoonStar className="h-4 w-4" />}
+              <span className="hidden sm:inline">{dark ? "Light mode" : "Dark mode"}</span>
             </button>
           </div>
         </header>
@@ -211,8 +233,8 @@ function Dashboard() {
 
         <div className="mx-auto max-w-7xl space-y-4">
           {/* ── Navigation ── */}
-          <div className="print:hidden space-y-3">
-            <div className={`overflow-x-auto rounded-xl border ${dark ? "border-slate-700/60 bg-slate-900" : "border-slate-200 bg-white"} shadow-sm`}>
+          <div className="print:hidden sticky top-3 z-20 space-y-3">
+            <div className={`overflow-x-auto rounded-2xl border px-1 py-1 ${dark ? "border-slate-700/60 bg-slate-900/85 backdrop-blur-sm" : "border-slate-200 bg-white/90 backdrop-blur-sm"} shadow-lg shadow-slate-900/5`}>
               <div className="flex items-stretch min-w-max px-2 py-1.5 gap-0" role="tablist" aria-label="Dashboard views">
                 {TAB_GROUPS.map((group, gi) => (
                   <React.Fragment key={group.label}>
@@ -220,7 +242,7 @@ function Dashboard() {
                       <div className={`mx-2 my-2 w-px self-stretch ${dark ? "bg-slate-700/60" : "bg-slate-200"}`} />
                     )}
                     <div className="flex flex-col">
-                      <span className={`px-3 pt-1.5 pb-0.5 text-[10px] font-semibold uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>
+                      <span className={`px-3 pt-1.5 pb-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${dark ? "text-slate-400" : "text-slate-500"}`}>
                         {group.label}
                       </span>
                       <div className="flex items-center gap-0.5">
@@ -235,8 +257,8 @@ function Dashboard() {
                             className={`relative rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-100 whitespace-nowrap ${
                               activeTab === tab
                                 ? dark
-                                  ? "text-slate-100"
-                                  : "text-slate-800"
+                                  ? "bg-slate-800 text-slate-100 shadow-inner shadow-white/5"
+                                  : "bg-slate-100 text-slate-800 shadow-sm shadow-slate-200/70"
                                 : dark
                                   ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
                                   : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
@@ -244,7 +266,7 @@ function Dashboard() {
                           >
                             {tab}
                             {activeTab === tab && (
-                              <span className={`absolute bottom-0 left-2.5 right-2.5 h-0.5 rounded-full ${dark ? "bg-blue-400" : "bg-blue-600"}`} />
+                              <span className={`absolute bottom-0 left-2.5 right-2.5 h-0.5 rounded-full ${dark ? "bg-cyan-400" : "bg-blue-600"}`} />
                             )}
                           </button>
                         ))}
@@ -256,42 +278,48 @@ function Dashboard() {
             </div>
 
             {/* ── Tools bar ── */}
-            <div className={`flex flex-wrap items-center gap-2 border-t pt-2.5 ${dark ? "border-slate-800" : "border-slate-100"}`}>
-              <span className={`text-[10px] font-semibold uppercase tracking-wide ${dark ? "text-slate-600" : "text-slate-400"}`}>Tools</span>
+            <div className={`flex flex-wrap items-center gap-2 rounded-2xl border px-3 py-3 ${dark ? "border-slate-800 bg-slate-900/80 backdrop-blur-sm" : "border-slate-200 bg-white/90 backdrop-blur-sm"} shadow-lg shadow-slate-900/5`}>
+              <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${dark ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500"}`}>
+                <Lightbulb className="h-3.5 w-3.5" />
+                Workspace tools
+              </div>
               <button
                 onClick={() => { setShowCompare((p) => !p); if (showScenario) setShowScenario(false); }}
-                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors duration-100 ${
+                className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition-colors duration-100 ${
                   showCompare
-                    ? "bg-blue-700 text-white"
+                    ? "bg-blue-700 text-white shadow-lg shadow-blue-900/20"
                     : dark
                       ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700"
                       : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
                 }`}
               >
+                <ArrowRightLeft className="h-3.5 w-3.5" />
                 {showCompare ? "Hide Compare" : "Compare scenarios"}
               </button>
               <button
                 onClick={() => { setShowScenario((p) => !p); if (showCompare) setShowCompare(false); }}
-                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors duration-100 ${
+                className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition-colors duration-100 ${
                   showScenario
-                    ? "bg-blue-700 text-white"
+                    ? "bg-blue-700 text-white shadow-lg shadow-blue-900/20"
                     : dark
                       ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700"
                       : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
                 }`}
               >
+                <SlidersHorizontal className="h-3.5 w-3.5" />
                 {showScenario ? "Hide scenario model" : "Scenario model"}
               </button>
               <button
                 onClick={() => setShowInsights((p) => !p)}
-                className={`relative rounded-lg px-3 py-1.5 text-xs font-medium transition-colors duration-100 ${
+                className={`relative inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition-colors duration-100 ${
                   showInsights
-                    ? "bg-blue-700 text-white"
+                    ? "bg-blue-700 text-white shadow-lg shadow-blue-900/20"
                     : dark
                       ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700"
                       : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
                 }`}
               >
+                <Sparkles className="h-3.5 w-3.5" />
                 {showInsights ? "Hide insights" : "Insights"}
                 {!showInsights && insightCount > 0 && (
                   <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-semibold text-white">
@@ -299,7 +327,11 @@ function Dashboard() {
                   </span>
                 )}
               </button>
-              <div className="ml-auto">
+              <div className="ml-auto flex items-center gap-2">
+                <span className={`hidden items-center gap-2 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] md:inline-flex ${dark ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500"}`}>
+                  <Download className="h-3.5 w-3.5" />
+                  Export
+                </span>
                 <ExportButton targetId="tab-content" filename={`Andwell - ${activeTab}`} />
               </div>
             </div>

@@ -57,14 +57,14 @@ export default function Metric({ label, value, detail, sparkData, sparkColor, co
 
   return (
     <div
-      className={`rounded-xl border p-5 transition-colors duration-150 hover:shadow-md ${accentClass} ${
+      className={`rounded-[22px] border p-5 backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${accentClass} ${
         dark
-          ? "border-slate-700/60 bg-slate-800/60 shadow-sm shadow-slate-900/20"
-          : "border-slate-200 bg-white shadow-sm shadow-slate-100"
+          ? "border-slate-700/60 bg-gradient-to-br from-slate-900/85 to-slate-800/65 shadow-sm shadow-slate-950/20"
+          : "border-slate-200 bg-gradient-to-br from-white via-white to-slate-50 shadow-sm shadow-slate-200/60"
       }`}
     >
       <div className="flex items-start justify-between gap-2">
-        <p className={`text-xs font-medium leading-snug ${dark ? "text-slate-400" : "text-slate-500"}`}>{label}</p>
+        <p className={`text-[11px] font-semibold leading-snug uppercase tracking-[0.12em] ${dark ? "text-slate-400" : "text-slate-500"}`}>{label}</p>
         {sparkData && <Sparkline data={sparkData} color={sparkColor} />}
       </div>
       <div className="mt-2 flex items-baseline gap-2">
