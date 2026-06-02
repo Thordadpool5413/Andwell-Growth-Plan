@@ -119,7 +119,17 @@ function Dashboard() {
   );
   const handleNavigate = useCallback(({ tab, county }) => {
     if (county) setSelectedCounty(county);
-    if (tab) setActiveTab(tab);
+    if (tab) {
+      setActiveTab(tab);
+      window.setTimeout(() => setActiveTab(tab), 0);
+    }
+    setShowScenario(false);
+    setShowCompare(false);
+    setShowInsights(false);
+    setShowScenarioSidebar(false);
+    window.requestAnimationFrame(() => {
+      document.getElementById("tab-content")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   }, []);
   const handleApplyScenario = useCallback((nextScenario) => {
     setScenario(nextScenario);
