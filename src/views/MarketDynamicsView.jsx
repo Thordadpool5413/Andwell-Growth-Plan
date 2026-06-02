@@ -727,11 +727,13 @@ export default function MarketDynamicsView({ setActiveTab }) {
 
       {/* ── County + Service Filter Bar ─────────────────────── */}
       <div
+        className="rounded-2xl p-4 flex flex-col gap-3"
         className="rounded-xl p-4 flex flex-col gap-3"
         style={{ background: surfMed, border: `1px solid ${divider}` }}
       >
         {/* County pills */}
         <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] shrink-0 w-20" style={{ color: textMute }}>County</span>
           <span className="text-[9px] font-medium uppercase tracking-[0.2em] shrink-0 w-20" style={{ color: textMute }}>County</span>
           {["Statewide", ...COUNTY_LIST].map((county) => {
             const active = selectedCounty === county;
@@ -739,6 +741,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
               <button
                 key={county}
                 onClick={() => setSelectedCounty(county)}
+                className="rounded-full px-3 py-1 text-xs font-black transition-all"
                 className="rounded-lg px-3 py-1 text-xs font-medium transition-all"
                 style={active
                   ? { background: C.primary, color: "#fff", boxShadow: `0 2px 8px ${C.primary}55` }
@@ -753,6 +756,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
 
         {/* Service line pills */}
         <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] shrink-0 w-20" style={{ color: textMute }}>Service</span>
           <span className="text-[9px] font-medium uppercase tracking-[0.2em] shrink-0 w-20" style={{ color: textMute }}>Service</span>
           {SERVICE_OPTIONS.map((svc) => {
             const active = selectedService === svc;
@@ -760,6 +764,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
               <button
                 key={svc}
                 onClick={() => setSelectedService(svc)}
+                className="rounded-full px-3 py-1 text-xs font-black transition-all"
                 className="rounded-lg px-3 py-1 text-xs font-medium transition-all"
                 style={active
                   ? { background: C.secondary, color: "#fff", boxShadow: `0 2px 8px ${C.secondary}55` }
@@ -773,6 +778,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
 
           {/* Active filter label */}
           {(selectedCounty !== "Statewide" || selectedService !== "All") && (
+            <span className="ml-auto text-[10px] font-black uppercase tracking-[0.15em]" style={{ color: C.primary }}>
             <span className="ml-auto text-[10px] font-medium uppercase tracking-[0.15em]" style={{ color: C.primary }}>
               {selectedCounty !== "Statewide" ? selectedCounty : "Statewide"}
               {selectedService !== "All" ? ` · ${selectedService}` : ""}
@@ -781,6 +787,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
           {(selectedCounty !== "Statewide" || selectedService !== "All") && (
             <button
               onClick={() => { setSelectedCounty("Statewide"); setSelectedService("All"); }}
+              className="rounded-full px-2.5 py-0.5 text-[10px] font-black transition-all hover:opacity-70"
               className="rounded-lg px-2.5 py-0.5 text-[10px] font-medium transition-all hover:opacity-70"
               style={{ background: dark ? "#1a1d2a" : "#fff", color: textMute, border: `1px solid ${divider}` }}
             >
@@ -809,6 +816,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
           <div className="font-bold tabular-nums" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: textMain }}>
             {percent(andwellDominance)}
           </div>
+          <div className="mt-1 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: C.primary }}>
           <div className="mt-1 text-[10px] font-medium uppercase tracking-[0.2em]" style={{ color: C.primary }}>
             {!isCountyView ? "+2.4% vs Prev Qtr" : `Provider file · ${selectedCounty}`}
           </div>
@@ -821,6 +829,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
           style={{ ...card({ borderLeft: `4px solid ${C.secondary}` }) }}
         >
           <div className="flex justify-between items-start mb-3">
+            <span className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: textSub }}>
             <span className="text-[10px] font-medium uppercase tracking-[0.3em]" style={{ color: textSub }}>
               {!isCountyView ? "Aggregated Competition" : "County Providers"}
             </span>
@@ -828,11 +837,13 @@ export default function MarketDynamicsView({ setActiveTab }) {
               <path d="M17 7L7 17M7 7v10h10"/>
             </svg>
           </div>
+          <div className="font-black" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: textMain }}>
           <div className="font-bold tabular-nums" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: textMain }}>
             {!isCountyView
               ? percent(competitionShare)
               : (countyKpis?.providerCount ?? "—")}
           </div>
+          <div className="mt-1 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: !isCountyView ? "#ba1a1a" : C.secondary }}>
           <div className="mt-1 text-[10px] font-medium uppercase tracking-[0.2em]" style={{ color: !isCountyView ? "#ba1a1a" : C.secondary }}>
             {!isCountyView ? "-1.1% Sector Loss" : `Active in ${selectedCounty}`}
           </div>
@@ -845,6 +856,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
           style={{ ...card({ borderLeft: `4px solid ${C.tertiaryC}` }) }}
         >
           <div className="flex justify-between items-start mb-3">
+            <span className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: textSub }}>
             <span className="text-[10px] font-medium uppercase tracking-[0.3em]" style={{ color: textSub }}>
               {!isCountyView ? "Strategic Velocity" : "HH Utilization Rate"}
             </span>
@@ -852,6 +864,10 @@ export default function MarketDynamicsView({ setActiveTab }) {
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
             </svg>
           </div>
+          <div className="font-black" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: textMain }}>
+            {velocityPct != null ? `${velocityPct}%` : "—"}
+          </div>
+          <div className="mt-1 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: C.tertiaryC }}>
           <div className="font-bold tabular-nums" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: textMain }}>
             {velocityPct != null ? `${velocityPct}%` : "—"}
           </div>
@@ -867,6 +883,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
           style={{ ...card({ borderTop: `4px solid ${C.primary}` }) }}
         >
           <div className="flex justify-between items-start mb-3">
+            <span className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: textSub }}>
             <span className="text-[10px] font-medium uppercase tracking-[0.3em]" style={{ color: textSub }}>
               {!isCountyView ? "Data Confidence" : "FFS Population"}
             </span>
@@ -874,6 +891,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>
             </svg>
           </div>
+          <div className="font-black" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: textMain }}>
           <div className="font-bold tabular-nums" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: textMain }}>
             {!isCountyView
               ? (displayConfidence != null ? `${displayConfidence}%` : "—")
@@ -882,6 +900,11 @@ export default function MarketDynamicsView({ setActiveTab }) {
           <div className="mt-1 flex items-center gap-1.5">
             {!isCountyView ? (
               <>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: textSub }}>CMS Verified</span>
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              </>
+            ) : (
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: textSub }}>
                 <span className="text-[10px] font-medium uppercase tracking-[0.2em]" style={{ color: textSub }}>CMS Verified</span>
                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
               </>
@@ -1404,6 +1427,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
 
           {/* Emerging Markets */}
           <CommandCard className="p-5">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-3" style={{ color: textSub }}>
             <h3 className="text-[10px] font-medium uppercase tracking-[0.2em] mb-3" style={{ color: textSub }}>
               {!isCountyView ? "Emerging Markets" : `${selectedCounty} Market Snapshot`}
             </h3>
