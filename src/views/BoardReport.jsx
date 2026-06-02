@@ -5,11 +5,13 @@ import Card from "../components/Card.jsx";
 import Badge from "../components/Badge.jsx";
 import Abbr from "../components/Abbr.jsx";
 import AiBadge from "../components/AiBadge.jsx";
+import Metric from "../components/Metric.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
 import { rollupByService, getOpportunityScore, getCompetitiveThreatScore, getMarketPenetration } from "../utils/calculations.js";
 import { streamChat, buildBoardNarrativePrompt, AI_AVAILABLE } from "../utils/ai.js";
 import { currency, number, percent } from "../utils/formatters.js";
+import { useSortableTable, SortTh } from "../hooks/useSortableTable.jsx";
 
 const CMS_LAST_SYNCED = "2026-05-01";
 const CMS_DISPLAY_DATE = "May 2026";
@@ -106,6 +108,8 @@ export default function BoardReport({ rows, totals }) {
   const riskCounties = countyStatus.filter((c) => c.threatScore > 60 || c.penetration < 0.02);
   const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 
+  const { sorted: sortedCounties, sortKey: cSortKey, sortDir: cSortDir, toggleSort: cToggleSort } = useSortableTable(countyStatus, "oppScore", "desc");
+
   const generateNarrative = useCallback(() => {
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -143,25 +147,25 @@ export default function BoardReport({ rows, totals }) {
       <div className="flex items-center justify-between">
         <div>
           <p className={`text-sm font-semibold uppercase tracking-wide ${dark ? "text-blue-400" : "text-blue-600"}`}>Board report</p>
-          <h2 className={`text-2xl font-black ${dark ? "text-white" : "text-slate-950"}`}>Andwell Growth Plan — Executive Summary</h2>
+          <h2 className={`text-xl font-semibold ${dark ? "text-slate-100" : "text-slate-900"}`}>Andwell Growth Plan — Executive Summary</h2>
         </div>
         <div className="flex items-center gap-2">
           {AI_AVAILABLE && (
             <button
               onClick={generateNarrative}
               disabled={narrativeGenerating}
-              className={`rounded-2xl px-4 py-2.5 text-sm font-black transition disabled:opacity-50 ${
+              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-100 disabled:opacity-50 ${
                 dark
-                  ? "bg-violet-700 text-white hover:bg-violet-600"
-                  : "bg-violet-600 text-white hover:bg-violet-500"
+                  ? "bg-blue-700 text-white hover:bg-blue-600"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
               }`}
             >
-              {narrativeGenerating ? "Drafting…" : "✦ Draft narrative"}
+              {narrativeGenerating ? "Drafting…" : "Draft narrative"}
             </button>
           )}
           <button
             onClick={handlePrint}
-            className={`rounded-2xl px-5 py-2.5 text-sm font-black transition ${dark ? "bg-blue-600 text-white hover:bg-blue-500" : "bg-blue-600 text-white hover:bg-blue-700"}`}
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-100 ${dark ? "bg-blue-600 text-white hover:bg-blue-500" : "bg-blue-600 text-white hover:bg-blue-700"}`}
           >
             Print / PDF
           </button>
@@ -181,7 +185,7 @@ export default function BoardReport({ rows, totals }) {
               <p className={`text-sm leading-7 whitespace-pre-wrap ${dark ? "text-slate-200" : "text-slate-700"}`}>
                 {narrativeText}
                 {narrativeGenerating && (
-                  <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-violet-400" />
+                  <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-blue-400" />
                 )}
               </p>
               {!narrativeGenerating && (
@@ -206,32 +210,40 @@ export default function BoardReport({ rows, totals }) {
       )}
 
       <div ref={reportRef} className="space-y-6 print:space-y-4">
-        <div className={`rounded-3xl border p-6 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
-          <div className="grid gap-6 md:grid-cols-4">
-            <div>
-              <p className={`text-xs font-semibold uppercase ${dark ? "text-slate-400" : "text-slate-500"}`}>Active counties</p>
-              <p className={`mt-1 text-3xl font-black ${dark ? "text-white" : "text-slate-950"}`}>{counties.length}</p>
-            </div>
-            <div>
-              <p className={`text-xs font-semibold uppercase ${dark ? "text-slate-400" : "text-slate-500"}`}>Year 1 revenue</p>
-              <p className={`mt-1 text-3xl font-black ${dark ? "text-blue-400" : "text-blue-700"}`}>{currency(totals.y1Revenue)}</p>
-            </div>
-            <div>
-              <p className={`text-xs font-semibold uppercase ${dark ? "text-slate-400" : "text-slate-500"}`}>Year 3 revenue</p>
-              <p className={`mt-1 text-3xl font-black ${dark ? "text-emerald-400" : "text-emerald-600"}`}>{currency(totals.y3Revenue)}</p>
-            </div>
-            <div>
-              <p className={`text-xs font-semibold uppercase ${dark ? "text-slate-400" : "text-slate-500"}`}>3-year contribution</p>
-              <p className={`mt-1 text-3xl font-black ${dark ? "text-purple-400" : "text-purple-600"}`}>{currency(totals.totalContribution)}</p>
-            </div>
-          </div>
+        <div className="board-report-cover grid gap-4 md:grid-cols-4">
+          <Metric
+            label="Active counties"
+            value={counties.length}
+            detail="County markets in phased launch plan"
+            color="blue"
+          />
+          <Metric
+            label="Year 1 revenue"
+            value={currency(totals.y1Revenue)}
+            detail="Projected first-year net revenue"
+            sparkData={[totals.y1Revenue, totals.y2Revenue, totals.y3Revenue]}
+            sparkColor={COLORS.blue}
+            color="blue"
+          />
+          <Metric
+            label="Year 3 revenue"
+            value={currency(totals.y3Revenue)}
+            detail="Full-ramp revenue by end of Year 3"
+            color="emerald"
+          />
+          <Metric
+            label="3-year contribution"
+            value={currency(totals.totalContribution)}
+            detail="Cumulative operating contribution margin"
+            color="blue"
+          />
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr] print:break-after-page">
           <Card title="County status matrix" eyebrow="Traffic light indicators">
             <div className={`mb-3 rounded-xl border px-4 py-2.5 ${dark ? "border-slate-700 bg-slate-800/60" : "border-slate-100 bg-slate-50"}`}>
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-                <p className={`text-[10px] font-black uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-400"}`}>Traffic light key</p>
+                <p className={`text-[10px] font-medium uppercase tracking-[0.1em] ${dark ? "text-slate-500" : "text-slate-400"}`}>Traffic light key</p>
                 {[
                   { color: "bg-emerald-500", label: "On track", sub: "≥60% position (threat ≤40)" },
                   { color: "bg-amber-500", label: "Watch", sub: "40–59% position (threat 41–60)" },
@@ -246,31 +258,30 @@ export default function BoardReport({ rows, totals }) {
               </div>
             </div>
             <div className={`mb-3 flex items-start gap-2 rounded-xl border px-3 py-2.5 text-xs ${dark ? "border-amber-900/40 bg-amber-950/30 text-amber-300" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
-              <span className="mt-0.5 shrink-0 text-amber-500">⚠</span>
-              <span><span className="font-black"><Abbr term="Provider File Share">Provider file share</Abbr> ≠ market share.</span> Revenue figures are modeled from <Abbr term="CMS">CMS</Abbr> provider file beneficiary volume — a proxy for relative market position, not independently verified county market share. True market share requires county-attributed claims data not available in this dataset.</span>
+              <span><span className="font-semibold"><Abbr term="Provider File Share">Provider file share</Abbr> ≠ market share.</span> Revenue figures are modeled from <Abbr term="CMS">CMS</Abbr> provider file beneficiary volume — a proxy for relative market position, not independently verified county market share. True market share requires county-attributed claims data not available in this dataset.</span>
             </div>
-            <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-100"}`}>
+            <div className={`overflow-x-auto rounded-lg border ${dark ? "border-slate-700/60" : "border-slate-200"}`}>
               <table className="w-full text-left text-sm">
-                <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
+                <thead className={`sticky top-0 z-10 text-xs uppercase tracking-wide ${dark ? "bg-slate-700/80 text-slate-400 backdrop-blur" : "bg-slate-50 text-slate-500 shadow-sm"}`}>
                   <tr>
-                    <th className="px-4 py-3">County</th>
-                    <th className="px-4 py-3">Priority</th>
-                    <th className="px-4 py-3 text-right">Y1 rev</th>
-                    <th className="px-4 py-3 text-center">Competition</th>
-                    <th className="px-4 py-3 text-center"><Abbr term="Market Penetration">Penetration</Abbr></th>
-                    <th className="px-4 py-3 text-center">Opp score</th>
+                    <SortTh sortKey="county" currentKey={cSortKey} currentDir={cSortDir} onSort={cToggleSort} className="px-4 py-3">County</SortTh>
+                    <SortTh sortKey="launchGroup" currentKey={cSortKey} currentDir={cSortDir} onSort={cToggleSort} className="px-4 py-3">Priority</SortTh>
+                    <SortTh sortKey="y1Rev" currentKey={cSortKey} currentDir={cSortDir} onSort={cToggleSort} className="px-4 py-3 text-right">Y1 rev</SortTh>
+                    <SortTh sortKey="threatScore" currentKey={cSortKey} currentDir={cSortDir} onSort={cToggleSort} className="px-4 py-3 text-center">Competition</SortTh>
+                    <SortTh sortKey="penetration" currentKey={cSortKey} currentDir={cSortDir} onSort={cToggleSort} className="px-4 py-3 text-center"><Abbr term="Market Penetration">Penetration</Abbr></SortTh>
+                    <SortTh sortKey="oppScore" currentKey={cSortKey} currentDir={cSortDir} onSort={cToggleSort} className="px-4 py-3 text-center">Opp score</SortTh>
                   </tr>
                 </thead>
                 <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-slate-100"}`}>
-                  {countyStatus.map((c, i) => (
+                  {sortedCounties.map((c, i) => (
                     <tr key={c.county} className={dark ? i % 2 === 1 ? "bg-slate-800/60 hover:bg-slate-700/50" : "hover:bg-slate-700/50" : i % 2 === 1 ? "bg-slate-50/60 hover:bg-slate-50" : "hover:bg-slate-50"}>
-                      <td className={`px-4 py-3 font-black ${dark ? "text-white" : ""}`}>{c.county}</td>
+                      <td className={`px-4 py-3 font-semibold ${dark ? "text-slate-100" : "text-slate-800"}`}>{c.county}</td>
                       <td className="px-4 py-3">
                         <Badge tone={c.launchGroup.includes("1") ? "green" : c.launchGroup.includes("2") ? "blue" : "amber"}>
                           {c.launchGroup}
                         </Badge>
                       </td>
-                      <td className={`px-4 py-3 text-right font-black ${dark ? "text-blue-400" : "text-blue-700"}`}>{currency(c.y1Rev)}</td>
+                      <td className={`px-4 py-3 text-right font-semibold tabular-nums ${dark ? "text-blue-400" : "text-blue-700"}`}>{currency(c.y1Rev)}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-center gap-1.5">
                           <span className={`inline-block h-2.5 w-2.5 rounded-full ${c.threatStatus.color}`} />
@@ -297,7 +308,7 @@ export default function BoardReport({ rows, totals }) {
 
           <div className="space-y-6">
             <Card title="Y1 service mix" eyebrow="Revenue breakdown">
-              <ChartContainer height="h-52">
+              <ChartContainer height="h-52" caption="Source: scenario model — Y1 projected revenue by service line">
                 <PieChart>
                   <Pie data={serviceMix} dataKey="revenue" nameKey="service" cx="50%" cy="50%" outerRadius={80} label={({ service, revenue }) => `${service}: ${currency(revenue)}`}>
                     {serviceMix.map((entry) => (
@@ -313,7 +324,7 @@ export default function BoardReport({ rows, totals }) {
                 <div className="space-y-2">
                   {riskCounties.map((c) => (
                     <div key={c.county} className={`rounded-xl border p-3 ${dark ? "border-red-900 bg-red-950/30" : "border-red-200 bg-red-50"}`}>
-                      <p className={`text-sm font-black ${dark ? "text-red-400" : "text-red-700"}`}>{c.county}</p>
+                      <p className={`text-sm font-semibold ${dark ? "text-red-400" : "text-red-700"}`}>{c.county}</p>
                       <p className={`text-xs mt-1 ${dark ? "text-red-400/70" : "text-red-600"}`}>
                         {c.threatScore > 60 ? `Threat score ${c.threatScore}/100 (${c.threatLevel}). ` : ""}
                         {c.penetration < 0.02 ? `Penetration ${percent(c.penetration)} below 2% threshold.` : ""}
@@ -330,31 +341,31 @@ export default function BoardReport({ rows, totals }) {
           <div className="grid gap-4 md:grid-cols-3">
             {[
               { label: "Year 1", value: totals.y1Revenue, color: dark ? "text-blue-400" : "text-blue-700", accent: "border-l-4 border-l-blue-500" },
-              { label: "Year 2", value: totals.y2Revenue, color: dark ? "text-purple-400" : "text-purple-600", accent: "border-l-4 border-l-purple-500" },
+              { label: "Year 2", value: totals.y2Revenue, color: dark ? "text-slate-300" : "text-slate-600", accent: "border-l-4 border-l-slate-400" },
               { label: "Year 3", value: totals.y3Revenue, color: dark ? "text-emerald-400" : "text-emerald-600", accent: "border-l-4 border-l-emerald-500" },
             ].map((yr) => (
-              <div key={yr.label} className={`rounded-2xl border p-5 text-center ${yr.accent} ${dark ? "border-slate-700 bg-slate-700/30" : "border-slate-100 bg-slate-50"}`}>
-                <p className={`text-sm font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>{yr.label}</p>
-                <p className={`mt-2 text-3xl font-black ${yr.color}`}>{currency(yr.value)}</p>
+              <div key={yr.label} className={`rounded-xl border p-5 text-center ${yr.accent} ${dark ? "border-slate-700/60 bg-slate-700/20" : "border-slate-200 bg-slate-50"}`}>
+                <p className={`text-xs font-medium uppercase tracking-[0.1em] ${dark ? "text-slate-400" : "text-slate-500"}`}>{yr.label}</p>
+                <p className={`mt-2 text-2xl font-bold tabular-nums ${yr.color}`}>{currency(yr.value)}</p>
               </div>
             ))}
           </div>
           <div className="mt-4 grid gap-4 md:grid-cols-3">
-            <div className={`rounded-2xl border p-4 text-center ${dark ? "border-slate-700 bg-slate-700/30" : "border-slate-100 bg-slate-50"}`}>
-              <p className={`text-sm ${dark ? "text-slate-400" : "text-slate-500"}`}>Y1→Y2 growth</p>
-              <p className="mt-1 text-xl font-black text-emerald-600">
+            <div className={`rounded-xl border p-4 text-center border-l-4 border-l-slate-300 ${dark ? "border-slate-700/60 bg-slate-700/20" : "border-slate-200 bg-slate-50"}`}>
+              <p className={`text-xs font-medium uppercase tracking-[0.1em] ${dark ? "text-slate-400" : "text-slate-500"}`}>Y1→Y2 growth</p>
+              <p className="mt-1 text-xl font-bold tabular-nums text-emerald-600">
                 +{totals.y1Revenue > 0 ? Math.round((totals.y2Revenue - totals.y1Revenue) / totals.y1Revenue * 100) : 0}%
               </p>
             </div>
-            <div className={`rounded-2xl border p-4 text-center ${dark ? "border-slate-700 bg-slate-700/30" : "border-slate-100 bg-slate-50"}`}>
-              <p className={`text-sm ${dark ? "text-slate-400" : "text-slate-500"}`}>Y2→Y3 growth</p>
-              <p className="mt-1 text-xl font-black text-emerald-600">
+            <div className={`rounded-xl border p-4 text-center border-l-4 border-l-slate-300 ${dark ? "border-slate-700/60 bg-slate-700/20" : "border-slate-200 bg-slate-50"}`}>
+              <p className={`text-xs font-medium uppercase tracking-[0.1em] ${dark ? "text-slate-400" : "text-slate-500"}`}>Y2→Y3 growth</p>
+              <p className="mt-1 text-xl font-bold tabular-nums text-emerald-600">
                 +{totals.y2Revenue > 0 ? Math.round((totals.y3Revenue - totals.y2Revenue) / totals.y2Revenue * 100) : 0}%
               </p>
             </div>
-            <div className={`rounded-2xl border p-4 text-center ${dark ? "border-slate-700 bg-slate-700/30" : "border-slate-100 bg-slate-50"}`}>
-              <p className={`text-sm ${dark ? "text-slate-400" : "text-slate-500"}`}>3-year total revenue</p>
-              <p className={`mt-1 text-xl font-black ${dark ? "text-white" : "text-slate-950"}`}>
+            <div className={`rounded-xl border p-4 text-center border-l-4 border-l-slate-400 ${dark ? "border-slate-700/60 bg-slate-700/20" : "border-slate-200 bg-slate-50"}`}>
+              <p className={`text-xs font-medium uppercase tracking-[0.1em] ${dark ? "text-slate-400" : "text-slate-500"}`}>3-year total revenue</p>
+              <p className={`mt-1 text-xl font-bold tabular-nums ${dark ? "text-slate-100" : "text-slate-800"}`}>
                 {currency(totals.y1Revenue + totals.y2Revenue + totals.y3Revenue)}
               </p>
             </div>
@@ -365,7 +376,7 @@ export default function BoardReport({ rows, totals }) {
           <p className={`mb-4 text-sm leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>
             Before acting on the numbers above, board members should understand which inputs are independently verified versus modeled planning assumptions. The table below summarizes the confidence level and provenance for each key input.
           </p>
-          <div className={`overflow-x-auto rounded-2xl border ${dark ? "border-slate-700" : "border-slate-200"}`}>
+          <div className={`overflow-x-auto rounded-lg border ${dark ? "border-slate-700/60" : "border-slate-200"}`}>
             <table className="w-full text-left text-sm">
               <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/50 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
                 <tr>
@@ -381,11 +392,11 @@ export default function BoardReport({ rows, totals }) {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <span className={`h-2.5 w-2.5 flex-shrink-0 rounded-full ${input.dot}`} />
-                        <span className={`font-black text-sm ${dark ? "text-white" : "text-slate-900"}`}>{input.name}</span>
+                        <span className={`font-semibold text-sm ${dark ? "text-slate-100" : "text-slate-800"}`}>{input.name}</span>
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black ${input.typeClass}`}>
+                      <span className={`inline-flex items-center rounded px-2 py-0.5 text-[10px] font-medium ${input.typeClass}`}>
                         {input.type}
                       </span>
                     </td>
@@ -397,7 +408,7 @@ export default function BoardReport({ rows, totals }) {
             </table>
           </div>
           <div className={`mt-4 flex flex-wrap items-center gap-4 rounded-xl border px-4 py-3 text-xs ${dark ? "border-slate-700 bg-slate-800/40 text-slate-400" : "border-slate-200 bg-white text-slate-500"}`}>
-            <span className="font-black">Legend:</span>
+            <span className="font-semibold">Legend:</span>
             {[
               { dot: "bg-emerald-500", label: "CMS verified — sourced directly from CMS certification or provider files" },
               { dot: "bg-amber-400", label: "Modeled assumption — internal planning figure, not externally verified" },

@@ -37,7 +37,7 @@ export default function ChartContainer({ height = "h-80", children, title, subti
     <div className="flex flex-col h-full">
       {(title || subtitle) && (
         <div className="mb-4">
-          {title && <p className={`text-sm font-black tracking-tight ${dark ? "text-white" : "text-slate-900"}`}>{title}</p>}
+          {title && <p className={`text-sm font-semibold tracking-tight ${dark ? "text-white" : "text-slate-900"}`}>{title}</p>}
           {subtitle && <p className={`mt-0.5 text-xs font-medium ${dark ? "text-slate-400" : "text-slate-500"}`}>{subtitle}</p>}
         </div>
       )}

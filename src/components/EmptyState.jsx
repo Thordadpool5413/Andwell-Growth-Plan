@@ -26,7 +26,7 @@ export default function EmptyState({
 
   return (
     <div className={`
-      empty-state rounded-2xl border-2 border-dashed
+      empty-state rounded-xl border-2 border-dashed
       ${dark 
         ? "border-slate-700 bg-slate-800/30" 
         : "border-slate-300 bg-slate-50"}

@@ -24,17 +24,17 @@ export default function DataSourceBanner() {
               className={`text-xs font-semibold hover:underline transition-colors ${dark ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-700"}`}
             >
               Data sources &amp; methodology
-              <span className={`ml-2 text-[10px] font-black rounded-full px-1.5 py-0.5 ${dark ? "bg-slate-800 text-slate-500" : "bg-slate-200 text-slate-400"}`}>
+              <span className={`ml-2 text-[10px] font-medium rounded px-1.5 py-0.5 ${dark ? "bg-slate-800 text-slate-500" : "bg-slate-200 text-slate-400"}`}>
                 Model {cmsMeta.modelDate}
               </span>
             </button>
           ) : (
             <div className="min-w-0">
               <div className="flex items-center gap-4">
-                <p className={`text-xs font-black uppercase tracking-wide ${dark ? "text-blue-400" : "text-blue-600"}`}>
+                <p className={`text-xs font-medium uppercase tracking-wide ${dark ? "text-blue-400" : "text-blue-600"}`}>
                   Data sources &amp; methodology
                 </p>
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${dark ? "bg-blue-900/60 text-blue-300" : "bg-blue-100 text-blue-700"}`}>
+                <span className={`rounded px-2 py-0.5 text-[10px] font-medium ${dark ? "bg-blue-900/60 text-blue-300" : "bg-blue-100 text-blue-700"}`}>
                   Model as of {cmsMeta.modelDate}
                 </span>
               </div>
@@ -46,7 +46,7 @@ export default function DataSourceBanner() {
                   <span className="font-semibold">Methodology:</span> Referral math uses a 75% conversion baseline (NAHC 2023 industry median: 72–78%). Capture rates are internal Andwell planning assumptions (HH Y1: 10%, industry median range: 8–15%). Competitive scores are composite weighted averages across provider density, market share, and national chain presence. "Est." badges indicate figures derived from proxies, not direct CMS county data.
                 </p>
                 <p>
-                  <span className="font-semibold">Important:</span> Provider file share figures reflect share of CMS provider file beneficiary volume — they are <span className="font-black">not</span> equivalent to true county market share, which requires county-attributed claims data not available in this dataset.
+                  <span className="font-semibold">Important:</span> Provider file share figures reflect share of CMS provider file beneficiary volume — they are <span className="font-bold">not</span> equivalent to true county market share, which requires county-attributed claims data not available in this dataset.
                 </p>
               </div>
             </div>
@@ -55,7 +55,7 @@ export default function DataSourceBanner() {
         {!collapsed && (
           <button
             onClick={() => setCollapsed(true)}
-            className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-black transition ${
+            className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-medium transition ${
               dark
                 ? "text-blue-400 hover:bg-blue-900/50"
                 : "text-blue-600 hover:bg-blue-100"

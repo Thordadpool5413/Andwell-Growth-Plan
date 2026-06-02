@@ -155,7 +155,7 @@ export default function InsightsPanel({ insights, onActionClick }) {
   return (
     <div
       className={`
-        rounded-2xl border shadow-md
+        rounded-xl border shadow-md
         ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}
       `}
     >

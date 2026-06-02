@@ -244,4 +244,38 @@ export async function callCmsAnalyze(question) {
   return res.json();
 }
 
+export function buildMarketSummaryPrompt({ velocityRows, andwellDominance, amedisysCombinedShare, northernLight, totalCompetitors, nationalChainCount }) {
+  const topCompetitors = velocityRows.slice(0, 5).map((r) =>
+    `• ${r.name}: momentum ${r.momentum}%, region ${r.primaryRegion}, status ${r.status}${r.national ? " (national chain)" : ""}, provider share ${r.providerShare != null ? (r.providerShare * 100).toFixed(1) + "%" : "N/A"}`
+    `• ${r.name}: momentum ${r.momentum}%, region ${r.region}, status ${r.status}${r.national ? " (national chain)" : ""}, provider share ${r.providerShare != null ? (r.providerShare * 100).toFixed(1) + "%" : "N/A"}`
+  ).join("\n");
+
+  return [
+    {
+      role: "system",
+      content:
+        "You are a healthcare market strategy analyst specializing in Maine home health and hospice. Write a concise competitive market summary in 3–5 plain-English sentences. Ground every claim in the metrics provided. Name specific competitors where the data supports it. Do not invent data not in the context. Do not use bullet points or headings.",
+    },
+    {
+      role: "user",
+      content: `Generate a competitive market summary for the Maine home health and hospice market based solely on these CMS-verified metrics.
+
+Andwell market position:
+- Combined provider file share (HH + Hospice): ${(andwellDominance * 100).toFixed(1)}%
+
+Competitor landscape:
+- Total named competitors in CMS file: ${totalCompetitors}
+- National chain competitors: ${nationalChainCount}
+- Amedisys combined Maine share: ${amedisysCombinedShare > 0 ? (amedisysCombinedShare * 100).toFixed(1) + "%" : "active in Penobscot"}
+${northernLight ? `- Northern Light Home Care momentum score: ${northernLight.momentum}%, primary region: ${northernLight.primaryRegion}` : ""}
+${northernLight ? `- Northern Light Home Care momentum score: ${northernLight.momentum}%, primary region: ${northernLight.region}` : ""}
+
+Top competitors by momentum score:
+${topCompetitors || "No competitor data available."}
+
+Summarize: (1) Andwell's current competitive position, (2) the biggest competitive threats by name and their market presence, and (3) the strategic implication for Andwell's expansion. Suitable for a board-level market intelligence brief.`,
+    },
+  ];
+}
+
 export { isCmsQuestion };

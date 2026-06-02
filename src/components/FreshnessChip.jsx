@@ -43,7 +43,7 @@ export default function FreshnessChip({ lastSynced, label = "CMS data", syncType
         className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-400 ${className}`}
       >
         <span className="h-1.5 w-1.5 rounded-full bg-amber-500 flex-shrink-0" />
-        ⚠ Sync overdue · Last synced {displayDate}{typeLabel}
+        Sync overdue · Last synced {displayDate}{typeLabel}
       </span>
     );
   }

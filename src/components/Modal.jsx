@@ -49,7 +49,7 @@ export default function Modal({
             <div
               className={`
                 pointer-events-auto w-full mx-4 ${sizeStyles[size]}
-                rounded-2xl shadow-xl border
+                rounded-xl shadow-xl border
                 ${dark
                   ? "border-slate-700 bg-slate-800"
                   : "border-slate-200 bg-white"

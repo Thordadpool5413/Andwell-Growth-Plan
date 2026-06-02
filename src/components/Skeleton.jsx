@@ -5,7 +5,7 @@ export function SkeletonMetric() {
   const { dark } = useDarkMode();
   return (
     <div className={`
-      rounded-2xl border p-5 animate-pulse
+      rounded-xl border p-5 animate-pulse
       ${dark 
         ? "border-slate-700 bg-slate-800" 
         : "border-slate-200 bg-slate-100"}
@@ -21,7 +21,7 @@ export function SkeletonCard() {
   const { dark } = useDarkMode();
   return (
     <div className={`
-      rounded-2xl border p-6 animate-pulse
+      rounded-xl border p-6 animate-pulse
       ${dark 
         ? "border-slate-700 bg-slate-800" 
         : "border-slate-200 bg-slate-100"}
@@ -37,7 +37,7 @@ export function SkeletonChart() {
   const { dark } = useDarkMode();
   return (
     <div className={`
-      rounded-2xl border p-6 animate-pulse
+      rounded-xl border p-6 animate-pulse
       ${dark 
         ? "border-slate-700 bg-slate-800" 
         : "border-slate-200 bg-slate-100"}

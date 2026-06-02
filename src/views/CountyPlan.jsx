@@ -26,6 +26,7 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiError, setAiError] = useState(null);
   const abortRef = useRef(null);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     abortRef.current?.abort();
@@ -66,13 +67,26 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
         {/* County Selection List */}
         <Card title="County launch queue" eyebrow="Prioritization — ranked by opportunity score">
           <div className={`mb-3 rounded-xl border px-3 py-2 text-xs ${dark ? "border-slate-700 bg-slate-800/60 text-slate-400" : "border-slate-100 bg-slate-50 text-slate-500"}`}>
-            <span className="font-black">Priority groups: </span>
+            <span className="font-semibold">Priority groups: </span>
             <span className="font-semibold text-emerald-600 dark:text-emerald-400">Priority 1</span> = immediate launch (months 1–12) ·{" "}
             <span className="font-semibold text-blue-600 dark:text-blue-400">Priority 2</span> = staged expansion (months 7–18) ·{" "}
             <span className="font-semibold text-amber-600 dark:text-amber-400">Priority 3</span> = targeted growth (months 13–24)
           </div>
+          <div className="mb-2">
+            <input
+              type="text"
+              placeholder="Search counties…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className={`w-full rounded-xl border px-3 py-2 text-sm transition ${
+                dark
+                  ? "border-slate-600 bg-slate-700 text-slate-200 placeholder-slate-500 focus:border-blue-500 focus:outline-none"
+                  : "border-slate-200 bg-white text-slate-800 placeholder-slate-400 focus:border-blue-400 focus:outline-none"
+              }`}
+            />
+          </div>
           <div className="space-y-2">
-            {rows.map((row, index) => {
+            {rows.filter((r) => !search || r.county.toLowerCase().includes(search.toLowerCase())).map((row, index) => {
               const rowIntel = getCountyIntelligence(row.county, rows);
               const oppScore = getOpportunityScore(row.county, rows);
               const score = oppScore?.score ?? 0;
@@ -81,14 +95,14 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
                 <button
                   key={row.county}
                   onClick={() => setSelectedCounty(row.county)}
-                  className={`w-full rounded-2xl border p-3 text-left transition ${
+                  className={`w-full rounded-xl border p-3 text-left transition ${
                     isSelected
                       ? dark ? "border-blue-500 bg-blue-950/50" : "border-blue-500 bg-blue-50"
                       : dark ? "border-slate-700 bg-slate-800 hover:border-blue-600" : "border-slate-200 bg-white hover:border-blue-300"
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl text-sm font-black ${
+                    <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-sm font-semibold ${
                       index === 0 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
                       : index === 1 ? "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
                       : index === 2 ? "bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300"
@@ -98,7 +112,7 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <p className={`font-black truncate ${dark ? "text-white" : "text-slate-950"}`}>{row.county}</p>
+                        <p className={`font-semibold truncate ${dark ? "text-slate-100" : "text-slate-800"}`}>{row.county}</p>
                         <div className="flex items-center gap-1.5 flex-shrink-0">
                           {rowIntel?.threat && (
                             <Badge tone={rowIntel.threat.score >= 50 ? "red" : rowIntel.threat.score >= 30 ? "amber" : "green"}>
@@ -120,7 +134,7 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
                             />
                           </div>
                         </div>
-                        <span className={`text-[10px] font-black flex-shrink-0 ${score >= 60 ? (dark ? "text-emerald-400" : "text-emerald-600") : (dark ? "text-amber-400" : "text-amber-600")}`}>
+                        <span className={`text-[10px] font-medium tabular-nums flex-shrink-0 ${score >= 60 ? (dark ? "text-emerald-400" : "text-emerald-600") : (dark ? "text-amber-400" : "text-amber-600")}`}>
                           {score}
                         </span>
                       </div>
@@ -170,18 +184,18 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
           </div>
 
           <div className="mt-5 grid gap-4 md:grid-cols-2">
-            <div className={`rounded-2xl p-4 ${dark ? "bg-slate-700/50" : "bg-slate-50"}`}>
-              <p className={`font-black ${dark ? "text-white" : "text-slate-950"}`}>Why this county</p>
+            <div className={`rounded-lg p-4 ${dark ? "bg-slate-700/30" : "bg-slate-50"}`}>
+              <p className={`font-semibold text-sm ${dark ? "text-slate-100" : "text-slate-800"}`}>Why this county</p>
               <p className={`mt-2 leading-7 text-sm ${dark ? "text-slate-300" : "text-slate-700"}`}>{selected.reason}</p>
             </div>
-            <div className={`rounded-2xl p-4 ${dark ? "bg-slate-700/50" : "bg-slate-50"}`}>
-              <p className={`font-black ${dark ? "text-white" : "text-slate-950"}`}>Current Andwell presence</p>
+            <div className={`rounded-lg p-4 ${dark ? "bg-slate-700/30" : "bg-slate-50"}`}>
+              <p className={`font-semibold text-sm ${dark ? "text-slate-100" : "text-slate-800"}`}>Current Andwell presence</p>
               <p className={`mt-2 leading-7 text-sm ${dark ? "text-slate-300" : "text-slate-700"}`}>{selected.current}</p>
             </div>
           </div>
 
-          <div className={`mt-4 rounded-2xl p-4 ${dark ? "bg-slate-700/50" : "bg-slate-50"}`}>
-            <p className={`font-black ${dark ? "text-white" : "text-slate-950"}`}>Missing service lines</p>
+          <div className={`mt-4 rounded-lg p-4 ${dark ? "bg-slate-700/30" : "bg-slate-50"}`}>
+            <p className={`font-semibold text-sm ${dark ? "text-slate-100" : "text-slate-800"}`}>Missing service lines</p>
             <p className={`mt-2 leading-7 text-sm ${dark ? "text-slate-300" : "text-slate-700"}`}>{selected.missing}</p>
           </div>
 
@@ -198,13 +212,13 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
               {!aiText && !aiGenerating && (
                 <button
                   onClick={generateSummary}
-                  className={`w-full rounded-2xl border-2 border-dashed py-3 text-sm font-black transition ${
+                  className={`w-full rounded-xl border-2 border-dashed py-3 text-sm font-medium transition ${
                     dark
-                      ? "border-violet-700 text-violet-400 hover:border-violet-500 hover:bg-violet-950/30"
-                      : "border-violet-200 text-violet-600 hover:border-violet-400 hover:bg-violet-50"
+                      ? "border-slate-600 text-slate-400 hover:border-slate-500 hover:bg-slate-800/50"
+                      : "border-slate-300 text-slate-600 hover:border-slate-400 hover:bg-slate-50"
                   }`}
                 >
-                  ✦ Generate AI Summary
+                  Generate AI Summary
                 </button>
               )}
               {(aiText || aiGenerating) && (
@@ -217,7 +231,7 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
                     <p className={`text-sm leading-7 ${dark ? "text-slate-200" : "text-slate-700"}`}>
                       {aiText}
                       {aiGenerating && (
-                        <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-violet-400" />
+                        <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-blue-400" />
                       )}
                     </p>
                   ) : (
@@ -235,10 +249,10 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
         {intel && (
           <Card title="County intelligence" eyebrow="Smart analytics">
             <div className="grid gap-4 md:grid-cols-2">
-              <div className={`rounded-2xl border p-4 ${dark ? "border-slate-700 bg-slate-700/30" : "border-slate-100 bg-slate-50"}`}>
-                <p className={`text-sm font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>Competitive threat</p>
+              <div className={`rounded-lg border p-4 ${dark ? "border-slate-700/60 bg-slate-700/20" : "border-slate-100 bg-slate-50"}`}>
+                <p className={`text-xs font-medium uppercase tracking-wide ${dark ? "text-slate-400" : "text-slate-500"}`}>Competitive threat</p>
                 <div className="mt-2 flex items-center gap-2">
-                  <p className={`text-2xl font-black ${dark ? "text-white" : "text-slate-950"}`}>{intel.threat?.score ?? "—"}/100</p>
+                  <p className={`text-2xl font-bold tabular-nums ${dark ? "text-slate-100" : "text-slate-900"}`}>{intel.threat?.score ?? "—"}/100</p>
                   {intel.threat && (
                     <Badge tone={intel.threat.level === "Fortress" ? "red" : intel.threat.level === "High" ? "amber" : intel.threat.level === "Moderate" ? "blue" : "green"}>
                       {intel.threat.level}
@@ -249,23 +263,23 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
                   <p className={`mt-1 text-xs font-semibold ${dark ? "text-red-400" : "text-red-600"}`}>National chain present</p>
                 )}
               </div>
-              <div className={`rounded-2xl border p-4 ${dark ? "border-slate-700 bg-slate-700/30" : "border-slate-100 bg-slate-50"}`}>
-                <p className={`text-sm font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>Market penetration</p>
-                <p className={`mt-2 text-2xl font-black ${dark ? "text-white" : "text-slate-950"}`}>
+              <div className={`rounded-lg border p-4 ${dark ? "border-slate-700/60 bg-slate-700/20" : "border-slate-100 bg-slate-50"}`}>
+                <p className={`text-xs font-medium uppercase tracking-wide ${dark ? "text-slate-400" : "text-slate-500"}`}>Market penetration</p>
+                <p className={`mt-2 text-2xl font-bold tabular-nums ${dark ? "text-slate-100" : "text-slate-900"}`}>
                   {intel.penetration ? percent(intel.penetration.y1Penetration) : "—"}
                 </p>
                 <p className={`mt-1 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>
                   Y3 target: {intel.penetration ? percent(intel.penetration.y3Penetration) : "—"}
                 </p>
               </div>
-              <div className={`rounded-2xl border p-4 ${dark ? "border-slate-700 bg-slate-700/30" : "border-slate-100 bg-slate-50"}`}>
-                <p className={`text-sm font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}><Abbr term="HH">HH</Abbr> provider density</p>
-                <p className={`mt-2 text-2xl font-black ${dark ? "text-white" : "text-slate-950"}`}>{intel.providerDensityHH}</p>
+              <div className={`rounded-lg border p-4 ${dark ? "border-slate-700/60 bg-slate-700/20" : "border-slate-100 bg-slate-50"}`}>
+                <p className={`text-xs font-medium uppercase tracking-wide ${dark ? "text-slate-400" : "text-slate-500"}`}><Abbr term="HH">HH</Abbr> provider density</p>
+                <p className={`mt-2 text-2xl font-bold tabular-nums ${dark ? "text-slate-100" : "text-slate-900"}`}>{intel.providerDensityHH}</p>
                 <p className={`mt-1 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>Providers per 10K <Abbr term="FFS">FFS</Abbr> beneficiaries</p>
               </div>
-              <div className={`rounded-2xl border p-4 ${dark ? "border-slate-700 bg-slate-700/30" : "border-slate-100 bg-slate-50"}`}>
-                <p className={`text-sm font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>Revenue per beneficiary</p>
-                <p className={`mt-2 text-2xl font-black ${dark ? "text-white" : "text-slate-950"}`}>
+              <div className={`rounded-lg border p-4 ${dark ? "border-slate-700/60 bg-slate-700/20" : "border-slate-100 bg-slate-50"}`}>
+                <p className={`text-xs font-medium uppercase tracking-wide ${dark ? "text-slate-400" : "text-slate-500"}`}>Revenue per beneficiary</p>
+                <p className={`mt-2 text-2xl font-bold tabular-nums ${dark ? "text-slate-100" : "text-slate-900"}`}>
                   {intel.penetration ? currency(intel.penetration.revenuePerBeneficiary) : "—"}
                 </p>
                 <p className={`mt-1 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>Y1 revenue / {number(intel.ffs)} <Abbr term="FFS">FFS</Abbr></p>
