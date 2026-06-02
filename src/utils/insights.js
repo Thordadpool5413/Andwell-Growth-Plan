@@ -1,3 +1,5 @@
+import { getCountyIntelligence } from "./calculations.js";
+
 export class InsightsEngine {
   constructor(rows, totals) {
     this.rows = rows;
@@ -7,6 +9,8 @@ export class InsightsEngine {
   // Detect anomalies
   detectAnomalies() {
     const anomalies = [];
+    if (this.rows.length === 0) return anomalies;
+
     const avgRevenue = this.rows.reduce((sum, r) => sum + r.revenue[0], 0) / this.rows.length;
 
     this.rows.forEach((row) => {
@@ -17,7 +21,7 @@ export class InsightsEngine {
           id: `anomaly-${row.county}`,
           severity: revenueDeviation > 1 ? "high" : "medium",
           title: `${row.county} revenue opportunity`,
-          message: `${row.county} shows ${revenueDeviation > 1 ? "significantly" : "notably"} ${revenueDeviation > avgRevenue ? "higher" : "lower"} revenue potential than peers`,
+          message: `${row.county} shows ${revenueDeviation > 1 ? "significantly" : "notably"} ${row.revenue[0] > avgRevenue ? "higher" : "lower"} revenue potential than peers`,
           type: "anomaly",
           county: row.county,
           metric: "revenue",
@@ -45,8 +49,19 @@ export class InsightsEngine {
   // Generate smart recommendations
   generateRecommendations() {
     const recommendations = [];
-    const sortedByRevenue = [...this.rows].sort((a, b) => b.revenue[0] - a.revenue[0]);
-    const sortedByThreat = [...this.rows].sort((a, b) => (b.threat?.score || 0) - (a.threat?.score || 0));
+    const countySummaries = [...new Set(this.rows.map((row) => row.county))]
+      .map((county) => {
+        const countyRows = this.rows.filter((row) => row.county === county);
+        const intelligence = getCountyIntelligence(county, this.rows);
+        return {
+          county,
+          y1Revenue: countyRows.reduce((sum, row) => sum + row.revenue[0], 0),
+          threatScore: intelligence?.threat?.score || 0,
+          opportunityScore: intelligence?.opportunityScore?.score || 0,
+        };
+      });
+    const sortedByRevenue = [...countySummaries].sort((a, b) => b.y1Revenue - a.y1Revenue);
+    const sortedByThreat = [...countySummaries].sort((a, b) => b.threatScore - a.threatScore);
 
     // Top opportunity
     if (sortedByRevenue[0]) {
@@ -54,35 +69,35 @@ export class InsightsEngine {
         id: "rec-1",
         priority: "high",
         title: "Prioritize high-revenue county",
-        message: `Focus resources on ${sortedByRevenue[0].county} which shows the highest revenue potential (${(sortedByRevenue[0].revenue[0] / 1000).toFixed(0)}K in Year 1)`,
-        action: "View County Plan",
-        actionValue: sortedByRevenue[0].county,
+        message: `Focus resources on ${sortedByRevenue[0].county} which shows the highest revenue potential (${(sortedByRevenue[0].y1Revenue / 1000).toFixed(0)}K in Year 1)`,
+        action: "View county plan",
+        actionValue: { tab: "County Plan", county: sortedByRevenue[0].county },
       });
     }
 
     // Competition warning
-    if (sortedByThreat[0]?.threat?.score > 70) {
+    if (sortedByThreat[0]?.threatScore > 70) {
       recommendations.push({
         id: "rec-2",
         priority: "high",
         title: "High competition detected",
         message: `${sortedByThreat[0].county} has significant competitive pressure. Consider aggressive pricing or service differentiation`,
-        action: "View Competitive Analysis",
-        actionValue: sortedByThreat[0].county,
+        action: "View competitive view",
+        actionValue: { tab: "Competitive View", county: sortedByThreat[0].county },
       });
     }
 
     // Growth opportunity
-    const lowThreats = this.rows.filter((r) => !r.threat || r.threat.score < 30);
+    const lowThreats = countySummaries.filter((summary) => summary.threatScore < 30);
     if (lowThreats.length > 0) {
-      const topOpportunity = lowThreats.sort((a, b) => b.revenue[0] - a.revenue[0])[0];
+      const topOpportunity = lowThreats.sort((a, b) => b.opportunityScore - a.opportunityScore || b.y1Revenue - a.y1Revenue)[0];
       recommendations.push({
         id: "rec-3",
         priority: "medium",
         title: "Expand in undercompetitive market",
         message: `${topOpportunity.county} combines low competition with strong revenue potential. Consider accelerated launch timeline`,
-        action: "Adjust Launch Timeline",
-        actionValue: topOpportunity.county,
+        action: "Review launch timeline",
+        actionValue: { tab: "Launch Timeline", county: topOpportunity.county },
       });
     }
 
@@ -98,7 +113,8 @@ export class InsightsEngine {
         priority: "low",
         title: "Diversify service line portfolio",
         message: `${dominantService[0]} represents ${((dominantService[1] / this.rows.length) * 100).toFixed(0)}% of your plan. Consider balancing with other services`,
-        action: "Explore Service Mix",
+        action: "Explore service lines",
+        actionValue: { tab: "Service Lines" },
       });
     }
 

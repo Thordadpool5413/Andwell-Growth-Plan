@@ -2,6 +2,7 @@ import React from "react";
 import { DEFAULT_SCENARIO } from "../data/constants.js";
 import Button from "./Button.jsx";
 import { useDarkMode } from "./DarkModeContext.jsx";
+import SmartScenarioCard from "./SmartScenarioCard.jsx";
 
 function SliderRow({ label, value, min, max, step, format, onChange, dark }) {
   return (
@@ -21,7 +22,7 @@ function SliderRow({ label, value, min, max, step, format, onChange, dark }) {
   );
 }
 
-export default function ScenarioPanel({ scenario, setScenario }) {
+export default function ScenarioPanel({ scenario, setScenario, onApplyScenario, onNavigate }) {
   const { dark } = useDarkMode();
   const pct = (v) => `${(v * 100).toFixed(0)}%`;
 
@@ -82,6 +83,12 @@ export default function ScenarioPanel({ scenario, setScenario }) {
       </div>
 
       <div className="space-y-4">
+        <SmartScenarioCard
+          scenario={scenario}
+          onApplyScenario={onApplyScenario || setScenario}
+          onNavigate={onNavigate}
+        />
+
         <SliderRow
           label="Conversion rate"
           value={scenario.conversionRate}

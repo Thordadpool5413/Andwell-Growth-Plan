@@ -17,16 +17,16 @@ export default function Card({ title, eyebrow, children, accent, flush }) {
 
   return (
     <section
-      className={`rounded-xl border transition-colors duration-200 ${paddingClass} ${accentClass} ${
+      className={`group overflow-hidden rounded-[24px] border backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl ${paddingClass} ${accentClass} ${
         dark
-          ? "border-slate-700/60 bg-slate-800/60 shadow-sm shadow-slate-900/20"
-          : "border-slate-200 bg-white shadow-sm shadow-slate-100"
+          ? "border-slate-700/60 bg-gradient-to-br from-slate-900/85 to-slate-800/65 shadow-sm shadow-slate-950/20"
+          : "border-slate-200 bg-gradient-to-br from-white via-white to-slate-50 shadow-sm shadow-slate-200/60"
       }`}
     >
       {(eyebrow || title) && (
         <div className={flush ? "px-6 pt-5 pb-4" : ""}>
           {eyebrow && (
-            <p className={`mb-1 text-[11px] font-medium uppercase tracking-[0.12em] ${dark ? "text-slate-500" : "text-slate-400"}`}>
+            <p className={`mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] ${dark ? "text-slate-500" : "text-slate-400"}`}>
               {eyebrow}
             </p>
           )}

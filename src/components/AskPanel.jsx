@@ -185,13 +185,13 @@ export default function AskPanel({ rows, totals, activeTab }) {
     <div className="fixed bottom-6 right-6 z-50 print:hidden">
       {open ? (
         <div
-          className={`flex w-[26rem] flex-col rounded-xl border shadow-2xl ${
-            dark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white shadow-slate-200"
+          className={`flex w-[27rem] flex-col overflow-hidden rounded-[24px] border shadow-2xl backdrop-blur-sm ${
+            dark ? "border-slate-700/80 bg-slate-900/95" : "border-slate-200 bg-white/95 shadow-slate-200/70"
           }`}
         >
           <div
             className={`flex items-center justify-between border-b px-4 py-3 ${
-              dark ? "border-slate-700" : "border-slate-100"
+              dark ? "border-slate-700 bg-gradient-to-r from-violet-500/10 to-transparent" : "border-slate-100 bg-gradient-to-r from-violet-50 to-white"
             }`}
           >
             <div className="flex items-center gap-2 min-w-0">
@@ -350,12 +350,31 @@ export default function AskPanel({ rows, totals, activeTab }) {
         <button
           key={pulseKey}
           onClick={() => setOpen(true)}
-          className="ask-panel-pulse flex items-center gap-2 rounded-lg bg-violet-600 px-5 py-3 text-sm font-medium text-white shadow-lg shadow-violet-500/25 transition hover:scale-105 hover:bg-violet-500"
+          className={`ask-panel-pulse flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium shadow-xl transition hover:-translate-y-0.5 ${
+            dark
+              ? "border-violet-500/25 bg-slate-950/95 text-white shadow-violet-900/30 hover:border-violet-400/35"
+              : "border-violet-200 bg-white/95 text-slate-900 shadow-violet-200/60 hover:border-violet-300"
+          }`}
         >
-          <span className="rounded-sm bg-violet-500/40 px-1 text-[10px] font-medium uppercase">AI</span>
-          Ask the data
+          <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${
+            dark ? "bg-violet-500/20 text-violet-300" : "bg-violet-100 text-violet-700"
+          }`}>
+            <SparklesIcon />
+          </span>
+          <span className="flex flex-col items-start leading-tight">
+            <span className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${dark ? "text-violet-300" : "text-violet-600"}`}>AI Assistant</span>
+            <span>Ask the data</span>
+          </span>
         </button>
       )}
     </div>
+  );
+}
+
+function SparklesIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4.5 w-4.5">
+      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l.767 2.36a1 1 0 00.95.69h2.48c.969 0 1.371 1.24.588 1.81l-2.006 1.458a1 1 0 00-.364 1.118l.766 2.36c.3.922-.755 1.688-1.538 1.118l-2.006-1.458a1 1 0 00-1.176 0l-2.006 1.458c-.783.57-1.838-.196-1.539-1.118l.767-2.36a1 1 0 00-.363-1.118L4.264 7.787c-.783-.57-.38-1.81.588-1.81h2.48a1 1 0 00.95-.69l.767-2.36z" />
+    </svg>
   );
 }
