@@ -29,6 +29,10 @@ import AskPanel from "./components/AskPanel.jsx";
 import ScenarioSidebar from "./components/ScenarioSidebar.jsx";
 
 const TAB_GROUPS = [
+  { label: "Planning", tabs: ["Executive View", "County Plan", "Referral Plan", "Opportunity Score"] },
+  { label: "Competitive", tabs: ["Competitive View", "Market Dynamics", "Service Lines", "CMS Data"] },
+  { label: "Financial", tabs: ["Financial Model", "Sensitivity"] },
+  { label: "Operations", tabs: ["Staffing Model", "Launch Timeline", "Board Report", "Launch Checklist"] },
   { label: "Planning",    tabs: ["Executive View", "County Plan", "Referral Plan", "Opportunity Score"] },
   { label: "Competitive", tabs: ["Competitive View", "Market Dynamics", "Service Lines", "CMS Data"] },
   { label: "Financial",   tabs: ["Financial Model", "Sensitivity"] },
@@ -295,6 +299,16 @@ function Dashboard() {
               id={`panel-${activeTab.replace(/\s+/g, "-").toLowerCase()}`}
               aria-labelledby={`tab-${activeTab.replace(/\s+/g, "-").toLowerCase()}`}
             >
+              {activeTab === "Executive View" && <ExecutiveView rows={rows} totals={totals} />}
+              {activeTab === "County Plan" && <CountyPlan rows={rows} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} competitorProviderType={competitorProviderType} setCompetitorProviderType={setCompetitorProviderType} />}
+              {activeTab === "Referral Plan" && <ReferralPlan rows={rows} />}
+              {activeTab === "Competitive View" && <CompetitiveView selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} competitorProviderType={competitorProviderType} setCompetitorProviderType={setCompetitorProviderType} />}
+              {activeTab === "Market Dynamics" && <MarketDynamicsView setActiveTab={setActiveTab} />}
+              {activeTab === "Service Lines" && <ServiceLines />}
+              {activeTab === "CMS Data" && <CmsData />}
+              {activeTab === "Financial Model" && <FinancialModel rows={rows} />}
+              {activeTab === "Staffing Model" && <StaffingModel rows={rows} />}
+              {activeTab === "Sensitivity" && <SensitivityAnalysis rows={rows} />}
               {activeTab === "Executive View"    && <ExecutiveView rows={rows} totals={totals} />}
               {activeTab === "County Plan"       && <CountyPlan rows={rows} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} competitorProviderType={competitorProviderType} setCompetitorProviderType={setCompetitorProviderType} />}
               {activeTab === "Referral Plan"     && <ReferralPlan rows={rows} />}
