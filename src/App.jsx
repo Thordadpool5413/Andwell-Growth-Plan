@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { DEFAULT_SCENARIO } from "./data/constants.js";
 import DataSourceBanner from "./components/DataSourceBanner.jsx";
 import { buildRows } from "./utils/calculations.js";
@@ -33,15 +33,11 @@ const TAB_GROUPS = [
   { label: "Competitive", tabs: ["Competitive View", "Market Dynamics", "Service Lines", "CMS Data"] },
   { label: "Financial", tabs: ["Financial Model", "Sensitivity"] },
   { label: "Operations", tabs: ["Staffing Model", "Launch Timeline", "Board Report", "Launch Checklist"] },
-  { label: "Planning",    tabs: ["Executive View", "County Plan", "Referral Plan", "Opportunity Score"] },
-  { label: "Competitive", tabs: ["Competitive View", "Market Dynamics", "Service Lines", "CMS Data"] },
-  { label: "Financial",   tabs: ["Financial Model", "Sensitivity"] },
-  { label: "Operations",  tabs: ["Staffing Model", "Launch Timeline", "Board Report", "Launch Checklist"] },
 ];
 
 function Dashboard() {
   const { dark, toggle } = useDarkMode();
-  const { showToast } = useToast();
+  const { addToast } = useToast();
   const [activeTab, setActiveTab] = useState("Executive View");
   const [selectedCounty, setSelectedCounty] = useState("York");
   const [scenario, setScenario] = useState(() => {
@@ -117,6 +113,18 @@ function Dashboard() {
 
   const insightsEngine = useMemo(() => new InsightsEngine(rows, totals), [rows, totals]);
   const insights = useMemo(() => insightsEngine.getAllInsights(), [insightsEngine]);
+  const insightCount = useMemo(
+    () => (insights.recommendations?.length || 0) + (insights.anomalies?.length || 0) + (insights.risks?.length || 0),
+    [insights],
+  );
+  const handleNavigate = useCallback(({ tab, county }) => {
+    if (county) setSelectedCounty(county);
+    if (tab) setActiveTab(tab);
+  }, []);
+  const handleApplyScenario = useCallback((nextScenario) => {
+    setScenario(nextScenario);
+    addToast("Smart plan applied", "success");
+  }, [addToast]);
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${dark ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-900"}`}>
@@ -275,9 +283,9 @@ function Dashboard() {
                 }`}
               >
                 {showInsights ? "Hide insights" : "Insights"}
-                {!showInsights && insights.length > 0 && (
+                {!showInsights && insightCount > 0 && (
                   <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-semibold text-white">
-                    {insights.length}
+                    {insightCount}
                   </span>
                 )}
               </button>
@@ -287,9 +295,22 @@ function Dashboard() {
             </div>
           </div>
 
-          {showScenario && <div className="print:hidden"><ScenarioPanel scenario={scenario} setScenario={setScenario} /></div>}
+          {showScenario && (
+            <div className="print:hidden">
+              <ScenarioPanel
+                scenario={scenario}
+                setScenario={setScenario}
+                onApplyScenario={handleApplyScenario}
+                onNavigate={handleNavigate}
+              />
+            </div>
+          )}
           {showCompare && <div className="print:hidden"><ScenarioCompare currentScenario={scenario} /></div>}
-          {showInsights && <div className="print:hidden"><InsightsPanel insights={insights} /></div>}
+          {showInsights && (
+            <div className="print:hidden">
+              <InsightsPanel insights={insights} onActionClick={handleNavigate} />
+            </div>
+          )}
 
           <div id="tab-content">
             <div
@@ -309,16 +330,6 @@ function Dashboard() {
               {activeTab === "Financial Model" && <FinancialModel rows={rows} />}
               {activeTab === "Staffing Model" && <StaffingModel rows={rows} />}
               {activeTab === "Sensitivity" && <SensitivityAnalysis rows={rows} />}
-              {activeTab === "Executive View"    && <ExecutiveView rows={rows} totals={totals} />}
-              {activeTab === "County Plan"       && <CountyPlan rows={rows} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} competitorProviderType={competitorProviderType} setCompetitorProviderType={setCompetitorProviderType} />}
-              {activeTab === "Referral Plan"     && <ReferralPlan rows={rows} />}
-              {activeTab === "Competitive View"  && <CompetitiveView selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} competitorProviderType={competitorProviderType} setCompetitorProviderType={setCompetitorProviderType} />}
-              {activeTab === "Market Dynamics"   && <MarketDynamicsView setActiveTab={setActiveTab} />}
-              {activeTab === "Service Lines"     && <ServiceLines />}
-              {activeTab === "CMS Data"          && <CmsData />}
-              {activeTab === "Financial Model"   && <FinancialModel rows={rows} />}
-              {activeTab === "Staffing Model"    && <StaffingModel rows={rows} />}
-              {activeTab === "Sensitivity"       && <SensitivityAnalysis rows={rows} />}
               {activeTab === "Opportunity Score" && <OpportunityScore rows={rows} />}
               {activeTab === "Launch Timeline"   && <LaunchTimeline rows={rows} />}
               {activeTab === "Board Report"      && <BoardReport rows={rows} totals={totals} />}
@@ -360,6 +371,8 @@ function Dashboard() {
         onRestoredDismiss={() => setScenarioRestored(false)}
         totals={totals}
         defaultTotals={defaultTotals}
+        onApplyScenario={handleApplyScenario}
+        onNavigate={handleNavigate}
       />
     </div>
   );

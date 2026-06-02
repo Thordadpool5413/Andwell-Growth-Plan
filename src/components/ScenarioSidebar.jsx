@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { DEFAULT_SCENARIO } from "../data/constants.js";
 import { useDarkMode } from "./DarkModeContext.jsx";
+import SmartScenarioCard from "./SmartScenarioCard.jsx";
 
 function CompactSlider({ label, value, min, max, step, format, onChange, dark }) {
   return (
@@ -57,7 +58,18 @@ function RevenueDelta({ current, baseline, dark }) {
   );
 }
 
-export default function ScenarioSidebar({ scenario, setScenario, open, onClose, wasRestored, onRestoredDismiss, totals, defaultTotals }) {
+export default function ScenarioSidebar({
+  scenario,
+  setScenario,
+  open,
+  onClose,
+  wasRestored,
+  onRestoredDismiss,
+  totals,
+  defaultTotals,
+  onApplyScenario,
+  onNavigate,
+}) {
   const { dark } = useDarkMode();
   const pct = (v) => `${(v * 100).toFixed(0)}%`;
   const [showRestoredBanner, setShowRestoredBanner] = useState(false);
@@ -173,6 +185,13 @@ export default function ScenarioSidebar({ scenario, setScenario, open, onClose, 
         )}
 
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+          <SmartScenarioCard
+            scenario={scenario}
+            onApplyScenario={onApplyScenario || setScenario}
+            onNavigate={onNavigate}
+            compact
+          />
+
           <SliderGroup title="Conversion" dark={dark}>
             <CompactSlider
               label="Conversion rate"

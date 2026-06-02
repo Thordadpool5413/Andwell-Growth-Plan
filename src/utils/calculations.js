@@ -4,6 +4,229 @@ import launchPlan from "../data/launchPlan.js";
 import { namedProviderRows } from "../data/providers.js";
 import { DEFAULT_SCENARIO, STAFFING_RATIOS, SENSITIVITY_VARIABLES, OPPORTUNITY_WEIGHTS } from "../data/constants.js";
 
+const SMART_SCENARIO_BASES = {
+  conversionRate: [0.65, 0.7, 0.75, 0.8, 0.85, 0.9],
+  hhCapture: [0.08, 0.1, 0.12, 0.14, 0.16],
+  woundCapture: [0.18, 0.22, 0.26, 0.3, 0.34],
+  therapyCapture: [0.14, 0.18, 0.22, 0.26, 0.3],
+};
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function roundToStep(value, step = 0.01) {
+  return Math.round(value / step) * step;
+}
+
+function buildCaptureCurve(base, growthCurve, max) {
+  return growthCurve.map((factor) => clamp(roundToStep(base * factor), 0.01, max));
+}
+
+function getScenarioTotals(rows) {
+  return {
+    y1Revenue: rows.reduce((sum, row) => sum + row.revenue[0], 0),
+    y2Revenue: rows.reduce((sum, row) => sum + row.revenue[1], 0),
+    y3Revenue: rows.reduce((sum, row) => sum + row.revenue[2], 0),
+    y1Referrals: rows.reduce((sum, row) => sum + row.referrals[0], 0),
+    y1Starts: rows.reduce((sum, row) => sum + row.starts[0], 0),
+    totalContribution: rows.reduce((sum, row) => sum + row.totalContribution, 0),
+  };
+}
+
+function summarizeScenario(scenario) {
+  const rows = buildRows(scenario);
+  const totals = getScenarioTotals(rows);
+  const counties = [...new Set(rows.map((row) => row.county))];
+  const countySummaries = counties
+    .map((county) => {
+      const countyRows = rows.filter((row) => row.county === county);
+      const countyRevenue = countyRows.reduce((sum, row) => sum + row.revenue[0], 0);
+      const intelligence = getCountyIntelligence(county, rows);
+      return {
+        county,
+        y1Revenue: countyRevenue,
+        opportunityScore: intelligence?.opportunityScore?.score || 0,
+        threatScore: intelligence?.threat?.score || 0,
+      };
+    })
+    .sort((a, b) => b.y1Revenue - a.y1Revenue);
+
+  const totalY1Revenue = totals.y1Revenue || 1;
+  const weightedOpportunityScore = countySummaries.reduce(
+    (sum, county) => sum + county.opportunityScore * (county.y1Revenue / totalY1Revenue),
+    0,
+  );
+  const staffing = getStaffingModel(rows);
+  const y1Fte = staffing.totalFTE?.[0] || 0;
+  const totalRevenue = totals.y1Revenue + totals.y2Revenue + totals.y3Revenue;
+
+  return {
+    scenario,
+    rows,
+    totals,
+    topCounty: countySummaries[0] || null,
+    weightedOpportunityScore,
+    concentrationRisk: countySummaries[0] ? countySummaries[0].y1Revenue / totalY1Revenue : 0,
+    y1Fte,
+    referralsPerStart: totals.y1Starts > 0 ? totals.y1Referrals / totals.y1Starts : 0,
+    contributionMargin: totalRevenue > 0 ? totals.totalContribution / totalRevenue : 0,
+  };
+}
+
+function normalizeMetric(value, min, max) {
+  if (max === min) return 0.5;
+  return (value - min) / (max - min);
+}
+
+function getStrategyLabel(recommended, baseline) {
+  const revenueLift = baseline.totals.y1Revenue > 0
+    ? (recommended.totals.y1Revenue - baseline.totals.y1Revenue) / baseline.totals.y1Revenue
+    : 0;
+
+  if (revenueLift >= 0.12 && recommended.concentrationRisk <= baseline.concentrationRisk + 0.02) {
+    return "Balanced growth";
+  }
+  if (revenueLift >= 0.18) {
+    return "Aggressive expansion";
+  }
+  if (recommended.concentrationRisk < baseline.concentrationRisk || recommended.referralsPerStart < baseline.referralsPerStart) {
+    return "Risk-adjusted plan";
+  }
+  return "Steady optimization";
+}
+
+function getPrimaryLever(recommended, baseline) {
+  const levers = [
+    { label: "Conversion rate", delta: recommended.scenario.conversionRate - baseline.scenario.conversionRate, format: "percent" },
+    { label: "HH capture", delta: recommended.scenario.hhCapture[0] - baseline.scenario.hhCapture[0], format: "percent" },
+    { label: "Wound capture", delta: recommended.scenario.woundCapture[0] - baseline.scenario.woundCapture[0], format: "percent" },
+    { label: "Therapy capture", delta: recommended.scenario.therapyCapture[0] - baseline.scenario.therapyCapture[0], format: "percent" },
+  ].sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+
+  return levers[0];
+}
+
+export function areScenariosEqual(left, right) {
+  return (
+    left.conversionRate === right.conversionRate &&
+    JSON.stringify(left.hhCapture) === JSON.stringify(right.hhCapture) &&
+    JSON.stringify(left.woundCapture) === JSON.stringify(right.woundCapture) &&
+    JSON.stringify(left.therapyCapture) === JSON.stringify(right.therapyCapture) &&
+    JSON.stringify(left.marginOverrides || {}) === JSON.stringify(right.marginOverrides || {})
+  );
+}
+
+export function getSmartScenarioRecommendation(currentScenario = DEFAULT_SCENARIO) {
+  const searchSpace = {
+    conversionRate: [...new Set([...SMART_SCENARIO_BASES.conversionRate, roundToStep(currentScenario.conversionRate, 0.05)])].sort((a, b) => a - b),
+    hhCapture: [...new Set([...SMART_SCENARIO_BASES.hhCapture, roundToStep(currentScenario.hhCapture[0])])].sort((a, b) => a - b),
+    woundCapture: [...new Set([...SMART_SCENARIO_BASES.woundCapture, roundToStep(currentScenario.woundCapture[0])])].sort((a, b) => a - b),
+    therapyCapture: [...new Set([...SMART_SCENARIO_BASES.therapyCapture, roundToStep(currentScenario.therapyCapture[0])])].sort((a, b) => a - b),
+  };
+
+  const candidates = [];
+
+  searchSpace.conversionRate.forEach((conversionRate) => {
+    searchSpace.hhCapture.forEach((hhCapture) => {
+      searchSpace.woundCapture.forEach((woundCapture) => {
+        searchSpace.therapyCapture.forEach((therapyCapture) => {
+          const scenario = {
+            ...DEFAULT_SCENARIO,
+            marginOverrides: currentScenario.marginOverrides || {},
+            conversionRate,
+            hhCapture: buildCaptureCurve(hhCapture, [1, 1.5, 2], 0.5),
+            woundCapture: buildCaptureCurve(woundCapture, [1, 1.35, 1.7], 0.7),
+            therapyCapture: buildCaptureCurve(therapyCapture, [1, 1.45, 1.9], 0.6),
+          };
+          candidates.push(summarizeScenario(scenario));
+        });
+      });
+    });
+  });
+
+  const revenueRange = {
+    min: Math.min(...candidates.map((candidate) => candidate.totals.y1Revenue)),
+    max: Math.max(...candidates.map((candidate) => candidate.totals.y1Revenue)),
+  };
+  const contributionRange = {
+    min: Math.min(...candidates.map((candidate) => candidate.totals.totalContribution)),
+    max: Math.max(...candidates.map((candidate) => candidate.totals.totalContribution)),
+  };
+  const opportunityRange = {
+    min: Math.min(...candidates.map((candidate) => candidate.weightedOpportunityScore)),
+    max: Math.max(...candidates.map((candidate) => candidate.weightedOpportunityScore)),
+  };
+  const concentrationRange = {
+    min: Math.min(...candidates.map((candidate) => candidate.concentrationRisk)),
+    max: Math.max(...candidates.map((candidate) => candidate.concentrationRisk)),
+  };
+  const staffingRange = {
+    min: Math.min(...candidates.map((candidate) => candidate.y1Fte)),
+    max: Math.max(...candidates.map((candidate) => candidate.y1Fte)),
+  };
+  const marginRange = {
+    min: Math.min(...candidates.map((candidate) => candidate.contributionMargin)),
+    max: Math.max(...candidates.map((candidate) => candidate.contributionMargin)),
+  };
+
+  const scoredCandidates = candidates
+    .map((candidate) => {
+      const revenueScore = normalizeMetric(candidate.totals.y1Revenue, revenueRange.min, revenueRange.max);
+      const contributionScore = normalizeMetric(candidate.totals.totalContribution, contributionRange.min, contributionRange.max);
+      const opportunityScore = normalizeMetric(candidate.weightedOpportunityScore, opportunityRange.min, opportunityRange.max);
+      const concentrationScore = 1 - normalizeMetric(candidate.concentrationRisk, concentrationRange.min, concentrationRange.max);
+      const staffingScore = 1 - normalizeMetric(candidate.y1Fte, staffingRange.min, staffingRange.max);
+      const marginScore = normalizeMetric(candidate.contributionMargin, marginRange.min, marginRange.max);
+
+      const score =
+        revenueScore * 0.34 +
+        contributionScore * 0.24 +
+        opportunityScore * 0.18 +
+        concentrationScore * 0.14 +
+        staffingScore * 0.05 +
+        marginScore * 0.05;
+
+      return {
+        ...candidate,
+        optimizerScore: score,
+      };
+    })
+    .sort((a, b) => b.optimizerScore - a.optimizerScore);
+
+  const baseline = summarizeScenario(currentScenario);
+  const recommended = scoredCandidates[0];
+  const primaryLever = getPrimaryLever(recommended, baseline);
+  const strategyLabel = getStrategyLabel(recommended, baseline);
+  const y1RevenueDelta = recommended.totals.y1Revenue - baseline.totals.y1Revenue;
+  const contributionDelta = recommended.totals.totalContribution - baseline.totals.totalContribution;
+  const concentrationDelta = recommended.concentrationRisk - baseline.concentrationRisk;
+  const staffingDelta = recommended.y1Fte - baseline.y1Fte;
+
+  const rationale = [
+    `${strategyLabel} shifts Year 1 revenue by ${y1RevenueDelta.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0, signDisplay: "always" })} and 3-year contribution by ${contributionDelta.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0, signDisplay: "always" })}.`,
+    `Primary lever: ${primaryLever.label} ${primaryLever.delta >= 0 ? "up" : "down"} ${Math.abs(primaryLever.delta * 100).toFixed(0)} points from the current plan.`,
+    concentrationDelta <= 0
+      ? `Keeps concentration risk in check at ${(recommended.concentrationRisk * 100).toFixed(1)}% of Year 1 revenue from the top county.`
+      : `Accepts a modest concentration increase to ${(recommended.concentrationRisk * 100).toFixed(1)}% while staffing stays at ${recommended.y1Fte} Year 1 FTEs.`,
+  ];
+
+  return {
+    recommendedScenario: recommended.scenario,
+    strategyLabel,
+    baseline,
+    recommended,
+    alternatives: scoredCandidates.slice(1, 3),
+    deltas: {
+      y1Revenue: y1RevenueDelta,
+      totalContribution: contributionDelta,
+      concentrationRisk: concentrationDelta,
+      y1Fte: staffingDelta,
+    },
+    rationale,
+  };
+}
+
 export function getCountyMath(row, scenario = DEFAULT_SCENARIO) {
   const meta = services[row.service];
   const market = cmsCountyMarket[row.county];

@@ -3,6 +3,25 @@ import { useDarkMode } from "./DarkModeContext.jsx";
 import Badge from "./Badge.jsx";
 import { AlertCircle, TrendingUp, Lightbulb, Shield } from "lucide-react";
 
+const CATEGORY_STYLES = {
+  blue: {
+    dark: "border-blue-500 text-blue-400",
+    light: "border-blue-600 text-blue-600",
+  },
+  amber: {
+    dark: "border-amber-500 text-amber-400",
+    light: "border-amber-600 text-amber-600",
+  },
+  red: {
+    dark: "border-red-500 text-red-400",
+    light: "border-red-600 text-red-600",
+  },
+  green: {
+    dark: "border-green-500 text-green-400",
+    light: "border-green-600 text-green-600",
+  },
+};
+
 export default function InsightsPanel({ insights, onActionClick }) {
   const { dark } = useDarkMode();
   const [expandedCategory, setExpandedCategory] = useState("recommendations");
@@ -179,6 +198,7 @@ export default function InsightsPanel({ insights, onActionClick }) {
         {categories.map((cat) => {
           const Icon = cat.icon;
           const count = insights[cat.id]?.length || 0;
+          const activeStyles = CATEGORY_STYLES[cat.color];
           return (
             <button
               key={cat.id}
@@ -189,8 +209,8 @@ export default function InsightsPanel({ insights, onActionClick }) {
                 ${
                   expandedCategory === cat.id
                     ? dark
-                      ? `border-${cat.color}-500 text-${cat.color}-400`
-                      : `border-${cat.color}-600 text-${cat.color}-600`
+                      ? activeStyles.dark
+                      : activeStyles.light
                     : dark
                       ? "border-transparent text-slate-400 hover:text-slate-300"
                       : "border-transparent text-slate-600 hover:text-slate-700"
