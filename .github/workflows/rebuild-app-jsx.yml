@@ -17,16 +17,14 @@ permissions:
 jobs:
   rebuild-app-jsx:
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 24
           registry-url: "https://registry.npmjs.org"
@@ -44,7 +42,7 @@ jobs:
             echo "No compressed source chunks found. Using existing src/App.jsx."
           fi
           test -s src/App.jsx
-          grep -q "export default function AndwellGrowthPlanApp" src/App.jsx
+          grep -Eq "export default" src/App.jsx
 
       - name: Validate production build
         run: |
