@@ -47,7 +47,7 @@ export function KPIBuilder({
 
   return (
     <div className={`
-      rounded-2xl border shadow-shadow-lg p-6 max-w-4xl
+      rounded-xl border shadow-shadow-lg p-6 max-w-4xl
       ${dark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"}
       ${className}
     `}>
@@ -206,7 +206,7 @@ export function DashboardPreset({
     <button
       onClick={onSelect}
       className={`
-        text-left p-6 rounded-2xl border transition-all duration-200
+        text-left p-6 rounded-xl border transition-all duration-200
         ${selected
           ? dark ? "bg-blue-900 border-blue-700 shadow-shadow-lg" : "bg-blue-50 border-blue-300 shadow-shadow-md"
           : dark ? "bg-slate-800 border-slate-700 hover:border-slate-600" : "bg-white border-slate-200 hover:border-slate-300"

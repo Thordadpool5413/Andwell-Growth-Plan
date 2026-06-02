@@ -20,9 +20,9 @@ async function getCmsToken() {
 
 function StatBox({ label, value, sub, dark }) {
   return (
-    <div className={`rounded-2xl border p-4 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
-      <p className={`text-xs font-black uppercase tracking-wide ${dark ? "text-slate-400" : "text-slate-500"}`}>{label}</p>
-      <p className={`mt-1 text-3xl font-black ${dark ? "text-white" : "text-slate-950"}`}>{value}</p>
+    <div className={`rounded-xl border p-4 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+      <p className={`text-xs font-medium uppercase tracking-wide ${dark ? "text-slate-400" : "text-slate-500"}`}>{label}</p>
+      <p className={`mt-1 text-3xl font-bold tabular-nums ${dark ? "text-white" : "text-slate-950"}`}>{value}</p>
       {sub && <p className={`mt-0.5 text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>{sub}</p>}
     </div>
   );
@@ -127,7 +127,7 @@ export default function CmsDataPanel() {
           <button
             key={t.id}
             onClick={() => { setActivePanel(t.id); if (t.id === "competitors") fetchCompetitors(); }}
-            className={`rounded-full px-4 py-2 text-sm font-black transition ${activePanel === t.id ? "bg-blue-600 text-white" : dark ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"}`}
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activePanel === t.id ? "bg-blue-600 text-white" : dark ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"}`}
           >
             {t.label}
           </button>
@@ -143,8 +143,8 @@ export default function CmsDataPanel() {
             <StatBox label="Competitors verified" value={stats?.competitorMatches ?? "—"} sub="CMS-matched records" dark={dark} />
           </div>
 
-          <div className={`rounded-2xl border p-6 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
-            <p className={`text-sm font-black mb-3 ${dark ? "text-white" : "text-slate-950"}`}>CMS Provider Data Catalog</p>
+          <div className={`rounded-xl border p-6 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+            <p className={`text-sm font-semibold mb-3 ${dark ? "text-white" : "text-slate-950"}`}>CMS Provider Data Catalog</p>
             <div className="grid gap-3 md:grid-cols-2 text-sm">
               {[
                 { label: "API endpoint", value: "data.cms.gov/provider-data/api/1", status: "Active" },
@@ -156,10 +156,10 @@ export default function CmsDataPanel() {
               ].map((row) => (
                 <div key={row.label} className={`flex items-center justify-between rounded-xl px-4 py-3 ${dark ? "bg-slate-700/30" : "bg-slate-50"}`}>
                   <div>
-                    <p className={`text-xs font-black ${dark ? "text-slate-300" : "text-slate-700"}`}>{row.label}</p>
+                    <p className={`text-xs font-semibold ${dark ? "text-slate-300" : "text-slate-700"}`}>{row.label}</p>
                     <p className={`text-xs mt-0.5 ${dark ? "text-slate-500" : "text-slate-400"}`}>{row.value}</p>
                   </div>
-                  <span className={`text-[10px] font-black rounded-full px-2 py-0.5 ${row.status === "Active" ? dark ? "bg-emerald-900/40 text-emerald-300" : "bg-emerald-50 text-emerald-700" : dark ? "bg-amber-900/40 text-amber-300" : "bg-amber-50 text-amber-700"}`}>
+                  <span className={`text-[10px] font-medium rounded px-2 py-0.5 ${row.status === "Active" ? dark ? "bg-emerald-900/40 text-emerald-300" : "bg-emerald-50 text-emerald-700" : dark ? "bg-amber-900/40 text-amber-300" : "bg-amber-50 text-amber-700"}`}>
                     {row.status}
                   </span>
                 </div>
@@ -169,14 +169,14 @@ export default function CmsDataPanel() {
 
           {/* Match-status breakdown */}
           {stats?.matchStatusBreakdown?.length > 0 && (
-            <div className={`rounded-2xl border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
-              <p className={`text-sm font-black mb-3 ${dark ? "text-white" : "text-slate-950"}`}>Verification status breakdown</p>
+            <div className={`rounded-xl border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+              <p className={`text-sm font-semibold mb-3 ${dark ? "text-white" : "text-slate-950"}`}>Verification status breakdown</p>
               <div className="flex flex-wrap gap-2">
                 {stats.matchStatusBreakdown.map((row) => (
                   <div key={row.match_status} className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs ${dark ? "bg-slate-700/40" : "bg-slate-50"}`}>
                     <span className={`h-2 w-2 rounded-full ${row.match_status?.includes("Verified") ? "bg-emerald-500" : row.match_status === "Needs Review" ? "bg-amber-400" : "bg-slate-400"}`} />
                     <span className={dark ? "text-slate-300" : "text-slate-700"}>{row.match_status || "Unknown"}</span>
-                    <span className={`font-black ${dark ? "text-white" : "text-slate-950"}`}>{row.c}</span>
+                    <span className={`font-semibold tabular-nums ${dark ? "text-white" : "text-slate-950"}`}>{row.c}</span>
                   </div>
                 ))}
               </div>
@@ -185,8 +185,8 @@ export default function CmsDataPanel() {
 
           {/* Failed sync messages */}
           {stats?.failedSyncs?.length > 0 && (
-            <div className={`rounded-2xl border p-5 ${dark ? "border-red-900/50 bg-red-950/20" : "border-red-200 bg-red-50"}`}>
-              <p className={`text-sm font-black mb-2 ${dark ? "text-red-300" : "text-red-800"}`}>Failed sync events</p>
+            <div className={`rounded-xl border p-5 ${dark ? "border-red-900/50 bg-red-950/20" : "border-red-200 bg-red-50"}`}>
+              <p className={`text-sm font-semibold mb-2 ${dark ? "text-red-300" : "text-red-800"}`}>Failed sync events</p>
               {stats.failedSyncs.map((f, i) => (
                 <div key={i} className={`mt-1.5 text-xs ${dark ? "text-red-400" : "text-red-700"}`}>
                   <span className="font-semibold">{f.provider_type} / {f.dataset_identifier || "unknown"}</span>
@@ -199,8 +199,8 @@ export default function CmsDataPanel() {
 
           {/* Dataset list with dictionary links */}
           {stats?.datasetList?.length > 0 && (
-            <div className={`rounded-2xl border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
-              <p className={`text-sm font-black mb-3 ${dark ? "text-white" : "text-slate-950"}`}>Discovered datasets</p>
+            <div className={`rounded-xl border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+              <p className={`text-sm font-semibold mb-3 ${dark ? "text-white" : "text-slate-950"}`}>Discovered datasets</p>
               <div className="space-y-2">
                 {stats.datasetList.map((ds) => (
                   <div key={ds.cms_dataset_identifier} className={`flex items-center justify-between rounded-xl px-4 py-2 text-xs ${dark ? "bg-slate-700/30" : "bg-slate-50"}`}>
@@ -210,7 +210,7 @@ export default function CmsDataPanel() {
                     </div>
                     {ds.api_reference && (
                       <a href={ds.api_reference} target="_blank" rel="noopener noreferrer"
-                        className={`ml-3 shrink-0 rounded-full px-2 py-0.5 font-black text-[10px] transition ${dark ? "bg-blue-900/40 text-blue-300 hover:bg-blue-900/60" : "bg-blue-50 text-blue-700 hover:bg-blue-100"}`}>
+                        className={`ml-3 shrink-0 rounded px-2 py-0.5 font-medium text-[10px] transition ${dark ? "bg-blue-900/40 text-blue-300 hover:bg-blue-900/60" : "bg-blue-50 text-blue-700 hover:bg-blue-100"}`}>
                         Dictionary ↗
                       </a>
                     )}
@@ -220,8 +220,8 @@ export default function CmsDataPanel() {
             </div>
           )}
 
-          <div className={`rounded-2xl border p-5 text-xs leading-6 ${dark ? "border-slate-700 bg-slate-800/50 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
-            <p className="font-black mb-1">Data provenance and limitations</p>
+          <div className={`rounded-xl border p-5 text-xs leading-6 ${dark ? "border-slate-700 bg-slate-800/50 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
+            <p className="font-semibold mb-1">Data provenance and limitations</p>
             <p>Provider records are sourced from the CMS Provider Data Catalog via the public DKAN API. Records reflect Medicare certification status only. CMS data does not include Medicaid-only or private-pay providers. Match confidence scores are computed from name normalization and location proximity — review flagged records before treating as definitive competitive intelligence.</p>
           </div>
         </div>
@@ -230,21 +230,21 @@ export default function CmsDataPanel() {
       {activePanel === "competitors" && (
         <div className="space-y-3">
           {loadingComps && (
-            <div className={`rounded-2xl border p-6 text-center ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+            <div className={`rounded-xl border p-6 text-center ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
               <p className={`text-sm ${dark ? "text-slate-400" : "text-slate-500"}`}>Loading competitor records…</p>
             </div>
           )}
           {!loadingComps && competitors.length === 0 && (
-            <div className={`rounded-2xl border p-6 text-center ${dark ? "border-amber-800 bg-amber-950/20" : "border-amber-200 bg-amber-50"}`}>
-              <p className={`text-sm font-black ${dark ? "text-amber-300" : "text-amber-900"}`}>No competitor records yet</p>
+            <div className={`rounded-xl border p-6 text-center ${dark ? "border-amber-800 bg-amber-950/20" : "border-amber-200 bg-amber-50"}`}>
+              <p className={`text-sm font-semibold ${dark ? "text-amber-300" : "text-amber-900"}`}>No competitor records yet</p>
               <p className={`mt-1 text-xs ${dark ? "text-amber-400" : "text-amber-700"}`}>Run a CMS Sync from the Sync & Crawl tab to populate data.</p>
             </div>
           )}
           {!loadingComps && competitors.map((comp) => (
-            <div key={comp.id || comp.name} className={`rounded-2xl border p-4 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+            <div key={comp.id || comp.name} className={`rounded-xl border p-4 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className={`font-black truncate ${dark ? "text-white" : "text-slate-950"}`}>{comp.name}</p>
+                  <p className={`font-semibold truncate ${dark ? "text-slate-100" : "text-slate-800"}`}>{comp.name}</p>
                   <p className={`text-xs mt-0.5 ${dark ? "text-slate-400" : "text-slate-500"}`}>
                     {comp.provider_type} {comp.parent_company ? `· ${comp.parent_company}` : ""}
                   </p>
@@ -283,8 +283,8 @@ export default function CmsDataPanel() {
 
       {activePanel === "sync" && (
         <div className="space-y-4">
-          <div className={`rounded-2xl border p-6 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
-            <p className={`font-black mb-4 ${dark ? "text-white" : "text-slate-950"}`}>CMS Data Sync</p>
+          <div className={`rounded-xl border p-6 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+            <p className={`font-semibold mb-4 ${dark ? "text-white" : "text-slate-950"}`}>CMS Data Sync</p>
             <div className="flex flex-wrap items-center gap-3">
               <select
                 value={syncType}
@@ -298,7 +298,7 @@ export default function CmsDataPanel() {
               <button
                 onClick={runSync}
                 disabled={syncing}
-                className={`rounded-full px-6 py-2.5 text-sm font-black transition disabled:opacity-50 ${dark ? "bg-blue-600 text-white hover:bg-blue-500" : "bg-blue-600 text-white hover:bg-blue-700"}`}
+                className={`rounded-lg px-6 py-2.5 text-sm font-medium transition disabled:opacity-50 ${dark ? "bg-blue-600 text-white hover:bg-blue-500" : "bg-blue-600 text-white hover:bg-blue-700"}`}
               >
                 {syncing ? "Syncing…" : "Sync CMS Data"}
               </button>
@@ -308,12 +308,12 @@ export default function CmsDataPanel() {
             </p>
           </div>
 
-          <div className={`rounded-2xl border p-6 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
-            <p className={`font-black mb-4 ${dark ? "text-white" : "text-slate-950"}`}>Competitor Website Crawl</p>
+          <div className={`rounded-xl border p-6 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+            <p className={`font-semibold mb-4 ${dark ? "text-white" : "text-slate-950"}`}>Competitor Website Crawl</p>
             <button
               onClick={runCrawl}
               disabled={syncing}
-              className={`rounded-full px-6 py-2.5 text-sm font-black transition disabled:opacity-50 ${dark ? "bg-slate-700 text-slate-200 hover:bg-slate-600" : "bg-slate-900 text-white hover:bg-slate-800"}`}
+              className={`rounded-lg px-6 py-2.5 text-sm font-medium transition disabled:opacity-50 ${dark ? "bg-slate-700 text-slate-200 hover:bg-slate-600" : "bg-slate-900 text-white hover:bg-slate-800"}`}
             >
               {syncing ? "Crawling…" : "Crawl Competitor Websites"}
             </button>
@@ -323,8 +323,8 @@ export default function CmsDataPanel() {
           </div>
 
           {syncResult && (
-            <div className={`rounded-2xl border p-5 text-sm ${syncResult.error ? (dark ? "border-red-800 bg-red-950/30 text-red-300" : "border-red-200 bg-red-50 text-red-800") : (dark ? "border-emerald-800 bg-emerald-950/30 text-emerald-300" : "border-emerald-200 bg-emerald-50 text-emerald-800")}`}>
-              <p className="font-black mb-2">{syncResult.error ? "Sync error" : "Sync complete"}</p>
+            <div className={`rounded-xl border p-5 text-sm ${syncResult.error ? (dark ? "border-red-800 bg-red-950/30 text-red-300" : "border-red-200 bg-red-50 text-red-800") : (dark ? "border-emerald-800 bg-emerald-950/30 text-emerald-300" : "border-emerald-200 bg-emerald-50 text-emerald-800")}`}>
+              <p className="font-semibold mb-2">{syncResult.error ? "Sync error" : "Sync complete"}</p>
               <pre className="text-xs overflow-auto whitespace-pre-wrap">{JSON.stringify(syncResult, null, 2)}</pre>
             </div>
           )}

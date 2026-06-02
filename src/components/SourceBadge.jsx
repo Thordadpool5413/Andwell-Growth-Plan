@@ -6,7 +6,7 @@ export default function SourceBadge({ basis }) {
   return (
     <span
       title={basis}
-      className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide ${
+      className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${
         isCms
           ? "bg-blue-100 text-blue-700"
           : "bg-amber-100 text-amber-700"

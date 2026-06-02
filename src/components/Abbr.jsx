@@ -41,7 +41,7 @@ export default function Abbr({ term, children }) {
           role="tooltip"
           className="absolute bottom-full left-1/2 z-50 mb-2 w-72 -translate-x-1/2 rounded-xl bg-slate-900 px-3 py-2.5 text-xs leading-5 text-slate-100 shadow-xl"
         >
-          <span className="font-black text-blue-300">{display}</span>
+          <span className="font-semibold text-blue-300">{display}</span>
           <span className="mx-1 text-slate-500">—</span>
           {definition}
           <span className="absolute top-full left-1/2 -mt-1 -translate-x-1/2 border-4 border-transparent border-t-slate-900" />

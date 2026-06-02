@@ -87,7 +87,7 @@ function CommandCard({ children, style = {}, className = "", onClick }) {
   return (
     <div
       style={{ ...commandCard, ...(hovered ? commandCardHover : {}), ...style }}
-      className={`rounded-2xl ${className}`}
+      className={`rounded-xl ${className}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={onClick}
@@ -110,18 +110,26 @@ function MiniBar({ pct, color }) {
 
 function StatusBadge({ status }) {
   if (status === "ALERT") return (
-    <span className="inline-block rounded px-2 py-0.5 text-[9px] font-black uppercase tracking-tight text-white animate-pulse"
+    <span className="inline-block rounded px-2 py-0.5 text-[9px] font-medium uppercase tracking-tight text-white animate-pulse"
       style={{ background: "#ba1a1a" }}>Alert</span>
   );
   if (status === "WATCH") return (
-    <span className="inline-block rounded px-2 py-0.5 text-[9px] font-black uppercase tracking-tight text-white"
+    <span className="inline-block rounded px-2 py-0.5 text-[9px] font-medium uppercase tracking-tight text-white"
       style={{ background: C.tertiaryC }}>Watch</span>
   );
   return (
-    <span className="inline-block rounded px-2 py-0.5 text-[9px] font-black uppercase tracking-tight"
+    <span className="inline-block rounded px-2 py-0.5 text-[9px] font-medium uppercase tracking-tight"
       style={{ background: C.surfHigh, color: C.onSurfVar }}>Stable</span>
   );
 }
+
+const SERVICE_OPTIONS = ["All", "Home Health", "Hospice"];
+const COUNTY_LIST = Object.keys(cmsCountyMarket);
+const SVC_LABELS = {
+  "All":        ["Home Healthcare", "Hospice"],
+  "Home Health":["Home Healthcare"],
+  "Hospice":    ["Hospice"],
+};
 
 export default function MarketDynamicsView({ setActiveTab }) {
   const { dark } = useDarkMode();
@@ -129,10 +137,12 @@ export default function MarketDynamicsView({ setActiveTab }) {
   const hhSummary  = getProviderSummary("Home Healthcare");
   const hosSummary = getProviderSummary("Hospice");
 
-  const andwellDominance = ((hhSummary.andwellShare || 0) + (hosSummary.andwellShare || 0)) / 2;
-  const competitionShare = 1 - andwellDominance;
-  const andwellHHShare   = hhSummary.andwellShare || 0;
-  const velocityPct      = Math.round(andwellHHShare * 100 * 0.65 * 10) / 10;
+  const statewideAndwellDominance = ((hhSummary.andwellShare || 0) + (hosSummary.andwellShare || 0)) / 2;
+  const andwellHHShare            = hhSummary.andwellShare || 0;
+
+  /* ── Filter state ── */
+  const [selectedCounty,  setSelectedCounty]  = useState("Statewide");
+  const [selectedService, setSelectedService] = useState("All");
 
   const [cmsCompetitors, setCmsCompetitors] = useState([]);
   const [hhvbpData,      setHhvbpData]      = useState(null);
@@ -197,6 +207,89 @@ export default function MarketDynamicsView({ setActiveTab }) {
     return Math.round((v / cmsCompetitors.length) * 100);
   }, [cmsCompetitors]);
 
+  const activeSvcLabels = SVC_LABELS[selectedService] || ["Home Healthcare", "Hospice"];
+
+  /* ── Service-aware statewide KPIs ── */
+  const statewideKpis = useMemo(() => {
+    if (selectedService === "Home Health") {
+      const dom = hhSummary.andwellShare || 0;
+      return {
+        andwellDominance: dom,
+        competitionShare: 1 - dom,
+        velocityPct: Math.round(dom * 100 * 0.65 * 10) / 10,
+      };
+    }
+    if (selectedService === "Hospice") {
+      const dom = hosSummary.andwellShare || 0;
+      return {
+        andwellDominance: dom,
+        competitionShare: 1 - dom,
+        velocityPct: null,
+      };
+    }
+    return {
+      andwellDominance: statewideAndwellDominance,
+      competitionShare: 1 - statewideAndwellDominance,
+      velocityPct: Math.round(andwellHHShare * 100 * 0.65 * 10) / 10,
+    };
+  }, [selectedService, hhSummary, hosSummary, statewideAndwellDominance, andwellHHShare]);
+
+  /* ── County-scoped KPI derivation ── */
+  const countyKpis = useMemo(() => {
+    if (selectedCounty === "Statewide") return null;
+    const mkt = cmsCountyMarket[selectedCounty];
+    if (!mkt) return null;
+
+    const svcs = activeSvcLabels;
+
+    const countyRows = namedProviderRows.filter(
+      (r) => r.locationCounty === selectedCounty && svcs.includes(r.service)
+    );
+
+    const andwellCountyShare = countyRows
+      .filter((r) => r.isAndwellCmsRecord)
+      .reduce((s, r) => s + r.providerVolumeShare, 0);
+    const compCountyShare = countyRows
+      .filter((r) => !r.isAndwellCmsRecord)
+      .reduce((s, r) => s + r.providerVolumeShare, 0);
+
+    const hhUsers  = svcs.includes("Home Healthcare") ? (mkt.hh?.users  ?? 0) : 0;
+    const hosUsers = svcs.includes("Hospice")         ? (mkt.hos?.users ?? 0) : 0;
+    const totalUsers = hhUsers + hosUsers;
+
+    const hhProv  = svcs.includes("Home Healthcare") ? (mkt.hh?.prov  ?? 0) : 0;
+    const hosProv = svcs.includes("Hospice")         ? (mkt.hos?.prov ?? 0) : 0;
+
+    const hhRate = svcs.includes("Home Healthcare") ? (mkt.hh?.rate ?? null) : null;
+
+    return {
+      andwellDominance: andwellCountyShare,
+      competitionShare: compCountyShare,
+      velocityPct: hhRate != null ? Math.round(hhRate * 100 * 100) / 10 : null,
+      totalUsers,
+      providerCount: hhProv + hosProv,
+      ffs: mkt.ffs,
+      mkt,
+    };
+  }, [selectedCounty, selectedService]);
+
+  /* derived KPI values — county overrides statewide when available */
+  const isCountyView = selectedCounty !== "Statewide";
+  const andwellDominance = isCountyView ? (countyKpis?.andwellDominance ?? 0) : statewideKpis.andwellDominance;
+  const competitionShare = isCountyView ? (countyKpis?.competitionShare ?? 0) : statewideKpis.competitionShare;
+  const velocityPct = isCountyView ? (countyKpis?.velocityPct ?? null) : statewideKpis.velocityPct;
+
+  /* ── Provider → service mapping for velocity filter ── */
+  const provServiceMap = useMemo(() => {
+    const map = {};
+    for (const row of namedProviderRows) {
+      const k = row.providerName.toLowerCase().slice(0, 12);
+      if (!map[k]) map[k] = new Set();
+      map[k].add(row.service);
+    }
+    return map;
+  }, []);
+
   const velocityRows = useMemo(() => {
     if (!cmsCompetitors.length) return [];
     const provIdx = {};
@@ -234,6 +327,40 @@ export default function MarketDynamicsView({ setActiveTab }) {
       .slice(0, 8);
   }, [cmsCompetitors, andwellHHShare]);
 
+  /* ── County + service filtered velocity rows ── */
+  const filteredVelocityRows = useMemo(() => {
+    let rows = velocityRows;
+
+    if (selectedCounty !== "Statewide") {
+      rows = rows.filter((r) => r.region === selectedCounty || r.region === "Statewide");
+    }
+
+    if (selectedService !== "All") {
+      const svcLabel = selectedService === "Home Health" ? "Home Healthcare" : "Hospice";
+      rows = rows.filter((r) => {
+        const lc = (r.name || "").toLowerCase();
+        for (const [k, svcs] of Object.entries(provServiceMap)) {
+          if (lc.includes(k) || k.includes(lc.slice(0, 12))) {
+            return svcs.has(svcLabel);
+          }
+        }
+        return true;
+      });
+    }
+
+    return rows;
+  }, [velocityRows, selectedCounty, selectedService, provServiceMap]);
+
+  /* ── County + service filtered emerging markets ── */
+  const filteredEmergingMarkets = useMemo(() => {
+    if (selectedCounty === "Statewide") return emergingMarkets;
+    const mkt = cmsCountyMarket[selectedCounty];
+    if (!mkt) return emergingMarkets;
+    const rows = buildRows(DEFAULT_SCENARIO);
+    const opp  = getOpportunityScore(selectedCounty, rows);
+    return [{ county: selectedCounty, market: mkt, score: opp?.score || 0 }];
+  }, [selectedCounty]);
+
   const andwellQuality = qualityData?.rows?.find((r) =>
     (r.provider_name || "").toLowerCase().includes("androscoggin"));
   const andwellHhvbp  = hhvbpData?.rows?.find((r) =>
@@ -248,8 +375,8 @@ export default function MarketDynamicsView({ setActiveTab }) {
 
   const displayConfidence = dataConfidence ?? (loading ? null : 98);
 
-  const northernLight    = velocityRows.find((r) => (r.name || "").toLowerCase().includes("northern light"));
-  const amedisysRows     = velocityRows.filter((r) => (r.name || "").toLowerCase().includes("amedisys"));
+  const northernLight    = filteredVelocityRows.find((r) => (r.name || "").toLowerCase().includes("northern light"));
+  const amedisysRows     = filteredVelocityRows.filter((r) => (r.name || "").toLowerCase().includes("amedisys"));
   const amedisysShare    = amedisysRows.reduce((s, r) => s + r.providerShare, 0);
 
   /* In dark mode, invert the palette to dark surfaces */
@@ -272,6 +399,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
   }
 
   const nationalChainCount = useMemo(() => velocityRows.filter((r) => r.national).length, [velocityRows]);
+  const nationalChainCount = useMemo(() => filteredVelocityRows.filter((r) => r.national).length, [filteredVelocityRows]);
 
   useEffect(() => {
     if (loading) return;
@@ -295,7 +423,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span
-              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white"
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-[10px] font-medium uppercase tracking-[0.2em] text-white"
               style={{ background: C.primary }}
             >
               <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
@@ -307,7 +435,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
             </span>
           </div>
           <h1
-            className="font-black uppercase tracking-tight"
+            className="font-bold uppercase tracking-tight"
             style={{ fontSize: 30, lineHeight: "36px", letterSpacing: "-0.02em", color: textMain }}
           >
             Market Dynamics &amp; Competitors
@@ -336,97 +464,176 @@ export default function MarketDynamicsView({ setActiveTab }) {
         </div>
       </header>
 
+      {/* ── County + Service Filter Bar ─────────────────────── */}
+      <div
+        className="rounded-xl p-4 flex flex-col gap-3"
+        style={{ background: surfMed, border: `1px solid ${divider}` }}
+      >
+        {/* County pills */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[9px] font-medium uppercase tracking-[0.2em] shrink-0 w-20" style={{ color: textMute }}>County</span>
+          {["Statewide", ...COUNTY_LIST].map((county) => {
+            const active = selectedCounty === county;
+            return (
+              <button
+                key={county}
+                onClick={() => setSelectedCounty(county)}
+                className="rounded-lg px-3 py-1 text-xs font-medium transition-all"
+                style={active
+                  ? { background: C.primary, color: "#fff", boxShadow: `0 2px 8px ${C.primary}55` }
+                  : { background: dark ? "#1a1d2a" : "#fff", color: textSub, border: `1px solid ${divider}` }
+                }
+              >
+                {county}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Service line pills */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[9px] font-medium uppercase tracking-[0.2em] shrink-0 w-20" style={{ color: textMute }}>Service</span>
+          {SERVICE_OPTIONS.map((svc) => {
+            const active = selectedService === svc;
+            return (
+              <button
+                key={svc}
+                onClick={() => setSelectedService(svc)}
+                className="rounded-lg px-3 py-1 text-xs font-medium transition-all"
+                style={active
+                  ? { background: C.secondary, color: "#fff", boxShadow: `0 2px 8px ${C.secondary}55` }
+                  : { background: dark ? "#1a1d2a" : "#fff", color: textSub, border: `1px solid ${divider}` }
+                }
+              >
+                {svc}
+              </button>
+            );
+          })}
+
+          {/* Active filter label */}
+          {(selectedCounty !== "Statewide" || selectedService !== "All") && (
+            <span className="ml-auto text-[10px] font-medium uppercase tracking-[0.15em]" style={{ color: C.primary }}>
+              {selectedCounty !== "Statewide" ? selectedCounty : "Statewide"}
+              {selectedService !== "All" ? ` · ${selectedService}` : ""}
+            </span>
+          )}
+          {(selectedCounty !== "Statewide" || selectedService !== "All") && (
+            <button
+              onClick={() => { setSelectedCounty("Statewide"); setSelectedService("All"); }}
+              className="rounded-lg px-2.5 py-0.5 text-[10px] font-medium transition-all hover:opacity-70"
+              style={{ background: dark ? "#1a1d2a" : "#fff", color: textMute, border: `1px solid ${divider}` }}
+            >
+              Clear ✕
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* ── KPI Cards ──────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
 
         {/* 1 — Andwell Dominance */}
         <div
-          className="rounded-2xl p-5 relative group"
+          className="rounded-xl p-5 relative group"
           style={{ ...card({ borderLeft: `4px solid ${C.primary}` }) }}
         >
           <div className="flex justify-between items-start mb-3">
-            <span className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: textSub }}>
+            <span className="text-[10px] font-medium uppercase tracking-[0.3em]" style={{ color: textSub }}>
               Andwell Dominance
             </span>
             <svg className="w-5 h-5 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2">
               <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
           </div>
-          <div className="font-black" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: textMain }}>
+          <div className="font-bold tabular-nums" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: textMain }}>
             {percent(andwellDominance)}
           </div>
-          <div className="mt-1 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: C.primary }}>
-            +2.4% vs Prev Qtr
+          <div className="mt-1 text-[10px] font-medium uppercase tracking-[0.2em]" style={{ color: C.primary }}>
+            {!isCountyView ? "+2.4% vs Prev Qtr" : `Provider file · ${selectedCounty}`}
           </div>
           <MiniBar pct={andwellDominance * 100} color={C.primary} />
         </div>
 
-        {/* 2 — Aggregated Competition */}
+        {/* 2 — Aggregated Competition / County Providers */}
         <div
-          className="rounded-2xl p-5 relative group"
+          className="rounded-xl p-5 relative group"
           style={{ ...card({ borderLeft: `4px solid ${C.secondary}` }) }}
         >
           <div className="flex justify-between items-start mb-3">
-            <span className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: textSub }}>
-              Aggregated Competition
+            <span className="text-[10px] font-medium uppercase tracking-[0.3em]" style={{ color: textSub }}>
+              {!isCountyView ? "Aggregated Competition" : "County Providers"}
             </span>
             <svg className="w-5 h-5 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke={C.secondary} strokeWidth="2.5">
               <path d="M17 7L7 17M7 7v10h10"/>
             </svg>
           </div>
-          <div className="font-black" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: textMain }}>
-            {percent(competitionShare)}
+          <div className="font-bold tabular-nums" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: textMain }}>
+            {!isCountyView
+              ? percent(competitionShare)
+              : (countyKpis?.providerCount ?? "—")}
           </div>
-          <div className="mt-1 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: "#ba1a1a" }}>
-            -1.1% Sector Loss
+          <div className="mt-1 text-[10px] font-medium uppercase tracking-[0.2em]" style={{ color: !isCountyView ? "#ba1a1a" : C.secondary }}>
+            {!isCountyView ? "-1.1% Sector Loss" : `Active in ${selectedCounty}`}
           </div>
-          <MiniBar pct={competitionShare * 100} color={C.secondary} />
+          <MiniBar pct={!isCountyView ? competitionShare * 100 : Math.min((countyKpis?.providerCount ?? 0) * 10, 100)} color={C.secondary} />
         </div>
 
-        {/* 3 — Strategic Velocity */}
+        {/* 3 — Strategic Velocity / County HH Rate */}
         <div
-          className="rounded-2xl p-5 relative group"
+          className="rounded-xl p-5 relative group"
           style={{ ...card({ borderLeft: `4px solid ${C.tertiaryC}` }) }}
         >
           <div className="flex justify-between items-start mb-3">
-            <span className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: textSub }}>
-              Strategic Velocity
+            <span className="text-[10px] font-medium uppercase tracking-[0.3em]" style={{ color: textSub }}>
+              {!isCountyView ? "Strategic Velocity" : "HH Utilization Rate"}
             </span>
             <svg className="w-5 h-5 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke={C.tertiaryC} strokeWidth="2.5">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
             </svg>
           </div>
-          <div className="font-black" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: textMain }}>
-            {velocityPct}%
+          <div className="font-bold tabular-nums" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: textMain }}>
+            {velocityPct != null ? `${velocityPct}%` : "—"}
           </div>
-          <div className="mt-1 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: C.tertiaryC }}>
-            High Growth Potential
+          <div className="mt-1 text-[10px] font-medium uppercase tracking-[0.2em]" style={{ color: C.tertiaryC }}>
+            {!isCountyView ? "High Growth Potential" : "FFS beneficiary utilization"}
           </div>
-          <MiniBar pct={velocityPct} color={C.tertiaryC} />
+          <MiniBar pct={velocityPct ?? 0} color={C.tertiaryC} />
         </div>
 
-        {/* 4 — Data Confidence */}
+        {/* 4 — Data Confidence / County FFS Population */}
         <div
-          className="rounded-2xl p-5 relative group"
+          className="rounded-xl p-5 relative group"
           style={{ ...card({ borderTop: `4px solid ${C.primary}` }) }}
         >
           <div className="flex justify-between items-start mb-3">
-            <span className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: textSub }}>
-              Data Confidence
+            <span className="text-[10px] font-medium uppercase tracking-[0.3em]" style={{ color: textSub }}>
+              {!isCountyView ? "Data Confidence" : "FFS Population"}
             </span>
             <svg className="w-5 h-5 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>
             </svg>
           </div>
-          <div className="font-black" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: textMain }}>
-            {displayConfidence != null ? `${displayConfidence}%` : "—"}
+          <div className="font-bold tabular-nums" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: textMain }}>
+            {!isCountyView
+              ? (displayConfidence != null ? `${displayConfidence}%` : "—")
+              : (countyKpis?.ffs != null ? countyKpis.ffs.toLocaleString() : "—")}
           </div>
           <div className="mt-1 flex items-center gap-1.5">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: textSub }}>CMS Verified</span>
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            {!isCountyView ? (
+              <>
+                <span className="text-[10px] font-medium uppercase tracking-[0.2em]" style={{ color: textSub }}>CMS Verified</span>
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              </>
+            ) : (
+              <span className="text-[10px] font-medium uppercase tracking-[0.2em]" style={{ color: textSub }}>
+                {countyKpis?.totalUsers != null ? `${countyKpis.totalUsers.toLocaleString()} beneficiaries` : "CMS county data"}
+              </span>
+            )}
           </div>
           <div className="mt-2 text-[9px] uppercase tracking-[0.15em]" style={{ color: textMute }}>
-            {loading ? "Loading…" : `Source: CMS Audit · ${cmsCompetitors.length} records`}
+            {!isCountyView
+              ? (loading ? "Loading…" : `Source: CMS Audit · ${cmsCompetitors.length} records`)
+              : `CMS county market · ${selectedCounty}`}
           </div>
         </div>
       </div>
@@ -436,7 +643,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
 
         {/* ── Competitor table — 8 cols ─────────────────────── */}
         <section
-          className="lg:col-span-8 rounded-2xl overflow-hidden relative"
+          className="lg:col-span-8 rounded-xl overflow-hidden relative"
           style={card()}
         >
           {/* dot-matrix background */}
@@ -453,13 +660,13 @@ export default function MarketDynamicsView({ setActiveTab }) {
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2.5">
                 <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
               </svg>
-              <h2 className="text-sm font-black uppercase tracking-[0.2em]" style={{ color: textMain }}>
+              <h2 className="text-sm font-semibold uppercase tracking-[0.2em]" style={{ color: textMain }}>
                 Competitor Velocity Index
               </h2>
             </div>
             <button
               onClick={() => setActiveTab?.("Competitive View")}
-              className="text-[10px] font-black uppercase tracking-[0.2em] hover:underline"
+              className="text-[10px] font-medium uppercase tracking-[0.2em] hover:underline"
               style={{ color: C.primary }}
             >
               Full Analysis →
@@ -472,23 +679,25 @@ export default function MarketDynamicsView({ setActiveTab }) {
               <div className="px-6 py-10 text-center text-sm" style={{ color: textMute }}>
                 Loading competitor intelligence…
               </div>
-            ) : velocityRows.length === 0 ? (
+            ) : filteredVelocityRows.length === 0 ? (
               <div className="px-6 py-6 text-sm" style={{ color: textMute }}>
-                No competitor records found. Run a CMS sync to populate data.
+                {velocityRows.length === 0
+                  ? "No competitor records found. Run a CMS sync to populate data."
+                  : `No competitors found in ${selectedCounty}. Showing statewide data — select a different county or choose Statewide.`}
               </div>
             ) : (
               <table className="w-full text-left min-w-[540px]">
                 <thead style={{ background: dark ? surfMed : C.surfMed }}>
                   <tr>
                     {["Organization", "Primary Region", "Momentum", "Share Shift", "Status"].map((col) => (
-                      <th key={col} className="px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: textSub }}>
+                      <th key={col} className="px-6 py-3 text-[10px] font-medium uppercase tracking-[0.2em]" style={{ color: textSub }}>
                         {col}
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {velocityRows.map((row, i) => (
+                  {filteredVelocityRows.map((row, i) => (
                     <tr
                       key={row.id}
                       className="group cursor-default transition-colors"
@@ -500,7 +709,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
                     >
                       <td className="px-6 py-4">
                         <div
-                          className="font-black group-hover:text-[#004bc6] transition-colors"
+                          className="font-semibold group-hover:text-[#004bc6] transition-colors"
                           style={{ color: textMain, fontSize: 14 }}
                         >
                           {(row.name || "").length > 30 ? row.name.slice(0, 30) + "…" : row.name}
@@ -513,7 +722,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
                       <td className="px-6 py-4 text-sm" style={{ color: textSub }}>{row.region}</td>
                       <td className="px-6 py-4">
                         <div
-                          className="flex items-center gap-1.5 font-black text-sm"
+                          className="flex items-center gap-1.5 font-semibold tabular-nums text-sm"
                           style={{
                             color: row.momentum > 6 ? "#ba1a1a"
                                  : row.momentum > 3 ? C.tertiaryC
@@ -549,7 +758,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
 
           {/* Market Intel — inverse-surface dark card */}
           <div
-            className="rounded-2xl p-5 relative overflow-hidden"
+            className="rounded-xl p-5 relative overflow-hidden"
             style={{
               background: C.inverseSurf,
               color: C.inverseOn,
@@ -567,6 +776,10 @@ export default function MarketDynamicsView({ setActiveTab }) {
                 {AI_AVAILABLE && (
                   <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wide bg-violet-600/30 text-violet-300 border border-violet-500/30">
                     <span className={`h-1.5 w-1.5 rounded-full ${aiLoading ? "bg-violet-400 animate-pulse" : "bg-violet-400"}`} />
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-white">Market Intel</h3>
+                {AI_AVAILABLE && (
+                  <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide bg-blue-600/30 text-blue-300 border border-blue-500/30">
+                    <span className={`h-1.5 w-1.5 rounded-full ${aiLoading ? "bg-blue-400 animate-pulse" : "bg-blue-400"}`} />
                     AI
                   </span>
                 )}
@@ -575,6 +788,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
                 <button
                   onClick={() => generateAiSummary(velocityRows, andwellDominance, amedisysShare, northernLight, velocityRows.length, nationalChainCount)}
                   className="text-[9px] font-black uppercase tracking-wide text-slate-400 hover:text-white transition-colors"
+                  className="text-[9px] font-medium uppercase tracking-wide text-slate-400 hover:text-white transition-colors"
                   title="Regenerate summary"
                 >
                   ↻ Refresh
@@ -600,6 +814,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
                   <p className="text-sm font-medium opacity-90 leading-relaxed">
                     {aiSummary}
                     {aiLoading && <span className="inline-block w-1.5 h-3.5 ml-0.5 bg-violet-400 animate-pulse rounded-sm align-middle" />}
+                    {aiLoading && <span className="inline-block w-1.5 h-3.5 ml-0.5 bg-blue-400 animate-pulse rounded-sm align-middle" />}
                   </p>
                 </div>
               )}
@@ -609,6 +824,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
                 <div className="space-y-3">
                   <div className="rounded-r-xl p-3.5 border-l-4" style={{ borderLeftColor: C.primary, background: "rgba(255,255,255,0.05)" }}>
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: C.primary }}>
+                    <p className="text-[10px] font-medium uppercase tracking-[0.2em] mb-1" style={{ color: C.primary }}>
                       Consolidation Alert
                     </p>
                     <p className="text-sm font-medium opacity-90 leading-relaxed">
@@ -619,6 +835,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
                   </div>
                   <div className="rounded-r-xl p-3.5 border-l-4" style={{ borderLeftColor: C.tertiaryC, background: "rgba(255,255,255,0.05)" }}>
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: C.tertiaryC }}>
+                    <p className="text-[10px] font-medium uppercase tracking-[0.2em] mb-1" style={{ color: C.tertiaryC }}>
                       Referral Leakage
                     </p>
                     <p className="text-sm font-medium opacity-90 leading-relaxed">
@@ -629,6 +846,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
                   </div>
                   <div className="rounded-r-xl p-3.5 border-l-4 border-l-emerald-500" style={{ background: "rgba(255,255,255,0.05)" }}>
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 mb-1">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-emerald-400 mb-1">
                       Quality Moat
                     </p>
                     <p className="text-sm font-medium opacity-90 leading-relaxed">
@@ -645,11 +863,11 @@ export default function MarketDynamicsView({ setActiveTab }) {
 
           {/* Emerging Markets */}
           <CommandCard className="p-5">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-3" style={{ color: textSub }}>
-              Emerging Markets
+            <h3 className="text-[10px] font-medium uppercase tracking-[0.2em] mb-3" style={{ color: textSub }}>
+              {!isCountyView ? "Emerging Markets" : `${selectedCounty} Market Snapshot`}
             </h3>
             <div className="space-y-2">
-              {emergingMarkets.map((m) => (
+              {filteredEmergingMarkets.map((m) => (
                 <div
                   key={m.county}
                   className="flex items-center justify-between rounded-xl border p-3 cursor-pointer transition-all"
@@ -659,9 +877,15 @@ export default function MarketDynamicsView({ setActiveTab }) {
                   onClick={() => setActiveTab?.("County Plan")}
                 >
                   <div>
-                    <div className="font-black text-sm" style={{ color: textMain }}>{m.county}</div>
+                    <div className="font-semibold text-sm" style={{ color: textMain }}>{m.county}</div>
                     <div className="text-[10px] font-bold uppercase tracking-wide mt-0.5" style={{ color: textMute }}>
-                      {m.score}/100 opportunity score · {number(m.market.hh.users + m.market.hos.users)} users
+                      {(() => {
+                        const users = selectedService === "Home Health" ? m.market.hh.users
+                                    : selectedService === "Hospice"     ? m.market.hos.users
+                                    : m.market.hh.users + m.market.hos.users;
+                        const svcLabel = selectedService === "All" ? "" : ` · ${selectedService}`;
+                        return `${m.score}/100 opportunity score · ${number(users)} users${svcLabel}`;
+                      })()}
                     </div>
                   </div>
                   <svg className="w-5 h-5 shrink-0 ml-2" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2">
@@ -684,7 +908,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
               <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
               <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
             </svg>
-            <h3 className="text-sm font-black uppercase tracking-[0.2em]" style={{ color: textMain }}>
+            <h3 className="text-sm font-semibold uppercase tracking-[0.2em]" style={{ color: textMain }}>
               CMS Market Provenance
             </h3>
           </div>
@@ -696,8 +920,8 @@ export default function MarketDynamicsView({ setActiveTab }) {
               onMouseEnter={(e) => e.currentTarget.style.background = `${C.primary}0d`}
               onMouseLeave={(e) => e.currentTarget.style.background = surfLow}
             >
-              <div className="text-[9px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: textMute }}>HCAHPS Peer Rank</div>
-              <div className="font-black" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: C.primary }}>
+              <div className="text-[9px] font-medium uppercase tracking-[0.2em] mb-1" style={{ color: textMute }}>HCAHPS Peer Rank</div>
+              <div className="font-bold tabular-nums" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: C.primary }}>
                 {hcahpsRank}
               </div>
               <div className="text-[9px] font-bold uppercase mt-2" style={{ color: textSub }}>Clinical Meta-Data</div>
@@ -709,8 +933,8 @@ export default function MarketDynamicsView({ setActiveTab }) {
               onMouseEnter={(e) => e.currentTarget.style.background = `${C.secondary}0d`}
               onMouseLeave={(e) => e.currentTarget.style.background = surfLow}
             >
-              <div className="text-[9px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: textMute }}>VBP Adjustment</div>
-              <div className="font-black" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: C.secondary }}>
+              <div className="text-[9px] font-medium uppercase tracking-[0.2em] mb-1" style={{ color: textMute }}>VBP Adjustment</div>
+              <div className="font-bold tabular-nums" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: C.secondary }}>
                 {vbpAdj}
               </div>
               <div className="text-[9px] font-bold uppercase mt-2" style={{ color: textSub }}>Net Revenue Impact</div>
@@ -723,7 +947,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
               <svg className="w-4 h-4 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2">
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Data Implication Cluster</p>
+              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-white">Data Implication Cluster</p>
             </div>
             <p className="relative z-10 text-sm leading-6 text-white opacity-90">
               The current CMS data indicates that Andwell's dominance in Portland metro is largely
@@ -735,7 +959,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
         </CommandCard>
 
         {/* Geographic Opportunity Density */}
-        <div className="rounded-2xl overflow-hidden relative min-h-[380px]" style={{ boxShadow: commandCard.boxShadow }}>
+        <div className="rounded-xl overflow-hidden relative min-h-[380px]" style={{ boxShadow: commandCard.boxShadow }}>
           <img
             src="/maine-map.png"
             alt="Maine geographic opportunity density map"
@@ -753,25 +977,25 @@ export default function MarketDynamicsView({ setActiveTab }) {
               style={{ background: `${C.inverseSurf}e6`, border: "1px solid rgba(255,255,255,0.1)" }}
             >
               <span className="h-3 w-3 rounded-full shrink-0" style={{ background: C.primary, boxShadow: `0 0 10px ${C.primary}` }} />
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white">Andwell Core Hubs</span>
+              <span className="text-[9px] font-medium uppercase tracking-[0.2em] text-white">Andwell Core Hubs</span>
             </div>
             <div
               className="flex items-center gap-2.5 rounded-xl px-3 py-2 backdrop-blur-md"
               style={{ background: `${C.inverseSurf}e6`, border: "1px solid rgba(255,255,255,0.1)" }}
             >
               <span className="h-3 w-3 rounded-full shrink-0" style={{ background: C.tertiaryC, boxShadow: `0 0 10px ${C.tertiaryC}` }} />
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white">Expansion Targets</span>
+              <span className="text-[9px] font-medium uppercase tracking-[0.2em] text-white">Expansion Targets</span>
             </div>
           </div>
           {/* Bottom text */}
           <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
             <div
-              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.2em] text-white mb-2"
+              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[9px] font-medium uppercase tracking-[0.2em] text-white mb-2"
               style={{ background: C.primary }}
             >
               Active Strategy Map
             </div>
-            <h4 className="font-black uppercase tracking-tight text-white"
+            <h4 className="font-bold uppercase tracking-tight text-white"
               style={{ fontSize: 24, lineHeight: "30px", letterSpacing: "-0.015em" }}>
               Geographic Opportunity Density
             </h4>
@@ -781,14 +1005,14 @@ export default function MarketDynamicsView({ setActiveTab }) {
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setActiveTab?.("County Plan")}
-                className="rounded-full px-5 py-2.5 text-sm font-black text-white transition-all hover:opacity-90 active:scale-[0.98]"
+                className="rounded-lg px-5 py-2.5 text-sm font-medium text-white transition-all hover:opacity-90 active:scale-[0.98]"
                 style={{ background: C.primary, boxShadow: `0 4px 14px ${C.primary}88` }}
               >
                 Open Map View →
               </button>
               <button
                 onClick={() => setActiveTab?.("Opportunity Score")}
-                className="rounded-full px-5 py-2.5 text-sm font-black text-white border transition-all hover:bg-white/10 active:scale-[0.98]"
+                className="rounded-lg px-5 py-2.5 text-sm font-medium text-white border transition-all hover:bg-white/10 active:scale-[0.98]"
                 style={{ borderColor: "rgba(255,255,255,0.3)", backdropFilter: "blur(6px)" }}
               >
                 Opportunity Scores →

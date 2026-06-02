@@ -25,7 +25,7 @@ export function MetricCard({
 
   return (
     <div className={`
-      rounded-2xl border p-6 shadow-shadow-md transition-all duration-300
+      rounded-xl border p-6 shadow-shadow-md transition-all duration-300
       ${statusColors[status] || statusColors.neutral}
       ${className}
     `}>
@@ -35,7 +35,7 @@ export function MetricCard({
             {label}
           </p>
           <div className="mt-2 flex items-baseline gap-2">
-            <p className={`text-3xl font-black ${dark ? "text-white" : "text-slate-900"}`}>
+            <p className={`text-3xl font-bold tabular-nums ${dark ? "text-white" : "text-slate-900"}`}>
               {value}
             </p>
             {unit && <span className={`text-lg ${dark ? "text-slate-400" : "text-slate-600"}`}>{unit}</span>}
@@ -79,7 +79,7 @@ export function MetricTile({
         {label}
       </p>
       <div className="flex items-end justify-between mt-2">
-        <p className={`${compact ? "text-lg" : "text-2xl"} font-black ${dark ? "text-white" : "text-slate-900"}`}>
+        <p className={`${compact ? "text-lg" : "text-2xl"} font-bold tabular-nums ${dark ? "text-white" : "text-slate-900"}`}>
           {value}
         </p>
         {trend !== null && (
@@ -112,7 +112,7 @@ export function ComparisonMetric({
 
   return (
     <div className={`
-      rounded-2xl border p-6 shadow-shadow-md
+      rounded-xl border p-6 shadow-shadow-md
       ${dark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"}
       ${className}
     `}>
@@ -123,13 +123,13 @@ export function ComparisonMetric({
       <div className="mt-4 grid grid-cols-2 gap-4">
         <div>
           <p className={`text-xs ${dark ? "text-slate-500" : "text-slate-600"}`}>Current</p>
-          <p className={`text-2xl font-black mt-1 ${dark ? "text-white" : "text-slate-900"}`}>
+          <p className={`text-2xl font-bold tabular-nums mt-1 ${dark ? "text-white" : "text-slate-900"}`}>
             {current}{unit}
           </p>
         </div>
         <div>
           <p className={`text-xs ${dark ? "text-slate-500" : "text-slate-600"}`}>Target</p>
-          <p className={`text-2xl font-black mt-1 ${dark ? "text-slate-400" : "text-slate-600"}`}>
+          <p className={`text-2xl font-bold tabular-nums mt-1 ${dark ? "text-slate-400" : "text-slate-600"}`}>
             {target}{unit}
           </p>
         </div>
@@ -166,7 +166,7 @@ export function MinimalMetric({
       {icon && <div className="text-lg">{icon}</div>}
       <div className="flex-1">
         <p className={`text-xs font-semibold ${dark ? "text-slate-400" : "text-slate-600"}`}>{label}</p>
-        <p className={`text-lg font-black ${dark ? "text-white" : "text-slate-900"}`}>{value}</p>
+        <p className={`text-lg font-bold tabular-nums ${dark ? "text-white" : "text-slate-900"}`}>{value}</p>
       </div>
       {trend !== null && (
         <div className={`text-sm font-semibold ${trend > 0 ? "text-positive" : "text-negative"}`}>

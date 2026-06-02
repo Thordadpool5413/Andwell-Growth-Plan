@@ -43,14 +43,14 @@ function TierBadge({ status }) {
         tabIndex={0}
         role="button"
         aria-label={`Verification tier: ${cfg.label}`}
-        className={`inline-flex cursor-help items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black ${cfg.badge}`}
+        className={`inline-flex cursor-help items-center gap-1 rounded border px-2 py-0.5 text-[10px] font-medium ${cfg.badge}`}
       >
         <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
         {cfg.label}
       </span>
       {open && (
         <span className="absolute bottom-full right-0 z-50 mb-1.5 w-60 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] leading-5 text-slate-700 shadow-lg dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300">
-          <span className="mb-0.5 block font-black text-slate-900 dark:text-white">Verification tier</span>
+          <span className="mb-0.5 block font-semibold text-slate-900 dark:text-white">Verification tier</span>
           {cfg.tooltip}
         </span>
       )}
@@ -89,10 +89,10 @@ export default function CmsEvidenceCard({ competitor, compact = false }) {
   }
 
   return (
-    <div className={`rounded-2xl border p-4 transition-all ${border} ${dark ? "bg-slate-800/50" : "bg-white"}`}>
+    <div className={`rounded-xl border p-4 transition-all ${border} ${dark ? "bg-slate-800/50" : "bg-white"}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className={`font-black truncate ${dark ? "text-white" : "text-slate-950"}`}>
+          <p className={`font-semibold truncate ${dark ? "text-slate-100" : "text-slate-800"}`}>
             {competitor.provider_name_raw || competitor.name}
           </p>
           <p className={`text-xs mt-0.5 ${dark ? "text-slate-400" : "text-slate-500"}`}>
@@ -107,7 +107,7 @@ export default function CmsEvidenceCard({ competitor, compact = false }) {
 
       {competitor.cms_certification_number && (
         <div className={`mt-3 rounded-xl px-3 py-2 text-xs ${dark ? "bg-slate-700/50 text-slate-300" : "bg-slate-50 text-slate-700"}`}>
-          <span className={`font-black ${dark ? "text-slate-400" : "text-slate-500"}`}>CCN: </span>
+          <span className={`font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>CCN: </span>
           {competitor.cms_certification_number}
         </div>
       )}
@@ -138,7 +138,7 @@ export default function CmsEvidenceCard({ competitor, compact = false }) {
         <div className="mt-2">
           <button
             onClick={() => setExpanded((p) => !p)}
-            className={`text-[10px] font-black uppercase tracking-wide ${dark ? "text-slate-500 hover:text-slate-400" : "text-slate-400 hover:text-slate-600"}`}
+            className={`text-[10px] font-medium uppercase tracking-wide ${dark ? "text-slate-500 hover:text-slate-400" : "text-slate-400 hover:text-slate-600"}`}
           >
             {expanded ? "Hide" : "Show"} CMS evidence
           </button>

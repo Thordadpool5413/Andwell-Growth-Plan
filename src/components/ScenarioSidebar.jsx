@@ -7,7 +7,7 @@ function CompactSlider({ label, value, min, max, step, format, onChange, dark })
     <div className="space-y-1">
       <div className="flex items-center justify-between gap-2">
         <span className={`text-xs font-semibold leading-tight ${dark ? "text-slate-300" : "text-slate-600"}`}>{label}</span>
-        <span className={`shrink-0 text-xs font-black tabular-nums ${dark ? "text-white" : "text-slate-900"}`}>{format(value)}</span>
+        <span className={`shrink-0 text-xs font-bold tabular-nums ${dark ? "text-white" : "text-slate-900"}`}>{format(value)}</span>
       </div>
       <input
         type="range"
@@ -25,7 +25,7 @@ function CompactSlider({ label, value, min, max, step, format, onChange, dark })
 function SliderGroup({ title, dark, children }) {
   return (
     <div>
-      <p className={`mb-2 text-[10px] font-black uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>
+      <p className={`mb-2 text-[10px] font-medium uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>
         {title}
       </p>
       <div className="space-y-3">{children}</div>
@@ -131,7 +131,7 @@ export default function ScenarioSidebar({ scenario, setScenario, open, onClose, 
       >
         <div className={`flex shrink-0 items-center justify-between border-b px-4 py-3 ${dark ? "border-slate-700" : "border-slate-100"}`}>
           <div>
-            <p className={`text-[10px] font-black uppercase tracking-[0.22em] ${dark ? "text-blue-400" : "text-blue-600"}`}>
+            <p className={`text-[10px] font-medium uppercase tracking-[0.22em] ${dark ? "text-blue-400" : "text-blue-600"}`}>
               Scenario Controls
             </p>
             <p className={`text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>
@@ -142,7 +142,7 @@ export default function ScenarioSidebar({ scenario, setScenario, open, onClose, 
             {!isDefault && (
               <button
                 onClick={handleReset}
-                className={`rounded-full px-2.5 py-1 text-[10px] font-black ring-1 transition ${
+                className={`rounded-lg px-2.5 py-1 text-[10px] font-medium ring-1 transition ${
                   dark
                     ? "bg-slate-700 text-slate-200 ring-slate-600 hover:bg-slate-600"
                     : "bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100"
@@ -243,7 +243,7 @@ export default function ScenarioSidebar({ scenario, setScenario, open, onClose, 
           <div className={`border-t ${dark ? "border-slate-800" : "border-slate-100"}`} />
 
           <div className={`rounded-xl p-3 text-[10px] leading-relaxed ${dark ? "bg-slate-800 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
-            <p className={`mb-1 font-black ${dark ? "text-slate-300" : "text-slate-600"}`}>Benchmarks</p>
+            <p className={`mb-1 font-semibold ${dark ? "text-slate-300" : "text-slate-600"}`}>Benchmarks</p>
             <p>Conversion: 72–78% industry median (NAHC 2023)</p>
             <p>HH capture: 8–15% first-year (industry)</p>
             <p>Wound/Therapy: Andwell planning assumptions</p>
@@ -252,7 +252,7 @@ export default function ScenarioSidebar({ scenario, setScenario, open, onClose, 
 
         {totals && defaultTotals && (
           <div className={`shrink-0 border-t px-4 py-3 ${dark ? "border-slate-700 bg-slate-900" : "border-slate-100 bg-white"}`}>
-            <p className={`mb-2 text-[10px] font-black uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>
+            <p className={`mb-2 text-[10px] font-medium uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>
               Revenue Impact
             </p>
             <div className="grid grid-cols-3 gap-2">
@@ -266,7 +266,7 @@ export default function ScenarioSidebar({ scenario, setScenario, open, onClose, 
                   className={`rounded-lg px-2 py-2 text-center ${dark ? "bg-slate-800" : "bg-slate-50"}`}
                 >
                   <p className={`text-[10px] font-semibold mb-0.5 ${dark ? "text-slate-500" : "text-slate-400"}`}>{label}</p>
-                  <p className={`text-sm font-black tabular-nums leading-tight ${dark ? "text-white" : "text-slate-900"}`}>{fmt(current)}</p>
+                  <p className={`text-sm font-bold tabular-nums leading-tight ${dark ? "text-white" : "text-slate-900"}`}>{fmt(current)}</p>
                   <div className="mt-0.5 h-3 flex items-center justify-center">
                     <RevenueDelta current={current} baseline={baseline} dark={dark} />
                   </div>
