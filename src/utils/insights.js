@@ -113,8 +113,8 @@ export class InsightsEngine {
         priority: "low",
         title: "Diversify service line portfolio",
         message: `${dominantService[0]} represents ${((dominantService[1] / this.rows.length) * 100).toFixed(0)}% of your plan. Consider balancing with other services`,
-        action: "Explore service lines",
-        actionValue: { tab: "Service Lines" },
+        action: "Review financial mix",
+        actionValue: { tab: "Financial Model" },
       });
     }
 

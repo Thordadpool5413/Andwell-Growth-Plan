@@ -8,7 +8,8 @@
     "build": "vite build",
     "start": "NODE_ENV=production node server.js",
     "preview": "vite preview --host 0.0.0.0",
-    "refresh:cms-data": "node scripts/refresh-dashboard-data.js"
+    "refresh:cms-data": "node scripts/refresh-dashboard-data.js",
+    "validate:data": "node scripts/validate-dashboard-data.js"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.19",

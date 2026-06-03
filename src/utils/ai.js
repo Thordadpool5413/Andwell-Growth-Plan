@@ -6,12 +6,20 @@ let _cachedToken = null;
 let _tokenFetchedAt = 0;
 const TOKEN_TTL_MS = 3.5 * 60 * 60 * 1000;
 
+async function readJsonSafe(res) {
+  const contentType = res.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) return res.json();
+  const text = await res.text().catch(() => "");
+  return { error: text ? text.slice(0, 180) : `HTTP ${res.status}` };
+}
+
 async function getToken() {
   const now = Date.now();
   if (_cachedToken && now - _tokenFetchedAt < TOKEN_TTL_MS) return _cachedToken;
   const res = await fetch("/api/ai/token");
-  if (!res.ok) throw new Error("Could not obtain AI session token.");
-  const { token } = await res.json();
+  const payload = await readJsonSafe(res);
+  if (!res.ok || !payload.token) throw new Error(payload.error || "Could not obtain AI session token.");
+  const { token } = payload;
   _cachedToken = token;
   _tokenFetchedAt = now;
   return token;
@@ -31,7 +39,7 @@ export async function streamChat({ messages, onChunk, onDone, onError, signal })
     });
 
     if (!res.ok) {
-      const errJson = await res.json().catch(() => ({}));
+      const errJson = await readJsonSafe(res);
       throw new Error(errJson.error || `AI error ${res.status}`);
     }
 
@@ -78,6 +86,10 @@ export function buildCountyPrompt(selected, intel, rows) {
   const threat = intel?.threat;
   const pen = intel?.penetration;
   const opp = intel?.opportunityScore;
+  const dashboardContext = buildDashboardAiContext({ rows, selectedCounty: county });
+  const selectedCountyData = dashboardContext.selected_county || {};
+  const quality = selectedCountyData.quality || {};
+  const providerLandscape = selectedCountyData.providerLandscape || {};
 
   const countyRows = rows.filter((r) => r.county === county);
   const y1FTE = countyRows.reduce((s, r) => {
@@ -93,7 +105,7 @@ export function buildCountyPrompt(selected, intel, rows) {
     {
       role: "system",
       content:
-        "You are a healthcare strategy analyst specializing in Maine home health and hospice market analysis. Write concise plain-English insights grounded only in the computed metrics provided. Be specific about numbers. Do not invent data not in the context. Respond in 3–5 sentences.",
+        "You are a healthcare strategy analyst specializing in Maine home health and hospice market analysis. Write concise plain-English insights grounded only in the computed metrics provided. Be specific about numbers. Do not invent data not in the context. Format the answer with these headings: Executive takeaway, Why this county matters, Provider and competitor context, Quality and HHVBP insight, Referral opportunity, Revenue opportunity, Risks or constraints, Recommended next action, Evidence and source notes.",
     },
     {
       role: "user",
@@ -119,6 +131,12 @@ Computed metrics:
 - Total Medicare market: ${pen ? pen.totalMarket.toLocaleString() + " beneficiaries" : "N/A"}
 - HH provider density: ${intel?.providerDensityHH ?? "N/A"} per 10K FFS beneficiaries
 - FFS beneficiaries: ${intel?.ffs?.toLocaleString() ?? "N/A"}
+- Provider landscape: ${providerLandscape.counts?.homeHealth ?? 0} CMS home health records, ${providerLandscape.counts?.hospice ?? 0} CMS hospice records, ${providerLandscape.counts?.hrsa ?? 0} HRSA hospice facilities
+- Provider classification counts: ${JSON.stringify(providerLandscape.byClassification || {})}
+- Quality: avg HH star=${quality.avgHomeHealthStar ?? "unavailable"}, avg HHVBP=${quality.avgHhvbpScore ?? "unavailable"}, avg hospice CAHPS=${quality.avgHospiceCahpsScore ?? "unavailable"}
+- Best available quality record: ${quality.bestScore ? `${quality.bestScore.provider} ${quality.bestScore.score} (${quality.bestScore.source})` : "unavailable"}
+- Lowest available quality record: ${quality.lowestScore ? `${quality.lowestScore.provider} ${quality.lowestScore.score} (${quality.lowestScore.source})` : "unavailable"}
+- Missing data notes: ${(quality.missingNotes || []).join("; ") || "none"}
 
 Based only on these computed metrics, summarize: (1) the opportunity score rationale, (2) staffing readiness relative to patient starts, (3) key competitive risks from the threat score, and (4) recommended next action. Suitable for a board briefing.`,
     },
@@ -160,7 +178,7 @@ Write a 2–3 paragraph executive summary covering: (1) the overall financial op
   ];
 }
 
-export function buildAskPrompt(question, rows, totals, intelMap = {}, selectedCounty = "York") {
+export function buildAskPrompt(question, rows, totals, intelMap = {}, selectedCounty = "York", uiContext = {}) {
   const counties = [...new Set(rows.map((r) => r.county))];
   const countyLines = counties
     .map((county) => {
@@ -191,14 +209,24 @@ export function buildAskPrompt(question, rows, totals, intelMap = {}, selectedCo
   const dashboardContext = buildDashboardAiContext({ rows, totals, selectedCounty });
   const selected = dashboardContext.selected_county || {};
   const selectedMarket = selected.market || selected.sourceMarket || {};
+  const quality = selected.quality || {};
+  const mapMetrics = selected.mapMetrics || {};
+  const providerLandscape = selected.providerLandscape || {};
   const selectedProviderLines = [
     ...(selected.homeHealthAgencies || []).slice(0, 5).map((provider) => `CMS home health: ${provider.provider_name} (${provider.ccn || "CCN unavailable"}) county=${provider.county || "unassigned"} star=${provider.star_rating ?? "unavailable"}`),
     ...(selected.hospiceProviders || []).slice(0, 5).map((provider) => `CMS hospice: ${provider.provider_name} (${provider.ccn || "CCN unavailable"}) county=${provider.county || "unassigned"}`),
+    ...(selected.hhvbp || []).slice(0, 5).map((provider) => `CMS HHVBP: ${provider.provider_name} (${provider.ccn || "CCN unavailable"}) display_score=${provider.display_score?.toFixed?.(1) ?? "unavailable"} payment_year=${provider.payment_year || "unavailable"}`),
     ...(selected.hrsaHospiceFacilities || []).slice(0, 5).map((facility) => `HRSA hospice facility: ${facility.facility_name} ${facility.city || ""} ${facility.zip_code || ""}`),
   ].join("\n") || "No selected-county provider/facility rows available in bundled seed data.";
   const compactSelectedCountyContext = `Selected county: ${selectedCounty}
+Current page: ${uiContext.activeTab || "Unknown"}
+Active map layer: ${uiContext.mapLayer || "priority"}
+Provider filter: ${uiContext.competitorProviderType || "all"}
 Priority: ${selected.priority || "Not in plan"}
 CMS market: FFS=${selectedMarket.ffs ?? "unavailable"}, HH users=${selectedMarket.home_health_users ?? selectedMarket.hh?.users ?? "unavailable"}, Hospice users=${selectedMarket.hospice_users ?? selectedMarket.hos?.users ?? "unavailable"}, HH providers=${selectedMarket.home_health_provider_count ?? selectedMarket.hh?.prov ?? "unavailable"}, Hospice providers=${selectedMarket.hospice_provider_count ?? selectedMarket.hos?.prov ?? "unavailable"}
+Map metrics: demand=${mapMetrics.demand ?? "unavailable"}, revenue=${mapMetrics.revenue ?? "unavailable"}, competition_density=${mapMetrics.competitionDensity ?? "unavailable"}, market_penetration_pct=${mapMetrics.marketPenetration ?? "unavailable"}, all_providers=${mapMetrics.allProviders ?? "unavailable"}
+Provider classification counts: ${JSON.stringify(providerLandscape.byClassification || {})}
+Quality summary: avg_hh_star=${quality.avgHomeHealthStar ?? "unavailable"}, avg_hhvbp_score=${quality.avgHhvbpScore ?? "unavailable"}, avg_hospice_cahps=${quality.avgHospiceCahpsScore ?? "unavailable"}, best=${quality.bestScore ? `${quality.bestScore.provider} ${quality.bestScore.score} ${quality.bestScore.source}` : "unavailable"}, missing=${(quality.missingNotes || []).join(" | ") || "none"}
 Provider/facility rows:
 ${selectedProviderLines}
 Bundled source counts: homeHealth=${dashboardContext.data_sources?.sources?.homeHealthAgencies?.maine_records ?? "n/a"}, HHCAHPS=${dashboardContext.data_sources?.sources?.homeHealthHhcahpsProvider?.maine_records ?? "n/a"}, HHVBP=${dashboardContext.data_sources?.sources?.homeHealthHhvbpAgencyData?.maine_records ?? "n/a"}, hospiceProviders=${dashboardContext.data_sources?.sources?.hospiceGeneralInformation?.maine_records ?? "n/a"}, hospiceQuality=${dashboardContext.data_sources?.sources?.hospiceProviderData?.maine_records ?? "n/a"}, hospiceCAHPS=${dashboardContext.data_sources?.sources?.hospiceCahpsProviderData?.maine_records ?? "n/a"}, HRSA facilities=${dashboardContext.data_sources?.hrsa?.cmsApprovedHospices?.maine_records ?? "n/a"}`;
@@ -207,7 +235,7 @@ Bundled source counts: homeHealth=${dashboardContext.data_sources?.sources?.home
     {
       role: "system",
       content:
-        "You are a data analyst for the Andwell Maine home health and hospice expansion plan. Answer using only the provided dashboard context. Be specific with numbers. Clearly distinguish sourced CMS or HRSA public data, bundled local seed data, modeled projections, and inferred strategy notes. If a requested fact is unavailable in the context, say what specific source is missing. End your response by citing which data fields you used, prefixed with 'Data used:'.",
+        "You are a data analyst for the Andwell Maine home health and hospice expansion plan. Answer using only the provided dashboard context. Be specific with numbers. Clearly distinguish sourced CMS or HRSA public data, bundled generated data, modeled projections, calculated outputs, and inferred strategy notes. If a requested fact is unavailable in the context, say what specific source is missing. Use short headings and source notes. Never output raw JSON. End your response by citing which data fields you used, prefixed with 'Data used:'.",
     },
     {
       role: "user",
@@ -261,10 +289,10 @@ export async function callCmsAnalyze(question) {
     body: JSON.stringify({ question }),
   });
   if (!res.ok) {
-    const errJson = await res.json().catch(() => ({}));
+    const errJson = await readJsonSafe(res);
     throw new Error(errJson.error || `CMS AI error ${res.status}`);
   }
-  return res.json();
+  return readJsonSafe(res);
 }
 
 export function buildMarketSummaryPrompt({ velocityRows, andwellDominance, amedisysCombinedShare, northernLight, totalCompetitors, nationalChainCount }) {

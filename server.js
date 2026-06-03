@@ -5,6 +5,7 @@ import path from "path";
 import crypto from "crypto";
 import { readFileSync } from "fs";
 import { runMigrations } from "./scripts/db-migrate.js";
+import { ANDWELL_CCN } from "./src/data/andwell.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isDev = process.env.NODE_ENV !== "production";
@@ -162,48 +163,7 @@ app.post("/api/ai/chat", strictOriginCheck, tokenCheck, rateLimit, async (req, r
   const clampedTokens = Math.min(Math.max(Number(max_tokens) || 700, 50), 1500);
 
   try {
-    const mod = await loadCms().catch(() => null);
-    const cmsTools = mod?.CMS_TOOLS || [];
     let chatMessages = messages;
-
-    // CMS tool-call pre-pass (non-streaming) — runs before streaming the final answer
-    if (cmsTools.length && mod) {
-      let toolRound = 0;
-      while (toolRound < 2) {
-        const toolRes = await fetch(`${OPENAI_BASE_URL}/chat/completions`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
-          body: JSON.stringify({
-            model: OPENAI_MODEL,
-            messages: chatMessages,
-            tools: cmsTools,
-            tool_choice: "auto",
-            max_tokens: clampedTokens,
-          }),
-        });
-        if (!toolRes.ok) break;
-        const toolData = await toolRes.json();
-        const choice = toolData.choices?.[0];
-        if (!choice || choice.finish_reason !== "tool_calls") break;
-
-        const assistantMsg = choice.message;
-        chatMessages = [...chatMessages, assistantMsg];
-        for (const tc of assistantMsg.tool_calls || []) {
-          let toolResult;
-          try {
-            const toolArgs = JSON.parse(tc.function.arguments || "{}");
-            toolResult = await mod.callTool(tc.function.name, toolArgs);
-          } catch (e) {
-            toolResult = { error: e.message };
-          }
-          chatMessages = [
-            ...chatMessages,
-            { role: "tool", tool_call_id: tc.id, content: JSON.stringify(toolResult).slice(0, 4000) },
-          ];
-        }
-        toolRound++;
-      }
-    }
 
     const upstream = await fetch(`${OPENAI_BASE_URL}/chat/completions`, {
       method: "POST",
@@ -262,7 +222,13 @@ app.post("/api/ai/cms-analyze", strictOriginCheck, tokenCheck, rateLimit, async 
 
   try {
     const mod = await loadCms();
-    const tools = mod?.CMS_TOOLS || [];
+    const READ_ONLY_TOOLS = new Set([
+      "search_cms_provider_datasets", "get_cms_dataset_metadata", "query_cms_dataset",
+      "fetch_maine_hospice_providers", "fetch_maine_home_health_agencies",
+      "match_competitor_to_cms_provider", "normalize_provider_identity",
+      "get_provider_quality_snapshot", "get_provider_service_area_snapshot",
+    ]);
+    const tools = (mod?.CMS_TOOLS || []).filter((tool) => READ_ONLY_TOOLS.has(tool.function?.name));
 
     const openaiTools = tools;
 
@@ -415,7 +381,7 @@ function seededQualitySummary() {
   const quality = readGeneratedJson("maineHomeHealthQuality.json");
   const hhvbp = readGeneratedJson("maineHhvbp.json");
   const benchmarks = readGeneratedJson("maineBenchmarks.json", {});
-  const andwell = quality.find((row) => row.ccn === "207019" || row.normalized_name?.includes("androscoggin")) || quality[0] || null;
+  const andwell = quality.find((row) => row.ccn === ANDWELL_CCN || row.normalized_name?.includes("androscoggin")) || quality[0] || null;
   const starRows = quality.filter((row) => row.star_rating != null).sort((a, b) => (b.star_rating || 0) - (a.star_rating || 0));
   const rank = andwell ? starRows.findIndex((row) => row.ccn === andwell.ccn) + 1 : null;
   return {
@@ -505,7 +471,7 @@ app.get("/api/cms/quality-summary", strictOriginCheck, tokenCheck, (_req, res) =
 });
 
 app.post("/api/cms/sync-quality", strictOriginCheck, tokenCheck, (_req, res) => {
-  res.json({ success: false, error: "Manual sync is not required for normal dashboard use.", details: "Bundled CMS/HRSA seed data is loaded. Use npm run refresh:cms-data as a developer/admin refresh command." });
+  res.json({ success: false, error: "Quality refresh is reserved for developer/admin operations.", details: "Bundled CMS/HRSA seed data is already loaded for normal dashboard use." });
 });
 
 app.get("/api/cms/stats", strictOriginCheck, tokenCheck, async (req, res) => {
@@ -705,7 +671,7 @@ app.get("/api/cms/hhvbp", strictOriginCheck, tokenCheck, async (req, res) => {
     const [maineResult, nationalResult] = await Promise.all([
       dbQuery(
         `SELECT v.*,
-                CASE WHEN v.ccn = '207019' THEN true ELSE false END AS is_andwell
+                CASE WHEN v.ccn = '${ANDWELL_CCN}' THEN true ELSE false END AS is_andwell
          FROM cms_hhvbp_scores v
          WHERE v.state = 'ME'
          ORDER BY v.total_performance_score DESC NULLS LAST`
@@ -737,10 +703,10 @@ app.get("/api/cms/quality-summary", strictOriginCheck, tokenCheck, async (req, r
   try {
     const { query: dbQuery } = await import("./server/cms/db.js");
     const [andwellRow, stateRow, rankRow, hhvbpRow, competitorAvgRow] = await Promise.all([
-      dbQuery(`SELECT * FROM cms_hh_quality WHERE ccn = '207019' LIMIT 1`),
+      dbQuery(`SELECT * FROM cms_hh_quality WHERE ccn = '${ANDWELL_CCN}' LIMIT 1`),
       dbQuery(`SELECT AVG(star_rating) AS avg_star, AVG(ppr_rate) AS avg_ppr, AVG(medicare_spend_ratio) AS avg_spend, COUNT(*) AS total_agencies FROM cms_hh_quality WHERE state = 'ME' AND star_rating IS NOT NULL`),
-      dbQuery(`SELECT COUNT(*) AS rank FROM cms_hh_quality WHERE state = 'ME' AND star_rating > (SELECT COALESCE((SELECT star_rating FROM cms_hh_quality WHERE ccn = '207019'), 0))`),
-      dbQuery(`SELECT total_performance_score, payment_adjustment_pct FROM cms_hhvbp_scores WHERE ccn = '207019' LIMIT 1`),
+      dbQuery(`SELECT COUNT(*) AS rank FROM cms_hh_quality WHERE state = 'ME' AND star_rating > (SELECT COALESCE((SELECT star_rating FROM cms_hh_quality WHERE ccn = '${ANDWELL_CCN}'), 0))`),
+      dbQuery(`SELECT total_performance_score, payment_adjustment_pct FROM cms_hhvbp_scores WHERE ccn = '${ANDWELL_CCN}' LIMIT 1`),
       // Competitor average: avg star rating of all seeded competitors (excludes Andwell CCN 207019)
       // Joins competitor_seeds → cms_matches → cms_provider_records → cms_hh_quality
       dbQuery(`
@@ -752,7 +718,7 @@ app.get("/api/cms/quality-summary", strictOriginCheck, tokenCheck, async (req, r
         JOIN competitor_cms_matches ccm ON ccm.competitor_seed_id = cs.id
         JOIN cms_provider_records cpr ON cpr.id = ccm.cms_provider_record_id
         JOIN cms_hh_quality q ON q.ccn = cpr.cms_certification_number
-        WHERE q.state = 'ME' AND q.ccn != '207019' AND q.star_rating IS NOT NULL
+        WHERE q.state = 'ME' AND q.ccn != '${ANDWELL_CCN}' AND q.star_rating IS NOT NULL
       `),
     ]);
     const andwell = andwellRow.rows[0] || null;

@@ -16,10 +16,8 @@ import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
 import { namedProviderRows } from "../data/providers.js";
 import { rollupByService, getCompetitiveThreatScore } from "../utils/calculations.js";
-import cmsCountyMarket from "../data/cmsCountyMarket.js";
+import { getAllCountyMarkets, getFreshness } from "../data/dashboardData.js";
 import { currency, number, percent } from "../utils/formatters.js";
-
-const CMS_LAST_SYNCED = "2026-05-01";
 
 function AtAGlanceIndicator({ label, status, dark }) {
   const colorMap = {
@@ -65,6 +63,8 @@ function QualityKPI({ label, value, sub, dark, color = "emerald" }) {
 export default function ExecutiveView({ rows, totals }) {
   const { dark } = useDarkMode();
   const [qualitySummary, setQualitySummary] = useState(null);
+  const freshness = getFreshness();
+  const countyMarkets = getAllCountyMarkets().filter((market) => market.ffs);
 
   useEffect(() => {
     (async () => {
@@ -76,15 +76,15 @@ export default function ExecutiveView({ rows, totals }) {
     })();
   }, []);
 
-  const totalMarket = Object.values(cmsCountyMarket).reduce((s, m) => s + m.hh.users + m.hos.users, 0);
+  const totalMarket = countyMarkets.reduce((s, m) => s + (m.home_health_users || 0) + (m.hospice_users || 0), 0);
   const y1Penetration = totalMarket > 0 ? totals.y1Starts / totalMarket : 0;
 
-  const avgThreat = Object.keys(cmsCountyMarket)
+  const avgThreat = countyMarkets.map((market) => market.county)
     .map((c) => getCompetitiveThreatScore(c))
     .filter(Boolean)
     .reduce((s, t, _, a) => s + t.score / a.length, 0);
 
-  const totalFFS = Object.values(cmsCountyMarket).reduce((s, m) => s + m.ffs, 0);
+  const totalFFS = countyMarkets.reduce((s, m) => s + (m.ffs || 0), 0);
   const revPerBeneficiary = totalFFS > 0 ? Math.round(totals.y1Revenue / totalFFS) : 0;
 
   const serviceMix = rollupByService(rows);
@@ -100,7 +100,7 @@ export default function ExecutiveView({ rows, totals }) {
       </SectionHeader>
 
       <div className="flex items-center gap-2 flex-wrap">
-        <FreshnessChip lastSynced={CMS_LAST_SYNCED} label="CMS data" />
+        <FreshnessChip lastSynced={freshness.generatedAt} label="CMS/HRSA data" syncType="Bundled sources" />
       </div>
 
       {/* At-a-glance status bar */}
@@ -172,51 +172,51 @@ export default function ExecutiveView({ rows, totals }) {
           <p className={`mt-2 text-xs leading-5 ${dark ? "text-slate-500" : "text-slate-500"}`}>Composite weighted score across all 12 target counties.</p>
         </div>
         <div className={`rounded-xl border-l-4 border-l-blue-500 border p-5 ${dark ? "border-slate-700/60 bg-slate-800/60" : "border-slate-200 bg-white"}`}>
-          <p className={`text-[11px] font-medium uppercase tracking-[0.1em] ${dark ? "text-slate-400" : "text-slate-500"}`}>Revenue per <Abbr term="FFS">FFS</Abbr> beneficiary</p>
+          <p className={`text-[11px] font-medium uppercase tracking-[0.1em] ${dark ? "text-slate-400" : "text-slate-500"}`}>Modeled Y1 revenue per <Abbr term="FFS">FFS</Abbr> beneficiary</p>
           <p className={`mt-2 text-3xl font-bold tabular-nums ${dark ? "text-slate-100" : "text-slate-900"}`}>{currency(revPerBeneficiary)}</p>
           <p className={`mt-2 text-xs leading-5 ${dark ? "text-slate-500" : "text-slate-500"}`}>
             <EstBadge reason="Derived: Y1 modeled revenue divided by total CMS Fee-For-Service beneficiary count — not a verified billing figure.">Est.</EstBadge>{" "}
-            Y1 revenue efficiency across {number(totalFFS)} <Abbr term="FFS">Fee-For-Service</Abbr> beneficiaries.
+            {currency(totals.y1Revenue)} modeled Y1 revenue / {number(totalFFS)} <Abbr term="FFS">Fee-For-Service</Abbr> beneficiaries.
           </p>
         </div>
       </div>
 
       {/* Quality position panel */}
-      {qualitySummary?.has_data && (
+      {(qualitySummary || true) && (
         <div className={`rounded-xl border p-5 ${dark ? "border-slate-700/60 bg-slate-800/60" : "border-slate-200 bg-white"}`}>
           <div className="flex items-center gap-2 mb-4 flex-wrap">
             <p className={`text-sm font-semibold ${dark ? "text-slate-100" : "text-slate-800"}`}>Andwell quality position</p>
-            <span className={`ml-auto rounded border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${dark ? "bg-slate-700/60 border-slate-600 text-slate-300" : "bg-slate-50 border-slate-200 text-slate-500"}`}>CMS-verified</span>
-            {qualitySummary.andwell?.synced_at && (
+            <span className={`ml-auto rounded border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${dark ? "bg-slate-700/60 border-slate-600 text-slate-300" : "bg-slate-50 border-slate-200 text-slate-500"}`}>CMS source status</span>
+            {qualitySummary?.andwell?.synced_at && (
               <FreshnessChip lastSynced={qualitySummary.andwell.synced_at} label="Quality" syncType="CMS 6jpm-sxkc" />
             )}
           </div>
           <div className="grid gap-3 sm:grid-cols-4">
             <QualityKPI
               label="Quality Star Rating"
-              value={qualitySummary.andwell?.star_rating != null ? `${parseFloat(qualitySummary.andwell.star_rating)} ★` : "—"}
+              value={qualitySummary?.andwell?.star_rating != null ? `${parseFloat(qualitySummary.andwell.star_rating)} ★` : "—"}
               sub="CMS Home Health Care Quality"
               dark={dark}
               color="emerald"
             />
             <QualityKPI
               label="Maine Ranking"
-              value={qualitySummary.andwell_rank != null ? `#${qualitySummary.andwell_rank} in Maine` : "—"}
-              sub={`of ${qualitySummary.total_maine_agencies} agencies`}
+              value={qualitySummary?.andwell_rank != null ? `#${qualitySummary.andwell_rank} in Maine` : "—"}
+              sub={qualitySummary?.total_maine_agencies != null ? `of ${qualitySummary.total_maine_agencies} agencies` : "CMS home health quality records bundled when available"}
               dark={dark}
               color="blue"
             />
             <QualityKPI
               label="Medicare Cost Index"
-              value={qualitySummary.andwell?.medicare_spend_ratio != null ? parseFloat(qualitySummary.andwell.medicare_spend_ratio).toFixed(2) : "—"}
-              sub={qualitySummary.andwell?.medicare_spend_ratio != null && parseFloat(qualitySummary.andwell.medicare_spend_ratio) < 1.0 ? "Below national avg (favorable)" : "vs. national avg = 1.0"}
+              value={qualitySummary?.andwell?.medicare_spend_ratio != null ? parseFloat(qualitySummary.andwell.medicare_spend_ratio).toFixed(2) : "—"}
+              sub={qualitySummary?.andwell?.medicare_spend_ratio != null && parseFloat(qualitySummary.andwell.medicare_spend_ratio) < 1.0 ? "Below national avg (favorable)" : "Unavailable: Medicare spend ratio is not included in bundled source registry."}
               dark={dark}
               color="amber"
             />
             <QualityKPI
               label="Preventable Readmissions"
-              value={qualitySummary.andwell?.ppr_rate != null ? `${parseFloat(qualitySummary.andwell.ppr_rate).toFixed(2)}%` : "—"}
-              sub="PPR risk-standardized rate"
+              value={qualitySummary?.andwell?.ppr_rate != null ? `${parseFloat(qualitySummary.andwell.ppr_rate).toFixed(2)}%` : "—"}
+              sub={qualitySummary?.andwell?.ppr_rate != null ? "PPR risk-standardized rate" : "Unavailable: PPR risk-standardized rate source is not bundled."}
               dark={dark}
               color="violet"
             />

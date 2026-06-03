@@ -12,9 +12,8 @@ import { COLORS } from "../data/constants.js";
 import cmsCountyMarket from "../data/cmsCountyMarket.js";
 import { number, currency } from "../utils/formatters.js";
 import { exportCmsCSV } from "../utils/csvExport.js";
-import dashboardData from "../data/dashboardData.js";
-
-const ANDWELL_CCN = "207019";
+import dashboardData, { hhvbpDisplayScore } from "../data/dashboardData.js";
+import { ANDWELL_CCN } from "../data/andwell.js";
 
 function generatedDate() {
   return dashboardData.generatedAt || dashboardData.cmsMeta.fetchedAt;
@@ -35,7 +34,7 @@ function SourceStrip({ dark, label, syncType, count }) {
       <FreshnessChip lastSynced={generatedDate()} label={label} syncType={syncType} />
       <Badge tone="green">Data loaded</Badge>
       <span>{number(count)} Maine records</span>
-      <span className={dark ? "text-slate-500" : "text-slate-400"}>Normal users do not need to run sync.</span>
+      <span className={dark ? "text-slate-500" : "text-slate-400"}>Loaded from the bundled CMS/HRSA source registry.</span>
     </div>
   );
 }
@@ -44,7 +43,7 @@ function EmptyDataState({ dark, dataset }) {
   return (
     <div className={`rounded-xl border p-6 text-sm ${dark ? "border-amber-800 bg-amber-950/30 text-amber-300" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
       <p className="font-semibold">Dataset unavailable</p>
-      <p className="mt-1">Expected source: {dataset}. Check the bundled seed file and the npm run refresh:cms-data admin command.</p>
+      <p className="mt-1">Expected source: {dataset}. The generated bundle does not currently include records for this section.</p>
     </div>
   );
 }
@@ -97,13 +96,6 @@ function QualityRatingsTab({ dark }) {
       </Card>
     </div>
   );
-}
-
-function hhvbpDisplayScore(row) {
-  if (row.total_performance_score != null) return row.total_performance_score;
-  const fields = ["discharged_to_community_score", "avoidable_hospitalizations_score", "ed_use_score", "care_of_patients_score", "communication_score", "overall_rating_score", "willingness_to_recommend_score"];
-  const vals = fields.map((field) => row[field]).filter((value) => value != null);
-  return vals.length ? vals.reduce((sum, value) => sum + value, 0) / vals.length : null;
 }
 
 function HHVBPTab({ dark }) {
@@ -212,8 +204,8 @@ export default function CmsData() {
 
   return (
     <div className="space-y-6">
-      <SectionHeader eyebrow="CMS data" title="County-level Medicare market data + live quality benchmarks">
-        CMS, HRSA, provider, quality, HHCAHPS, HHVBP, hospice CAHPS, and benchmark records are bundled into the dashboard experience and load without manual sync.
+      <SectionHeader eyebrow="CMS data" title="County-level Medicare market data and quality benchmarks">
+        CMS, HRSA, provider, quality, HHCAHPS, HHVBP, hospice CAHPS, and benchmark records are bundled into the dashboard experience and load when the page opens.
       </SectionHeader>
       <div className="flex items-center gap-2 flex-wrap"><FreshnessChip lastSynced={generatedDate()} label="CMS/HRSA data" syncType="Generated seed data" /><Badge tone="green">Loaded on page open</Badge></div>
       <div className="flex flex-wrap gap-2">

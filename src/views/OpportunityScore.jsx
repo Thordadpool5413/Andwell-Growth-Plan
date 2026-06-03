@@ -9,9 +9,8 @@ import MethodologyCallout from "../components/MethodologyCallout.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
 import { getOpportunityScore } from "../utils/calculations.js";
+import { getFreshness } from "../data/dashboardData.js";
 import { currency, number } from "../utils/formatters.js";
-
-const CMS_LAST_SYNCED = "2026-05-01";
 
 const TIER_STYLES = {
   Prime: {
@@ -42,15 +41,21 @@ const TIER_STYLES = {
 
 function TierChip({ tier }) {
   const s = TIER_STYLES[tier] || TIER_STYLES.Other;
+  const label = tier === "Prime" ? "Highest opportunity" : tier;
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1 text-sm font-medium ${s.bg} ${s.text} ${s.border}`}>
       <span className={`h-2 w-2 rounded-full flex-shrink-0 ${s.dot}`} />
-      {tier}
+      {label}
     </span>
   );
 }
 
-const TIER_FILTERS = ["All", "Prime", "Strong", "Developing"];
+const TIER_FILTERS = [
+  { label: "All", value: "All" },
+  { label: "Highest opportunity", value: "Prime" },
+  { label: "Strong", value: "Strong" },
+  { label: "Developing", value: "Developing" },
+];
 const GROUP_FILTERS = ["All", "Priority 1", "Priority 2", "Priority 3"];
 
 function FilterChip({ label, active, onClick, dark }) {
@@ -72,6 +77,7 @@ function FilterChip({ label, active, onClick, dark }) {
 
 export default function OpportunityScore({ rows }) {
   const { dark } = useDarkMode();
+  const freshness = getFreshness();
   const [tierFilter, setTierFilter] = useState("All");
   const [groupFilter, setGroupFilter] = useState("All");
   const [minScore, setMinScore] = useState(0);
@@ -100,7 +106,7 @@ export default function OpportunityScore({ rows }) {
   }, [scoredWithGroup, tierFilter, groupFilter, minScore]);
 
   const avgScore = scores.length > 0 ? Math.round(scores.reduce((s, c) => s + c.score, 0) / scores.length) : 0;
-  const primeCount = scores.filter((s) => s.tier === "Prime").length;
+  const topTierCount = scores.filter((s) => s.tier === "Prime").length;
   const topCounty = scores[0];
 
   const filterSummary = useMemo(() => {
@@ -108,8 +114,8 @@ export default function OpportunityScore({ rows }) {
     const totalY1 = visibleScores.reduce((s, c) => s + (c.y1Revenue || 0), 0);
     const totalY3 = visibleScores.reduce((s, c) => s + (c.y3Revenue || 0), 0);
     const avgFiltered = Math.round(visibleScores.reduce((s, c) => s + c.score, 0) / visibleScores.length);
-    const primeFiltered = visibleScores.filter((c) => c.tier === "Prime").length;
-    return { totalY1, totalY3, avgFiltered, primeFiltered, count: visibleScores.length };
+    const topTierFiltered = visibleScores.filter((c) => c.tier === "Prime").length;
+    return { totalY1, totalY3, avgFiltered, topTierFiltered, count: visibleScores.length };
   }, [visibleScores]);
 
   return (
@@ -119,7 +125,7 @@ export default function OpportunityScore({ rows }) {
       </SectionHeader>
 
       <div className="flex items-center gap-2 flex-wrap">
-        <FreshnessChip lastSynced={CMS_LAST_SYNCED} label="CMS data" />
+        <FreshnessChip lastSynced={freshness.generatedAt} label="CMS/HRSA data" syncType="Bundled source registry" />
       </div>
 
       <MethodologyCallout title="How is this calculated?">
@@ -144,13 +150,13 @@ export default function OpportunityScore({ rows }) {
           ))}
         </div>
         <p className={`mt-3 text-[11px] ${dark ? "text-slate-500" : "text-slate-400"}`}>
-          Tiers: Prime ≥ 80 · Strong 60–79 · Developing 40–59 · Below 40. Scores are relative to this dataset and should not be compared across different county sets.
+          Tiers: Highest opportunity ≥ 80 · Strong 60–79 · Developing 40–59 · Below 40. Scores are relative to this dataset and should not be compared across different county sets.
         </p>
       </MethodologyCallout>
 
       <div className="grid gap-4 md:grid-cols-4">
         <Metric label="Average opportunity score" value={`${avgScore}/100`} detail="Mean score across all launch counties." color="emerald" sourceType="derived" />
-        <Metric label="Prime counties" value={primeCount} detail="Counties scoring 80+ (top tier)." color="emerald" sourceType="derived" />
+        <Metric label="Highest opportunity counties" value={topTierCount} detail="Counties scoring 80+ in the current model." color="emerald" sourceType="derived" />
         <Metric label="Top county" value={topCounty?.county || "—"} detail={`Score: ${topCounty?.score || 0}/100 (${topCounty?.tier || "—"})`} color="blue" sourceType="derived" />
         <Metric label="Total Y1 opportunity" value={currency(scores.reduce((s, c) => s + c.y1Revenue, 0))} detail="Combined Y1 revenue across all scored counties." color="indigo" sourceType="modeled" />
       </div>
@@ -163,10 +169,10 @@ export default function OpportunityScore({ rows }) {
               <div className="flex flex-wrap gap-1.5">
                 {TIER_FILTERS.map((t) => (
                   <FilterChip
-                    key={t}
-                    label={t}
-                    active={tierFilter === t}
-                    onClick={() => setTierFilter(t)}
+                    key={t.value}
+                    label={t.label}
+                    active={tierFilter === t.value}
+                    onClick={() => setTierFilter(t.value)}
                     dark={dark}
                   />
                 ))}
@@ -252,9 +258,9 @@ export default function OpportunityScore({ rows }) {
                     <p className={`text-base font-bold tabular-nums ${dark ? "text-slate-100" : "text-slate-900"}`}>{filterSummary.avgFiltered}<span className={`text-xs font-medium ${dark ? "text-slate-500" : "text-slate-400"}`}>/100</span></p>
                   </div>
                   <div>
-                    <p className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>Prime counties</p>
+                    <p className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>Top-tier counties</p>
                     <p className={`text-base font-bold tabular-nums ${dark ? "text-emerald-400" : "text-emerald-600"}`}>
-                      {filterSummary.primeFiltered}
+                      {filterSummary.topTierFiltered}
                       <span className={`text-xs font-medium ${dark ? "text-slate-500" : "text-slate-400"}`}> of {filterSummary.count}</span>
                     </p>
                   </div>

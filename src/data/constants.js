@@ -30,7 +30,6 @@ export const TABS = [
   "County Plan",
   "Referral Plan",
   "Competitive View",
-  "Service Lines",
   "CMS Data",
   "Financial Model",
   "Staffing Model",
@@ -70,4 +69,7 @@ export const HEATMAP_MODES = [
   { key: "demand", label: "Demand Pool" },
   { key: "competition", label: "Competition Density" },
   { key: "penetration", label: "Market Penetration" },
+  { key: "allProviders", label: "All Providers" },
+  { key: "homeHealth", label: "Home Health" },
+  { key: "hospice", label: "Hospice" },
 ];

@@ -342,7 +342,7 @@ export async function callTool(toolName, args) {
         provider: args.provider_name,
         quality_measures: snap.rows,
         source: "CMS Quality Reporting",
-        note: snap.rows.length === 0 ? "No quality data synced yet. Run sync first." : null,
+        note: snap.rows.length === 0 ? "No quality data is available from the configured CMS quality source." : null,
       };
     }
 

@@ -9,26 +9,29 @@ import SectionHeader from "../components/SectionHeader.jsx";
 import Abbr from "../components/Abbr.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
-import { number } from "../utils/formatters.js";
+import { getReferralSummary } from "../data/dashboardData.js";
+import { number, currency } from "../utils/formatters.js";
 import { exportReferralCSV } from "../utils/csvExport.js";
 
 export default function ReferralPlan({ rows }) {
   const { dark } = useDarkMode();
 
-  const totalY1Referrals = rows.reduce((s, r) => s + r.referrals[0], 0);
-  const totalY1Starts = rows.reduce((s, r) => s + r.starts[0], 0);
-  const conversionRate = totalY1Referrals > 0 ? (totalY1Starts / totalY1Referrals) * 100 : 0;
+  const referralSummary = getReferralSummary(rows);
+  const totalY1Referrals = referralSummary.totals.referrals;
+  const totalY1Starts = referralSummary.totals.starts;
+  const conversionRate = referralSummary.conversionRate * 100;
 
-  const chartData = rows.map((r) => ({
-    county: r.county,
-    referrals: r.referrals[0],
-    starts: r.starts[0],
-  })).sort((a, b) => b.referrals - a.referrals);
+  const chartData = referralSummary.byCounty.map((row) => ({
+    county: row.county,
+    referrals: row.referrals,
+    starts: row.starts,
+    revenue: row.revenue,
+  }));
 
   return (
     <div className="space-y-6">
       <SectionHeader eyebrow="Referral plan" title="Required referrals by county and service line">
-        Referral requirements are derived from patient start goals using a 75% <Abbr term="Conversion Rate">conversion</Abbr> baseline (industry median: 72–78% per <Abbr term="NAHC">NAHC</Abbr> 2023). For every 100 referrals, ~75 are expected to convert to patient starts. Adjust the Scenario Model to see how different conversion rates affect the referral load.
+        Referral requirements are derived from patient start goals using the active modeled <Abbr term="Conversion Rate">conversion</Abbr> assumption. For every 100 referrals, the model estimates {conversionRate.toFixed(0)} patient starts. Adjust the Scenario Model to see how conversion changes affect the referral load.
       </SectionHeader>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -40,7 +43,7 @@ export default function ReferralPlan({ rows }) {
         <div className={`rounded-xl border-l-4 border-l-emerald-500 border p-5 ${dark ? "border-slate-700/60 bg-slate-800/60" : "border-slate-200 bg-white"}`}>
           <p className={`text-[11px] font-medium uppercase tracking-[0.1em] ${dark ? "text-slate-400" : "text-slate-500"}`}>Net patient starts</p>
           <p className={`mt-2 text-4xl font-bold tabular-nums ${dark ? "text-slate-100" : "text-slate-900"}`}>{number(totalY1Starts)}</p>
-          <p className={`mt-1 text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>Year 1 net starts after 75% conversion (NAHC median)</p>
+          <p className={`mt-1 text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>Year 1 net starts after modeled conversion</p>
         </div>
         <div className={`rounded-xl border-l-4 border-l-slate-400 border p-5 ${dark ? "border-slate-700/60 bg-slate-800/60" : "border-slate-200 bg-white"}`}>
           <p className={`text-[11px] font-medium uppercase tracking-[0.1em] ${dark ? "text-slate-400" : "text-slate-500"}`}>Modeled conversion rate</p>
@@ -50,7 +53,7 @@ export default function ReferralPlan({ rows }) {
       </div>
 
       <Card title="Year 1 referral volume by county" eyebrow="Gross referrals vs. patient starts">
-        <ChartContainer height="h-72" caption="Source: patient start goals ÷ 75% conversion rate (NAHC 2023 median)">
+        <ChartContainer height="h-72" caption={`Source: modeled patient start goals divided by ${(conversionRate).toFixed(0)}% conversion rate`}>
           <BarChart data={chartData} margin={{ bottom: 24, left: 10 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#e2e8f0"} />
             <XAxis
@@ -67,6 +70,23 @@ export default function ReferralPlan({ rows }) {
             <Bar dataKey="starts" name="Net starts" fill={COLORS.green} radius={[4, 4, 0, 0]} />
           </BarChart>
         </ChartContainer>
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <div className={`rounded-xl border p-4 ${dark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
+            <p className={`text-[10px] font-semibold uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-400"}`}>Monthly run rate</p>
+            <p className="mt-1 text-xl font-bold tabular-nums">{number(Math.ceil(totalY1Referrals / 12))}</p>
+            <p className={`text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>Gross referrals per month</p>
+          </div>
+          <div className={`rounded-xl border p-4 ${dark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
+            <p className={`text-[10px] font-semibold uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-400"}`}>Quarterly run rate</p>
+            <p className="mt-1 text-xl font-bold tabular-nums">{number(Math.ceil(totalY1Referrals / 4))}</p>
+            <p className={`text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>Gross referrals per quarter</p>
+          </div>
+          <div className={`rounded-xl border p-4 ${dark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
+            <p className={`text-[10px] font-semibold uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-400"}`}>Year 1 revenue impact</p>
+            <p className="mt-1 text-xl font-bold tabular-nums">{currency(referralSummary.totals.revenue)}</p>
+            <p className={`text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>Modeled output from starts</p>
+          </div>
+        </div>
       </Card>
 
       <Card title="Referral requirements by county" eyebrow="Referral plan">
@@ -88,8 +108,10 @@ export default function ReferralPlan({ rows }) {
                   <th className={`px-5 py-4 font-medium border-r ${dark ? "border-slate-600/60" : "border-slate-200"}`}>County</th>
                   <th className="px-5 py-4">Source</th>
                   <th className="px-5 py-4">Service</th>
+                  <th className="px-5 py-4">Priority</th>
                   <th className={`px-5 py-4 text-right border-l ${dark ? "border-slate-600/60" : "border-slate-200"}`}>Year 1 goal</th>
                   <th className="px-5 py-4 text-right">Year 1 referrals</th>
+                  <th className="px-5 py-4 text-right">Y1 revenue impact</th>
                   <th className={`px-5 py-4 text-right border-l ${dark ? "border-slate-600/60" : "border-slate-200"}`}>Year 2 goal</th>
                   <th className="px-5 py-4 text-right">Year 2 referrals</th>
                   <th className={`px-5 py-4 text-right border-l ${dark ? "border-slate-600/60" : "border-slate-200"}`}>Year 3 goal</th>
@@ -106,8 +128,10 @@ export default function ReferralPlan({ rows }) {
                       <td className={`px-5 py-4 font-semibold border-r ${dark ? "text-slate-100 border-slate-700/60" : "text-slate-800 border-slate-100"}`}>{row.county}</td>
                       <td className="px-5 py-4"><SourceBadge basis={row.basis} /></td>
                       <td className="px-5 py-4"><ServiceBadge service={row.service} /></td>
+                      <td className="px-5 py-4">{row.launchGroup}</td>
                       <td className={`px-5 py-4 text-right tabular-nums border-l ${dark ? "text-slate-300 border-slate-700/60" : "text-slate-600 border-slate-100"}`}>{number(row.starts[0])}</td>
                       <td className={`px-5 py-4 text-right font-semibold tabular-nums ${dark ? "text-blue-400" : "text-blue-700"}`}>{number(row.referrals[0])}</td>
+                      <td className={`px-5 py-4 text-right font-semibold tabular-nums ${dark ? "text-emerald-400" : "text-emerald-600"}`}>{currency(row.revenue[0])}</td>
                       <td className={`px-5 py-4 text-right tabular-nums border-l ${dark ? "text-slate-300 border-slate-700/60" : "text-slate-600 border-slate-100"}`}>{number(row.starts[1])}</td>
                       <td className={`px-5 py-4 text-right font-semibold tabular-nums ${dark ? "text-blue-400" : "text-blue-700"}`}>{number(row.referrals[1])}</td>
                       <td className={`px-5 py-4 text-right tabular-nums border-l ${dark ? "text-slate-300 border-slate-700/60" : "text-slate-600 border-slate-100"}`}>{number(row.starts[2])}</td>
@@ -121,9 +145,10 @@ export default function ReferralPlan({ rows }) {
               </tbody>
               <tfoot>
                 <tr className={`font-semibold text-sm border-t-2 ${dark ? "border-slate-600 bg-slate-700/40 text-slate-100" : "border-slate-200 bg-slate-50 text-slate-800"}`}>
-                  <td colSpan={3} className={`px-5 py-4 border-r ${dark ? "border-slate-600/60" : "border-slate-200"}`}>Totals</td>
+                  <td colSpan={4} className={`px-5 py-4 border-r ${dark ? "border-slate-600/60" : "border-slate-200"}`}>Totals</td>
                   <td className={`px-5 py-4 text-right tabular-nums border-l ${dark ? "border-slate-600/60" : "border-slate-200"}`}>{number(rows.reduce((s, r) => s + r.starts[0], 0))}</td>
                   <td className="px-5 py-4 text-right tabular-nums">{number(rows.reduce((s, r) => s + r.referrals[0], 0))}</td>
+                  <td className="px-5 py-4 text-right tabular-nums">{currency(rows.reduce((s, r) => s + r.revenue[0], 0))}</td>
                   <td className={`px-5 py-4 text-right tabular-nums border-l ${dark ? "border-slate-600/60" : "border-slate-200"}`}>{number(rows.reduce((s, r) => s + r.starts[1], 0))}</td>
                   <td className="px-5 py-4 text-right tabular-nums">{number(rows.reduce((s, r) => s + r.referrals[1], 0))}</td>
                   <td className={`px-5 py-4 text-right tabular-nums border-l ${dark ? "border-slate-600/60" : "border-slate-200"}`}>{number(rows.reduce((s, r) => s + r.starts[2], 0))}</td>

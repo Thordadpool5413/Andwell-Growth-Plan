@@ -6,6 +6,8 @@ import { getProviderSummary, getOpportunityScore, buildRows } from "../utils/cal
 import { percent, number } from "../utils/formatters.js";
 import { DEFAULT_SCENARIO } from "../data/constants.js";
 import { streamChat, buildMarketSummaryPrompt, AI_AVAILABLE } from "../utils/ai.js";
+import { MAINE_COUNTIES } from "../data/dashboardData.js";
+import { classifyProvider } from "../data/andwell.js";
 
 /* ── Design tokens (Clinical Intelligence Narrative spec) ── */
 const C = {
@@ -43,13 +45,8 @@ const dotMatrix = {
   backgroundSize: "24px 24px",
 };
 
-const NATIONAL_CHAINS = [
-  "amedisys","centerwell","gentiva","kindred","compassus",
-  "elara","constellation","enhabit","lhc group","bayada",
-];
 function isNational(name) {
-  const l = (name || "").toLowerCase();
-  return NATIONAL_CHAINS.some((c) => l.includes(c));
+  return classifyProvider({ provider_name: name }).classification === "National chain";
 }
 
 async function getCmsToken() {
@@ -124,7 +121,7 @@ function StatusBadge({ status }) {
 }
 
 const SERVICE_OPTIONS = ["All", "Home Health", "Hospice"];
-const COUNTY_LIST = Object.keys(cmsCountyMarket);
+const COUNTY_LIST = MAINE_COUNTIES.map((county) => county.name);
 
 function buildSeededCmsCompetitors() {
   const byName = new Map();
@@ -154,7 +151,7 @@ const SVC_LABELS = {
   "Hospice":    ["Hospice"],
 };
 
-export default function MarketDynamicsView({ setActiveTab }) {
+export default function MarketDynamicsView({ setActiveTab, selectedCounty: appSelectedCounty, setSelectedCounty: setAppSelectedCounty }) {
   const { dark } = useDarkMode();
 
   const hhSummary  = getProviderSummary("Home Healthcare");
@@ -164,8 +161,16 @@ export default function MarketDynamicsView({ setActiveTab }) {
   const andwellHHShare            = hhSummary.andwellShare || 0;
 
   /* ── Filter state ── */
-  const [selectedCounty,  setSelectedCounty]  = useState("Statewide");
+  const [selectedCounty,  setSelectedCountyState]  = useState(appSelectedCounty || "Statewide");
   const [selectedService, setSelectedService] = useState("All");
+  const setSelectedCounty = useCallback((county) => {
+    setSelectedCountyState(county);
+    if (county !== "Statewide") setAppSelectedCounty?.(county);
+  }, [setAppSelectedCounty]);
+
+  useEffect(() => {
+    if (appSelectedCounty) setSelectedCountyState(appSelectedCounty);
+  }, [appSelectedCounty]);
 
   const [cmsCompetitors, setCmsCompetitors] = useState(() => buildSeededCmsCompetitors());
   const [hhvbpData,      setHhvbpData]      = useState(null);
@@ -450,11 +455,11 @@ export default function MarketDynamicsView({ setActiveTab }) {
               className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white"
               style={{ background: C.primary }}
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-              CMS Real-Time Sync
+              <span className="h-1.5 w-1.5 rounded-full bg-white" />
+              Bundled CMS/HRSA data
             </span>
             <span className="text-[11px] flex items-center gap-1.5" style={{ color: textSub }}>
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
               Active Intelligence Layer
             </span>
           </div>
