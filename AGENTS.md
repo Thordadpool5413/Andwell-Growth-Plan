@@ -16,22 +16,20 @@ Single **Andwell Growth Plan** app: React 19 + Vite SPA served by **Express** (`
 | Production run | `npm start` (after build) |
 | Lint / unit tests | **Not configured** — use `npm run build` + browser smoke test |
 
-`predev` / `prebuild` run `scripts/apply-replit-host-fix.mjs` (no-op on non-Replit hosts).
-
 ### Services
 
 | Service | Required for |
 |---------|----------------|
 | **Node app** (`npm run dev`) | Everything |
 | **PostgreSQL** (`DATABASE_URL`) | CMS DB routes, migrations, competitor seeds, sync/cron. **Not** required for planning tabs that use static `src/data/*` |
-| **OpenAI** (`OPENAI_API_KEY` or `AI_INTEGRATIONS_OPENAI_API_KEY`) | `/api/ai/*` — returns 503 without keys |
-| **Google Maps** (`GOOGLE_MAPS_API_KEY` / `VITE_GOOGLE_MAPS_API_KEY`) | County map in County Plan — placeholder if missing |
+| **OpenAI** (`OPENAI_API_KEY`) | `/api/ai/*` — returns 503 without keys |
+| **County boundaries** (bundled Census seed data) | County map in County Plan |
 
-Without `DATABASE_URL`, server logs `[migrate] DATABASE_URL not set — skipping migrations` and CMS API calls return empty/401; static dashboard tabs still work.
+Without `DATABASE_URL`, server logs `[migrate] DATABASE_URL not set — skipping migrations`; bundled CMS/HRSA seed data still populates dashboard sections.
 
 ### API / auth notes
 
-- Session tokens: `GET /api/ai/token` with `Host: localhost:5000` (or allowed Replit hosts).
+- Session tokens: `GET /api/ai/token` from the same app origin.
 - CMS routes expect `x-ai-token` from that endpoint.
 - Do **not** use `npm run preview` for full-stack testing — it does not serve Express API routes.
 

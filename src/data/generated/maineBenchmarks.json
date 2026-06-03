@@ -1,0 +1,22 @@
+{
+  "generated_at": "2026-06-03T02:33:31.748Z",
+  "source_type": "calculated_from_sourced_cms",
+  "home_health": {
+    "maine_provider_count": 19,
+    "avg_quality_star_rating": 3.47,
+    "avg_timely_care_pct": 95.11,
+    "avg_walking_improve_pct": 87.99,
+    "hhcahps_provider_count": 19,
+    "avg_hhcahps_summary_star": 4.29,
+    "avg_hhcahps_recommend_pct": 87.17
+  },
+  "hhvbp": {
+    "maine_provider_count": 19,
+    "avg_total_performance_score": null
+  },
+  "hospice": {
+    "maine_provider_count": 17,
+    "quality_measure_rows": 1139,
+    "cahps_provider_count": 17
+  }
+}

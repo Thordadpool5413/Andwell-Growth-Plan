@@ -1,0 +1,2790 @@
+[
+  {
+    "ccn": "201524",
+    "provider_name": "AFFINITY CARE OF MAINE, LLC",
+    "county": "Cumberland",
+    "county_assignment_method": "source_county",
+    "measures": {
+      "EMO_REL_BBV": {
+        "measure_name": "The hospice team did |not| provide the right amount of emotional and spiritual support",
+        "score": 11,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_MBV": {
+        "measure_name": "",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_TBV": {
+        "measure_name": "The hospice team provided the right amount of emotional and spiritual support",
+        "score": 89,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_BBV": {
+        "measure_name": "Caregivers rated the hospice agency a 6 or lower",
+        "score": 1,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_MBV": {
+        "measure_name": "Caregivers rated the hospice agency a 7 or 8",
+        "score": 9,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_TBV": {
+        "measure_name": "Caregivers rated the hospice agency a 9 or 10",
+        "score": 90,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_BBV": {
+        "measure_name": "NO, they would probably not or definitely not recommend the hospice",
+        "score": 1,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_MBV": {
+        "measure_name": "YES, they would probably recommend the hospice",
+        "score": 10,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_TBV": {
+        "measure_name": "YES, they would definitely recommend the hospice",
+        "score": 89,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_BBV": {
+        "measure_name": "The hospice team sometimes or never treated the patient with respect",
+        "score": 1,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_MBV": {
+        "measure_name": "The hospice team usually treated the patient with respect",
+        "score": 2,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_TBV": {
+        "measure_name": "The hospice team always treated the patient with respect",
+        "score": 97,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_BBV": {
+        "measure_name": "The patient sometimes or never got the help they needed for pain and symptoms",
+        "score": 9,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_MBV": {
+        "measure_name": "The patient usually got the help they needed for pain and symptoms",
+        "score": 11,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_TBV": {
+        "measure_name": "The patient always got the help they needed for pain and symptoms",
+        "score": 80,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_BBV": {
+        "measure_name": "The hospice team sometimes or never communicated well",
+        "score": 3,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_MBV": {
+        "measure_name": "The hospice team usually communicated well",
+        "score": 11,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_TBV": {
+        "measure_name": "The hospice team always communicated well",
+        "score": 86,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_BBV": {
+        "measure_name": "The hospice team sometimes or never provided timely help",
+        "score": 4,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_MBV": {
+        "measure_name": "The hospice team usually provided timely help",
+        "score": 10,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_TBV": {
+        "measure_name": "The hospice team always provided timely help",
+        "score": 86,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SUMMARY_STAR_RATING": {
+        "measure_name": "Family caregiver survey rating",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "04/01/2023-03/31/2025",
+        "source_dataset_id": "gxki-hrr8"
+      }
+    },
+    "source_type": "sourced_cms",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "ccn": "201513",
+    "provider_name": "ANDWELL HEALTH PARTNERS",
+    "county": "Androscoggin",
+    "county_assignment_method": "source_county",
+    "measures": {
+      "EMO_REL_BBV": {
+        "measure_name": "The hospice team did |not| provide the right amount of emotional and spiritual support",
+        "score": 10,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_MBV": {
+        "measure_name": "",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_TBV": {
+        "measure_name": "The hospice team provided the right amount of emotional and spiritual support",
+        "score": 90,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_BBV": {
+        "measure_name": "Caregivers rated the hospice agency a 6 or lower",
+        "score": 6,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_MBV": {
+        "measure_name": "Caregivers rated the hospice agency a 7 or 8",
+        "score": 13,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_TBV": {
+        "measure_name": "Caregivers rated the hospice agency a 9 or 10",
+        "score": 81,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_BBV": {
+        "measure_name": "NO, they would probably not or definitely not recommend the hospice",
+        "score": 4,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_MBV": {
+        "measure_name": "YES, they would probably recommend the hospice",
+        "score": 9,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_TBV": {
+        "measure_name": "YES, they would definitely recommend the hospice",
+        "score": 87,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_BBV": {
+        "measure_name": "The hospice team sometimes or never treated the patient with respect",
+        "score": 3,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_MBV": {
+        "measure_name": "The hospice team usually treated the patient with respect",
+        "score": 8,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_TBV": {
+        "measure_name": "The hospice team always treated the patient with respect",
+        "score": 89,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_BBV": {
+        "measure_name": "The patient sometimes or never got the help they needed for pain and symptoms",
+        "score": 11,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_MBV": {
+        "measure_name": "The patient usually got the help they needed for pain and symptoms",
+        "score": 15,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_TBV": {
+        "measure_name": "The patient always got the help they needed for pain and symptoms",
+        "score": 74,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_BBV": {
+        "measure_name": "The hospice team sometimes or never communicated well",
+        "score": 7,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_MBV": {
+        "measure_name": "The hospice team usually communicated well",
+        "score": 14,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_TBV": {
+        "measure_name": "The hospice team always communicated well",
+        "score": 79,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_BBV": {
+        "measure_name": "The hospice team sometimes or never provided timely help",
+        "score": 10,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_MBV": {
+        "measure_name": "The hospice team usually provided timely help",
+        "score": 14,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_TBV": {
+        "measure_name": "The hospice team always provided timely help",
+        "score": 76,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SUMMARY_STAR_RATING": {
+        "measure_name": "Family caregiver survey rating",
+        "score": null,
+        "star_rating": 3,
+        "reporting_period": "04/01/2023-03/31/2025",
+        "source_dataset_id": "gxki-hrr8"
+      }
+    },
+    "source_type": "sourced_cms",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "ccn": "201516",
+    "provider_name": "BEACON HOSPICE, AN AMEDISYS COMPANY",
+    "county": "Cumberland",
+    "county_assignment_method": "source_county",
+    "measures": {
+      "EMO_REL_BBV": {
+        "measure_name": "The hospice team did |not| provide the right amount of emotional and spiritual support",
+        "score": 7,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_MBV": {
+        "measure_name": "",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_TBV": {
+        "measure_name": "The hospice team provided the right amount of emotional and spiritual support",
+        "score": 93,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_BBV": {
+        "measure_name": "Caregivers rated the hospice agency a 6 or lower",
+        "score": 3,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_MBV": {
+        "measure_name": "Caregivers rated the hospice agency a 7 or 8",
+        "score": 11,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_TBV": {
+        "measure_name": "Caregivers rated the hospice agency a 9 or 10",
+        "score": 86,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_BBV": {
+        "measure_name": "NO, they would probably not or definitely not recommend the hospice",
+        "score": 3,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_MBV": {
+        "measure_name": "YES, they would probably recommend the hospice",
+        "score": 5,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_TBV": {
+        "measure_name": "YES, they would definitely recommend the hospice",
+        "score": 92,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_BBV": {
+        "measure_name": "The hospice team sometimes or never treated the patient with respect",
+        "score": 1,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_MBV": {
+        "measure_name": "The hospice team usually treated the patient with respect",
+        "score": 7,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_TBV": {
+        "measure_name": "The hospice team always treated the patient with respect",
+        "score": 92,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_BBV": {
+        "measure_name": "The patient sometimes or never got the help they needed for pain and symptoms",
+        "score": 7,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_MBV": {
+        "measure_name": "The patient usually got the help they needed for pain and symptoms",
+        "score": 11,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_TBV": {
+        "measure_name": "The patient always got the help they needed for pain and symptoms",
+        "score": 82,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_BBV": {
+        "measure_name": "The hospice team sometimes or never communicated well",
+        "score": 4,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_MBV": {
+        "measure_name": "The hospice team usually communicated well",
+        "score": 9,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_TBV": {
+        "measure_name": "The hospice team always communicated well",
+        "score": 87,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_BBV": {
+        "measure_name": "The hospice team sometimes or never provided timely help",
+        "score": 10,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_MBV": {
+        "measure_name": "The hospice team usually provided timely help",
+        "score": 7,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_TBV": {
+        "measure_name": "The hospice team always provided timely help",
+        "score": 83,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SUMMARY_STAR_RATING": {
+        "measure_name": "Family caregiver survey rating",
+        "score": null,
+        "star_rating": 4,
+        "reporting_period": "04/01/2023-03/31/2025",
+        "source_dataset_id": "gxki-hrr8"
+      }
+    },
+    "source_type": "sourced_cms",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "ccn": "201517",
+    "provider_name": "BEACON HOSPICE, AN AMEDISYS COMPANY",
+    "county": "Androscoggin",
+    "county_assignment_method": "source_county",
+    "measures": {
+      "EMO_REL_BBV": {
+        "measure_name": "The hospice team did |not| provide the right amount of emotional and spiritual support",
+        "score": 8,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_MBV": {
+        "measure_name": "",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_TBV": {
+        "measure_name": "The hospice team provided the right amount of emotional and spiritual support",
+        "score": 92,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_BBV": {
+        "measure_name": "Caregivers rated the hospice agency a 6 or lower",
+        "score": 5,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_MBV": {
+        "measure_name": "Caregivers rated the hospice agency a 7 or 8",
+        "score": 12,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_TBV": {
+        "measure_name": "Caregivers rated the hospice agency a 9 or 10",
+        "score": 83,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_BBV": {
+        "measure_name": "NO, they would probably not or definitely not recommend the hospice",
+        "score": 4,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_MBV": {
+        "measure_name": "YES, they would probably recommend the hospice",
+        "score": 10,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_TBV": {
+        "measure_name": "YES, they would definitely recommend the hospice",
+        "score": 86,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_BBV": {
+        "measure_name": "The hospice team sometimes or never treated the patient with respect",
+        "score": 2,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_MBV": {
+        "measure_name": "The hospice team usually treated the patient with respect",
+        "score": 6,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_TBV": {
+        "measure_name": "The hospice team always treated the patient with respect",
+        "score": 92,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_BBV": {
+        "measure_name": "The patient sometimes or never got the help they needed for pain and symptoms",
+        "score": 10,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_MBV": {
+        "measure_name": "The patient usually got the help they needed for pain and symptoms",
+        "score": 18,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_TBV": {
+        "measure_name": "The patient always got the help they needed for pain and symptoms",
+        "score": 72,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_BBV": {
+        "measure_name": "The hospice team sometimes or never communicated well",
+        "score": 7,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_MBV": {
+        "measure_name": "The hospice team usually communicated well",
+        "score": 12,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_TBV": {
+        "measure_name": "The hospice team always communicated well",
+        "score": 81,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_BBV": {
+        "measure_name": "The hospice team sometimes or never provided timely help",
+        "score": 8,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_MBV": {
+        "measure_name": "The hospice team usually provided timely help",
+        "score": 12,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_TBV": {
+        "measure_name": "The hospice team always provided timely help",
+        "score": 80,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SUMMARY_STAR_RATING": {
+        "measure_name": "Family caregiver survey rating",
+        "score": null,
+        "star_rating": 4,
+        "reporting_period": "04/01/2023-03/31/2025",
+        "source_dataset_id": "gxki-hrr8"
+      }
+    },
+    "source_type": "sourced_cms",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "ccn": "201520",
+    "provider_name": "BEACON HOSPICE, AN AMEDISYS COMPANY",
+    "county": "Penobscot",
+    "county_assignment_method": "source_county",
+    "measures": {
+      "EMO_REL_BBV": {
+        "measure_name": "The hospice team did |not| provide the right amount of emotional and spiritual support",
+        "score": 9,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_MBV": {
+        "measure_name": "",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_TBV": {
+        "measure_name": "The hospice team provided the right amount of emotional and spiritual support",
+        "score": 91,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_BBV": {
+        "measure_name": "Caregivers rated the hospice agency a 6 or lower",
+        "score": 4,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_MBV": {
+        "measure_name": "Caregivers rated the hospice agency a 7 or 8",
+        "score": 15,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_TBV": {
+        "measure_name": "Caregivers rated the hospice agency a 9 or 10",
+        "score": 81,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_BBV": {
+        "measure_name": "NO, they would probably not or definitely not recommend the hospice",
+        "score": 5,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_MBV": {
+        "measure_name": "YES, they would probably recommend the hospice",
+        "score": 10,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_TBV": {
+        "measure_name": "YES, they would definitely recommend the hospice",
+        "score": 85,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_BBV": {
+        "measure_name": "The hospice team sometimes or never treated the patient with respect",
+        "score": 2,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_MBV": {
+        "measure_name": "The hospice team usually treated the patient with respect",
+        "score": 7,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_TBV": {
+        "measure_name": "The hospice team always treated the patient with respect",
+        "score": 91,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_BBV": {
+        "measure_name": "The patient sometimes or never got the help they needed for pain and symptoms",
+        "score": 11,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_MBV": {
+        "measure_name": "The patient usually got the help they needed for pain and symptoms",
+        "score": 18,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_TBV": {
+        "measure_name": "The patient always got the help they needed for pain and symptoms",
+        "score": 71,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_BBV": {
+        "measure_name": "The hospice team sometimes or never communicated well",
+        "score": 7,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_MBV": {
+        "measure_name": "The hospice team usually communicated well",
+        "score": 12,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_TBV": {
+        "measure_name": "The hospice team always communicated well",
+        "score": 81,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_BBV": {
+        "measure_name": "The hospice team sometimes or never provided timely help",
+        "score": 11,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_MBV": {
+        "measure_name": "The hospice team usually provided timely help",
+        "score": 11,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_TBV": {
+        "measure_name": "The hospice team always provided timely help",
+        "score": 78,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SUMMARY_STAR_RATING": {
+        "measure_name": "Family caregiver survey rating",
+        "score": null,
+        "star_rating": 3,
+        "reporting_period": "04/01/2023-03/31/2025",
+        "source_dataset_id": "gxki-hrr8"
+      }
+    },
+    "source_type": "sourced_cms",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "ccn": "201526",
+    "provider_name": "BRISTOL HOSPICE - BANGOR LLC",
+    "county": "Penobscot",
+    "county_assignment_method": "source_county",
+    "measures": {
+      "EMO_REL_BBV": {
+        "measure_name": "The hospice team did |not| provide the right amount of emotional and spiritual support",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_MBV": {
+        "measure_name": "",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_TBV": {
+        "measure_name": "The hospice team provided the right amount of emotional and spiritual support",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_BBV": {
+        "measure_name": "Caregivers rated the hospice agency a 6 or lower",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_MBV": {
+        "measure_name": "Caregivers rated the hospice agency a 7 or 8",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_TBV": {
+        "measure_name": "Caregivers rated the hospice agency a 9 or 10",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_BBV": {
+        "measure_name": "NO, they would probably not or definitely not recommend the hospice",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_MBV": {
+        "measure_name": "YES, they would probably recommend the hospice",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_TBV": {
+        "measure_name": "YES, they would definitely recommend the hospice",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_BBV": {
+        "measure_name": "The hospice team sometimes or never treated the patient with respect",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_MBV": {
+        "measure_name": "The hospice team usually treated the patient with respect",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_TBV": {
+        "measure_name": "The hospice team always treated the patient with respect",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_BBV": {
+        "measure_name": "The patient sometimes or never got the help they needed for pain and symptoms",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_MBV": {
+        "measure_name": "The patient usually got the help they needed for pain and symptoms",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_TBV": {
+        "measure_name": "The patient always got the help they needed for pain and symptoms",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_BBV": {
+        "measure_name": "The hospice team sometimes or never communicated well",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_MBV": {
+        "measure_name": "The hospice team usually communicated well",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_TBV": {
+        "measure_name": "The hospice team always communicated well",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_BBV": {
+        "measure_name": "The hospice team sometimes or never provided timely help",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_MBV": {
+        "measure_name": "The hospice team usually provided timely help",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_TBV": {
+        "measure_name": "The hospice team always provided timely help",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SUMMARY_STAR_RATING": {
+        "measure_name": "Family caregiver survey rating",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "04/01/2023-03/31/2025",
+        "source_dataset_id": "gxki-hrr8"
+      }
+    },
+    "source_type": "sourced_cms",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "ccn": "201501",
+    "provider_name": "CHANS HOME HEALTH & HOSPICE",
+    "county": "Cumberland",
+    "county_assignment_method": "source_county",
+    "measures": {
+      "EMO_REL_BBV": {
+        "measure_name": "The hospice team did |not| provide the right amount of emotional and spiritual support",
+        "score": 7,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_MBV": {
+        "measure_name": "",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_TBV": {
+        "measure_name": "The hospice team provided the right amount of emotional and spiritual support",
+        "score": 93,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_BBV": {
+        "measure_name": "Caregivers rated the hospice agency a 6 or lower",
+        "score": 2,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_MBV": {
+        "measure_name": "Caregivers rated the hospice agency a 7 or 8",
+        "score": 9,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_TBV": {
+        "measure_name": "Caregivers rated the hospice agency a 9 or 10",
+        "score": 89,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_BBV": {
+        "measure_name": "NO, they would probably not or definitely not recommend the hospice",
+        "score": 2,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_MBV": {
+        "measure_name": "YES, they would probably recommend the hospice",
+        "score": 5,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_TBV": {
+        "measure_name": "YES, they would definitely recommend the hospice",
+        "score": 93,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_BBV": {
+        "measure_name": "The hospice team sometimes or never treated the patient with respect",
+        "score": 1,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_MBV": {
+        "measure_name": "The hospice team usually treated the patient with respect",
+        "score": 4,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_TBV": {
+        "measure_name": "The hospice team always treated the patient with respect",
+        "score": 95,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_BBV": {
+        "measure_name": "The patient sometimes or never got the help they needed for pain and symptoms",
+        "score": 5,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_MBV": {
+        "measure_name": "The patient usually got the help they needed for pain and symptoms",
+        "score": 11,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_TBV": {
+        "measure_name": "The patient always got the help they needed for pain and symptoms",
+        "score": 84,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_BBV": {
+        "measure_name": "The hospice team sometimes or never communicated well",
+        "score": 3,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_MBV": {
+        "measure_name": "The hospice team usually communicated well",
+        "score": 11,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_TBV": {
+        "measure_name": "The hospice team always communicated well",
+        "score": 86,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_BBV": {
+        "measure_name": "The hospice team sometimes or never provided timely help",
+        "score": 9,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_MBV": {
+        "measure_name": "The hospice team usually provided timely help",
+        "score": 7,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_TBV": {
+        "measure_name": "The hospice team always provided timely help",
+        "score": 84,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SUMMARY_STAR_RATING": {
+        "measure_name": "Family caregiver survey rating",
+        "score": null,
+        "star_rating": 4,
+        "reporting_period": "04/01/2023-03/31/2025",
+        "source_dataset_id": "gxki-hrr8"
+      }
+    },
+    "source_type": "sourced_cms",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "ccn": "201514",
+    "provider_name": "COMMUNITY HEALTH & COUNSELING SERVICES",
+    "county": "Penobscot",
+    "county_assignment_method": "source_county",
+    "measures": {
+      "EMO_REL_BBV": {
+        "measure_name": "The hospice team did |not| provide the right amount of emotional and spiritual support",
+        "score": 8,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_MBV": {
+        "measure_name": "",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_TBV": {
+        "measure_name": "The hospice team provided the right amount of emotional and spiritual support",
+        "score": 92,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_BBV": {
+        "measure_name": "Caregivers rated the hospice agency a 6 or lower",
+        "score": 3,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_MBV": {
+        "measure_name": "Caregivers rated the hospice agency a 7 or 8",
+        "score": 11,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_TBV": {
+        "measure_name": "Caregivers rated the hospice agency a 9 or 10",
+        "score": 86,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_BBV": {
+        "measure_name": "NO, they would probably not or definitely not recommend the hospice",
+        "score": 2,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_MBV": {
+        "measure_name": "YES, they would probably recommend the hospice",
+        "score": 9,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_TBV": {
+        "measure_name": "YES, they would definitely recommend the hospice",
+        "score": 89,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_BBV": {
+        "measure_name": "The hospice team sometimes or never treated the patient with respect",
+        "score": 1,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_MBV": {
+        "measure_name": "The hospice team usually treated the patient with respect",
+        "score": 5,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_TBV": {
+        "measure_name": "The hospice team always treated the patient with respect",
+        "score": 94,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_BBV": {
+        "measure_name": "The patient sometimes or never got the help they needed for pain and symptoms",
+        "score": 8,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_MBV": {
+        "measure_name": "The patient usually got the help they needed for pain and symptoms",
+        "score": 13,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_TBV": {
+        "measure_name": "The patient always got the help they needed for pain and symptoms",
+        "score": 79,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_BBV": {
+        "measure_name": "The hospice team sometimes or never communicated well",
+        "score": 4,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_MBV": {
+        "measure_name": "The hospice team usually communicated well",
+        "score": 8,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_TBV": {
+        "measure_name": "The hospice team always communicated well",
+        "score": 88,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_BBV": {
+        "measure_name": "The hospice team sometimes or never provided timely help",
+        "score": 9,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_MBV": {
+        "measure_name": "The hospice team usually provided timely help",
+        "score": 10,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_TBV": {
+        "measure_name": "The hospice team always provided timely help",
+        "score": 81,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SUMMARY_STAR_RATING": {
+        "measure_name": "Family caregiver survey rating",
+        "score": null,
+        "star_rating": 5,
+        "reporting_period": "04/01/2023-03/31/2025",
+        "source_dataset_id": "gxki-hrr8"
+      }
+    },
+    "source_type": "sourced_cms",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "ccn": "201519",
+    "provider_name": "COMPASSUS - GREATER MAINE",
+    "county": "Cumberland",
+    "county_assignment_method": "source_county",
+    "measures": {
+      "EMO_REL_BBV": {
+        "measure_name": "The hospice team did |not| provide the right amount of emotional and spiritual support",
+        "score": 7,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_MBV": {
+        "measure_name": "",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_TBV": {
+        "measure_name": "The hospice team provided the right amount of emotional and spiritual support",
+        "score": 93,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_BBV": {
+        "measure_name": "Caregivers rated the hospice agency a 6 or lower",
+        "score": 5,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_MBV": {
+        "measure_name": "Caregivers rated the hospice agency a 7 or 8",
+        "score": 12,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_TBV": {
+        "measure_name": "Caregivers rated the hospice agency a 9 or 10",
+        "score": 83,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_BBV": {
+        "measure_name": "NO, they would probably not or definitely not recommend the hospice",
+        "score": 3,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_MBV": {
+        "measure_name": "YES, they would probably recommend the hospice",
+        "score": 8,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_TBV": {
+        "measure_name": "YES, they would definitely recommend the hospice",
+        "score": 89,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_BBV": {
+        "measure_name": "The hospice team sometimes or never treated the patient with respect",
+        "score": 2,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_MBV": {
+        "measure_name": "The hospice team usually treated the patient with respect",
+        "score": 4,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_TBV": {
+        "measure_name": "The hospice team always treated the patient with respect",
+        "score": 94,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_BBV": {
+        "measure_name": "The patient sometimes or never got the help they needed for pain and symptoms",
+        "score": 6,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_MBV": {
+        "measure_name": "The patient usually got the help they needed for pain and symptoms",
+        "score": 19,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_TBV": {
+        "measure_name": "The patient always got the help they needed for pain and symptoms",
+        "score": 75,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_BBV": {
+        "measure_name": "The hospice team sometimes or never communicated well",
+        "score": 5,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_MBV": {
+        "measure_name": "The hospice team usually communicated well",
+        "score": 9,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_TBV": {
+        "measure_name": "The hospice team always communicated well",
+        "score": 86,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_BBV": {
+        "measure_name": "The hospice team sometimes or never provided timely help",
+        "score": 6,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_MBV": {
+        "measure_name": "The hospice team usually provided timely help",
+        "score": 10,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_TBV": {
+        "measure_name": "The hospice team always provided timely help",
+        "score": 84,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SUMMARY_STAR_RATING": {
+        "measure_name": "Family caregiver survey rating",
+        "score": null,
+        "star_rating": 4,
+        "reporting_period": "04/01/2023-03/31/2025",
+        "source_dataset_id": "gxki-hrr8"
+      }
+    },
+    "source_type": "sourced_cms",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "ccn": "201522",
+    "provider_name": "CONSTELLATION HOSPICE, CONSTELLATION HEALTH SERVIC",
+    "county": "Kennebec",
+    "county_assignment_method": "source_county",
+    "measures": {
+      "EMO_REL_BBV": {
+        "measure_name": "The hospice team did |not| provide the right amount of emotional and spiritual support",
+        "score": 9,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_MBV": {
+        "measure_name": "",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_TBV": {
+        "measure_name": "The hospice team provided the right amount of emotional and spiritual support",
+        "score": 91,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_BBV": {
+        "measure_name": "Caregivers rated the hospice agency a 6 or lower",
+        "score": 4,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_MBV": {
+        "measure_name": "Caregivers rated the hospice agency a 7 or 8",
+        "score": 21,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_TBV": {
+        "measure_name": "Caregivers rated the hospice agency a 9 or 10",
+        "score": 75,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_BBV": {
+        "measure_name": "NO, they would probably not or definitely not recommend the hospice",
+        "score": 4,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_MBV": {
+        "measure_name": "YES, they would probably recommend the hospice",
+        "score": 16,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_TBV": {
+        "measure_name": "YES, they would definitely recommend the hospice",
+        "score": 80,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_BBV": {
+        "measure_name": "The hospice team sometimes or never treated the patient with respect",
+        "score": 3,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_MBV": {
+        "measure_name": "The hospice team usually treated the patient with respect",
+        "score": 7,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_TBV": {
+        "measure_name": "The hospice team always treated the patient with respect",
+        "score": 90,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_BBV": {
+        "measure_name": "The patient sometimes or never got the help they needed for pain and symptoms",
+        "score": 11,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_MBV": {
+        "measure_name": "The patient usually got the help they needed for pain and symptoms",
+        "score": 21,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_TBV": {
+        "measure_name": "The patient always got the help they needed for pain and symptoms",
+        "score": 68,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_BBV": {
+        "measure_name": "The hospice team sometimes or never communicated well",
+        "score": 9,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_MBV": {
+        "measure_name": "The hospice team usually communicated well",
+        "score": 12,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_TBV": {
+        "measure_name": "The hospice team always communicated well",
+        "score": 79,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_BBV": {
+        "measure_name": "The hospice team sometimes or never provided timely help",
+        "score": 11,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_MBV": {
+        "measure_name": "The hospice team usually provided timely help",
+        "score": 19,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_TBV": {
+        "measure_name": "The hospice team always provided timely help",
+        "score": 70,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SUMMARY_STAR_RATING": {
+        "measure_name": "Family caregiver survey rating",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "04/01/2023-03/31/2025",
+        "source_dataset_id": "gxki-hrr8"
+      }
+    },
+    "source_type": "sourced_cms",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "ccn": "201523",
+    "provider_name": "GENTIVA",
+    "county": "Penobscot",
+    "county_assignment_method": "source_county",
+    "measures": {
+      "EMO_REL_BBV": {
+        "measure_name": "The hospice team did |not| provide the right amount of emotional and spiritual support",
+        "score": 8,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_MBV": {
+        "measure_name": "",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_TBV": {
+        "measure_name": "The hospice team provided the right amount of emotional and spiritual support",
+        "score": 92,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_BBV": {
+        "measure_name": "Caregivers rated the hospice agency a 6 or lower",
+        "score": 4,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_MBV": {
+        "measure_name": "Caregivers rated the hospice agency a 7 or 8",
+        "score": 14,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_TBV": {
+        "measure_name": "Caregivers rated the hospice agency a 9 or 10",
+        "score": 82,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_BBV": {
+        "measure_name": "NO, they would probably not or definitely not recommend the hospice",
+        "score": 4,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_MBV": {
+        "measure_name": "YES, they would probably recommend the hospice",
+        "score": 10,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_TBV": {
+        "measure_name": "YES, they would definitely recommend the hospice",
+        "score": 86,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_BBV": {
+        "measure_name": "The hospice team sometimes or never treated the patient with respect",
+        "score": 2,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_MBV": {
+        "measure_name": "The hospice team usually treated the patient with respect",
+        "score": 7,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_TBV": {
+        "measure_name": "The hospice team always treated the patient with respect",
+        "score": 91,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_BBV": {
+        "measure_name": "The patient sometimes or never got the help they needed for pain and symptoms",
+        "score": 12,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_MBV": {
+        "measure_name": "The patient usually got the help they needed for pain and symptoms",
+        "score": 18,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_TBV": {
+        "measure_name": "The patient always got the help they needed for pain and symptoms",
+        "score": 70,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_BBV": {
+        "measure_name": "The hospice team sometimes or never communicated well",
+        "score": 9,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_MBV": {
+        "measure_name": "The hospice team usually communicated well",
+        "score": 14,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_TBV": {
+        "measure_name": "The hospice team always communicated well",
+        "score": 77,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_BBV": {
+        "measure_name": "The hospice team sometimes or never provided timely help",
+        "score": 9,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_MBV": {
+        "measure_name": "The hospice team usually provided timely help",
+        "score": 16,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_TBV": {
+        "measure_name": "The hospice team always provided timely help",
+        "score": 75,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SUMMARY_STAR_RATING": {
+        "measure_name": "Family caregiver survey rating",
+        "score": null,
+        "star_rating": 4,
+        "reporting_period": "04/01/2023-03/31/2025",
+        "source_dataset_id": "gxki-hrr8"
+      }
+    },
+    "source_type": "sourced_cms",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "ccn": "201525",
+    "provider_name": "GENTIVA I",
+    "county": "Cumberland",
+    "county_assignment_method": "source_county",
+    "measures": {
+      "EMO_REL_BBV": {
+        "measure_name": "The hospice team did |not| provide the right amount of emotional and spiritual support",
+        "score": 4,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_MBV": {
+        "measure_name": "",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_TBV": {
+        "measure_name": "The hospice team provided the right amount of emotional and spiritual support",
+        "score": 96,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_BBV": {
+        "measure_name": "Caregivers rated the hospice agency a 6 or lower",
+        "score": 0,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_MBV": {
+        "measure_name": "Caregivers rated the hospice agency a 7 or 8",
+        "score": 18,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_TBV": {
+        "measure_name": "Caregivers rated the hospice agency a 9 or 10",
+        "score": 82,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_BBV": {
+        "measure_name": "NO, they would probably not or definitely not recommend the hospice",
+        "score": 3,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_MBV": {
+        "measure_name": "YES, they would probably recommend the hospice",
+        "score": 13,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_TBV": {
+        "measure_name": "YES, they would definitely recommend the hospice",
+        "score": 84,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_BBV": {
+        "measure_name": "The hospice team sometimes or never treated the patient with respect",
+        "score": 0,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_MBV": {
+        "measure_name": "The hospice team usually treated the patient with respect",
+        "score": 4,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_TBV": {
+        "measure_name": "The hospice team always treated the patient with respect",
+        "score": 96,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_BBV": {
+        "measure_name": "The patient sometimes or never got the help they needed for pain and symptoms",
+        "score": 10,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_MBV": {
+        "measure_name": "The patient usually got the help they needed for pain and symptoms",
+        "score": 20,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_TBV": {
+        "measure_name": "The patient always got the help they needed for pain and symptoms",
+        "score": 70,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_BBV": {
+        "measure_name": "The hospice team sometimes or never communicated well",
+        "score": 6,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_MBV": {
+        "measure_name": "The hospice team usually communicated well",
+        "score": 16,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_TBV": {
+        "measure_name": "The hospice team always communicated well",
+        "score": 78,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_BBV": {
+        "measure_name": "The hospice team sometimes or never provided timely help",
+        "score": 9,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_MBV": {
+        "measure_name": "The hospice team usually provided timely help",
+        "score": 15,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_TBV": {
+        "measure_name": "The hospice team always provided timely help",
+        "score": 76,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SUMMARY_STAR_RATING": {
+        "measure_name": "Family caregiver survey rating",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "04/01/2023-03/31/2025",
+        "source_dataset_id": "gxki-hrr8"
+      }
+    },
+    "source_type": "sourced_cms",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "ccn": "201511",
+    "provider_name": "HOSPICE OF SOUTHERN MAINE",
+    "county": "Cumberland",
+    "county_assignment_method": "source_county",
+    "measures": {
+      "EMO_REL_BBV": {
+        "measure_name": "The hospice team did |not| provide the right amount of emotional and spiritual support",
+        "score": 8,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_MBV": {
+        "measure_name": "",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_TBV": {
+        "measure_name": "The hospice team provided the right amount of emotional and spiritual support",
+        "score": 92,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_BBV": {
+        "measure_name": "Caregivers rated the hospice agency a 6 or lower",
+        "score": 3,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_MBV": {
+        "measure_name": "Caregivers rated the hospice agency a 7 or 8",
+        "score": 11,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_TBV": {
+        "measure_name": "Caregivers rated the hospice agency a 9 or 10",
+        "score": 86,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_BBV": {
+        "measure_name": "NO, they would probably not or definitely not recommend the hospice",
+        "score": 3,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_MBV": {
+        "measure_name": "YES, they would probably recommend the hospice",
+        "score": 5,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_TBV": {
+        "measure_name": "YES, they would definitely recommend the hospice",
+        "score": 92,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_BBV": {
+        "measure_name": "The hospice team sometimes or never treated the patient with respect",
+        "score": 2,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_MBV": {
+        "measure_name": "The hospice team usually treated the patient with respect",
+        "score": 4,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_TBV": {
+        "measure_name": "The hospice team always treated the patient with respect",
+        "score": 94,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_BBV": {
+        "measure_name": "The patient sometimes or never got the help they needed for pain and symptoms",
+        "score": 10,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_MBV": {
+        "measure_name": "The patient usually got the help they needed for pain and symptoms",
+        "score": 15,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_TBV": {
+        "measure_name": "The patient always got the help they needed for pain and symptoms",
+        "score": 75,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_BBV": {
+        "measure_name": "The hospice team sometimes or never communicated well",
+        "score": 5,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_MBV": {
+        "measure_name": "The hospice team usually communicated well",
+        "score": 10,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_TBV": {
+        "measure_name": "The hospice team always communicated well",
+        "score": 85,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_BBV": {
+        "measure_name": "The hospice team sometimes or never provided timely help",
+        "score": 8,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_MBV": {
+        "measure_name": "The hospice team usually provided timely help",
+        "score": 12,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_TBV": {
+        "measure_name": "The hospice team always provided timely help",
+        "score": 80,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SUMMARY_STAR_RATING": {
+        "measure_name": "Family caregiver survey rating",
+        "score": null,
+        "star_rating": 4,
+        "reporting_period": "04/01/2023-03/31/2025",
+        "source_dataset_id": "gxki-hrr8"
+      }
+    },
+    "source_type": "sourced_cms",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "ccn": "201500",
+    "provider_name": "MAINEGENERAL COMMUNITY CARE",
+    "county": "Kennebec",
+    "county_assignment_method": "source_county",
+    "measures": {
+      "EMO_REL_BBV": {
+        "measure_name": "The hospice team did |not| provide the right amount of emotional and spiritual support",
+        "score": 10,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_MBV": {
+        "measure_name": "",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_TBV": {
+        "measure_name": "The hospice team provided the right amount of emotional and spiritual support",
+        "score": 90,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_BBV": {
+        "measure_name": "Caregivers rated the hospice agency a 6 or lower",
+        "score": 4,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_MBV": {
+        "measure_name": "Caregivers rated the hospice agency a 7 or 8",
+        "score": 14,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_TBV": {
+        "measure_name": "Caregivers rated the hospice agency a 9 or 10",
+        "score": 82,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_BBV": {
+        "measure_name": "NO, they would probably not or definitely not recommend the hospice",
+        "score": 4,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_MBV": {
+        "measure_name": "YES, they would probably recommend the hospice",
+        "score": 8,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_TBV": {
+        "measure_name": "YES, they would definitely recommend the hospice",
+        "score": 88,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_BBV": {
+        "measure_name": "The hospice team sometimes or never treated the patient with respect",
+        "score": 1,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_MBV": {
+        "measure_name": "The hospice team usually treated the patient with respect",
+        "score": 6,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_TBV": {
+        "measure_name": "The hospice team always treated the patient with respect",
+        "score": 93,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_BBV": {
+        "measure_name": "The patient sometimes or never got the help they needed for pain and symptoms",
+        "score": 8,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_MBV": {
+        "measure_name": "The patient usually got the help they needed for pain and symptoms",
+        "score": 18,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_TBV": {
+        "measure_name": "The patient always got the help they needed for pain and symptoms",
+        "score": 74,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_BBV": {
+        "measure_name": "The hospice team sometimes or never communicated well",
+        "score": 5,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_MBV": {
+        "measure_name": "The hospice team usually communicated well",
+        "score": 12,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_TBV": {
+        "measure_name": "The hospice team always communicated well",
+        "score": 83,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_BBV": {
+        "measure_name": "The hospice team sometimes or never provided timely help",
+        "score": 8,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_MBV": {
+        "measure_name": "The hospice team usually provided timely help",
+        "score": 13,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_TBV": {
+        "measure_name": "The hospice team always provided timely help",
+        "score": 79,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SUMMARY_STAR_RATING": {
+        "measure_name": "Family caregiver survey rating",
+        "score": null,
+        "star_rating": 4,
+        "reporting_period": "04/01/2023-03/31/2025",
+        "source_dataset_id": "gxki-hrr8"
+      }
+    },
+    "source_type": "sourced_cms",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "ccn": "201508",
+    "provider_name": "MAINEHEALTH HOME HEALTH AND HOSPICE",
+    "county": "York",
+    "county_assignment_method": "source_county",
+    "measures": {
+      "EMO_REL_BBV": {
+        "measure_name": "The hospice team did |not| provide the right amount of emotional and spiritual support",
+        "score": 8,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_MBV": {
+        "measure_name": "",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_TBV": {
+        "measure_name": "The hospice team provided the right amount of emotional and spiritual support",
+        "score": 92,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_BBV": {
+        "measure_name": "Caregivers rated the hospice agency a 6 or lower",
+        "score": 5,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_MBV": {
+        "measure_name": "Caregivers rated the hospice agency a 7 or 8",
+        "score": 16,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_TBV": {
+        "measure_name": "Caregivers rated the hospice agency a 9 or 10",
+        "score": 79,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_BBV": {
+        "measure_name": "NO, they would probably not or definitely not recommend the hospice",
+        "score": 4,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_MBV": {
+        "measure_name": "YES, they would probably recommend the hospice",
+        "score": 7,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_TBV": {
+        "measure_name": "YES, they would definitely recommend the hospice",
+        "score": 89,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_BBV": {
+        "measure_name": "The hospice team sometimes or never treated the patient with respect",
+        "score": 3,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_MBV": {
+        "measure_name": "The hospice team usually treated the patient with respect",
+        "score": 6,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_TBV": {
+        "measure_name": "The hospice team always treated the patient with respect",
+        "score": 91,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_BBV": {
+        "measure_name": "The patient sometimes or never got the help they needed for pain and symptoms",
+        "score": 9,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_MBV": {
+        "measure_name": "The patient usually got the help they needed for pain and symptoms",
+        "score": 18,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_TBV": {
+        "measure_name": "The patient always got the help they needed for pain and symptoms",
+        "score": 73,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_BBV": {
+        "measure_name": "The hospice team sometimes or never communicated well",
+        "score": 6,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_MBV": {
+        "measure_name": "The hospice team usually communicated well",
+        "score": 14,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_TBV": {
+        "measure_name": "The hospice team always communicated well",
+        "score": 80,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_BBV": {
+        "measure_name": "The hospice team sometimes or never provided timely help",
+        "score": 13,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_MBV": {
+        "measure_name": "The hospice team usually provided timely help",
+        "score": 15,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_TBV": {
+        "measure_name": "The hospice team always provided timely help",
+        "score": 72,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SUMMARY_STAR_RATING": {
+        "measure_name": "Family caregiver survey rating",
+        "score": null,
+        "star_rating": 4,
+        "reporting_period": "04/01/2023-03/31/2025",
+        "source_dataset_id": "gxki-hrr8"
+      }
+    },
+    "source_type": "sourced_cms",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "ccn": "201502",
+    "provider_name": "NORTHERN LIGHT HOME CARE & HOSPICE",
+    "county": "Cumberland",
+    "county_assignment_method": "source_county",
+    "measures": {
+      "EMO_REL_BBV": {
+        "measure_name": "The hospice team did |not| provide the right amount of emotional and spiritual support",
+        "score": 6,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_MBV": {
+        "measure_name": "",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_TBV": {
+        "measure_name": "The hospice team provided the right amount of emotional and spiritual support",
+        "score": 94,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_BBV": {
+        "measure_name": "Caregivers rated the hospice agency a 6 or lower",
+        "score": 2,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_MBV": {
+        "measure_name": "Caregivers rated the hospice agency a 7 or 8",
+        "score": 13,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_TBV": {
+        "measure_name": "Caregivers rated the hospice agency a 9 or 10",
+        "score": 85,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_BBV": {
+        "measure_name": "NO, they would probably not or definitely not recommend the hospice",
+        "score": 2,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_MBV": {
+        "measure_name": "YES, they would probably recommend the hospice",
+        "score": 8,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_TBV": {
+        "measure_name": "YES, they would definitely recommend the hospice",
+        "score": 90,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_BBV": {
+        "measure_name": "The hospice team sometimes or never treated the patient with respect",
+        "score": 1,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_MBV": {
+        "measure_name": "The hospice team usually treated the patient with respect",
+        "score": 4,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_TBV": {
+        "measure_name": "The hospice team always treated the patient with respect",
+        "score": 95,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_BBV": {
+        "measure_name": "The patient sometimes or never got the help they needed for pain and symptoms",
+        "score": 7,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_MBV": {
+        "measure_name": "The patient usually got the help they needed for pain and symptoms",
+        "score": 13,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_TBV": {
+        "measure_name": "The patient always got the help they needed for pain and symptoms",
+        "score": 80,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_BBV": {
+        "measure_name": "The hospice team sometimes or never communicated well",
+        "score": 4,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_MBV": {
+        "measure_name": "The hospice team usually communicated well",
+        "score": 10,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_TBV": {
+        "measure_name": "The hospice team always communicated well",
+        "score": 86,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_BBV": {
+        "measure_name": "The hospice team sometimes or never provided timely help",
+        "score": 10,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_MBV": {
+        "measure_name": "The hospice team usually provided timely help",
+        "score": 13,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_TBV": {
+        "measure_name": "The hospice team always provided timely help",
+        "score": 77,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SUMMARY_STAR_RATING": {
+        "measure_name": "Family caregiver survey rating",
+        "score": null,
+        "star_rating": 4,
+        "reporting_period": "04/01/2023-03/31/2025",
+        "source_dataset_id": "gxki-hrr8"
+      }
+    },
+    "source_type": "sourced_cms",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "ccn": "201504",
+    "provider_name": "ST. JOSEPH HOSPICE",
+    "county": "Penobscot",
+    "county_assignment_method": "source_county",
+    "measures": {
+      "EMO_REL_BBV": {
+        "measure_name": "The hospice team did |not| provide the right amount of emotional and spiritual support",
+        "score": 7,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_MBV": {
+        "measure_name": "",
+        "score": null,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "EMO_REL_TBV": {
+        "measure_name": "The hospice team provided the right amount of emotional and spiritual support",
+        "score": 93,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_BBV": {
+        "measure_name": "Caregivers rated the hospice agency a 6 or lower",
+        "score": 5,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_MBV": {
+        "measure_name": "Caregivers rated the hospice agency a 7 or 8",
+        "score": 9,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RATING_TBV": {
+        "measure_name": "Caregivers rated the hospice agency a 9 or 10",
+        "score": 86,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_BBV": {
+        "measure_name": "NO, they would probably not or definitely not recommend the hospice",
+        "score": 3,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_MBV": {
+        "measure_name": "YES, they would probably recommend the hospice",
+        "score": 4,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RECOMMEND_TBV": {
+        "measure_name": "YES, they would definitely recommend the hospice",
+        "score": 93,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_BBV": {
+        "measure_name": "The hospice team sometimes or never treated the patient with respect",
+        "score": 2,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_MBV": {
+        "measure_name": "The hospice team usually treated the patient with respect",
+        "score": 4,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "RESPECT_TBV": {
+        "measure_name": "The hospice team always treated the patient with respect",
+        "score": 94,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_BBV": {
+        "measure_name": "The patient sometimes or never got the help they needed for pain and symptoms",
+        "score": 12,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_MBV": {
+        "measure_name": "The patient usually got the help they needed for pain and symptoms",
+        "score": 11,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SYMPTOMS_TBV": {
+        "measure_name": "The patient always got the help they needed for pain and symptoms",
+        "score": 77,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_BBV": {
+        "measure_name": "The hospice team sometimes or never communicated well",
+        "score": 4,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_MBV": {
+        "measure_name": "The hospice team usually communicated well",
+        "score": 9,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TEAM_COMM_TBV": {
+        "measure_name": "The hospice team always communicated well",
+        "score": 87,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_BBV": {
+        "measure_name": "The hospice team sometimes or never provided timely help",
+        "score": 8,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_MBV": {
+        "measure_name": "The hospice team usually provided timely help",
+        "score": 12,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "TIMELY_CARE_TBV": {
+        "measure_name": "The hospice team always provided timely help",
+        "score": 80,
+        "star_rating": null,
+        "reporting_period": "07/01/2023-06/30/2025",
+        "source_dataset_id": "gxki-hrr8"
+      },
+      "SUMMARY_STAR_RATING": {
+        "measure_name": "Family caregiver survey rating",
+        "score": null,
+        "star_rating": 4,
+        "reporting_period": "04/01/2023-03/31/2025",
+        "source_dataset_id": "gxki-hrr8"
+      }
+    },
+    "source_type": "sourced_cms",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  }
+]
