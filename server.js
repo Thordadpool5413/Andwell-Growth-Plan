@@ -10,23 +10,24 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isDev = process.env.NODE_ENV !== "production";
 const PORT = process.env.PORT || 5000;
 
-const OPENAI_KEY = process.env.OPENAI_API_KEY;
-const OPENAI_BASE = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL || "https://api.openai.com/v1";
-const OPENAI_KEY_ACTUAL = process.env.AI_INTEGRATIONS_OPENAI_API_KEY || OPENAI_KEY;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const OPENAI_BASE_URL = process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
+const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
 const app = express();
 app.use(express.json({ limit: "32kb" }));
 
-const REPLIT_HOST_SUFFIXES = [".replit.dev", ".replit.app", ".repl.co"];
 const ALLOWED_HOSTS = new Set(
   [
     "localhost",
     "127.0.0.1",
     "0.0.0.0",
-    process.env.REPLIT_DEV_DOMAIN,
-    ...(process.env.REPLIT_DOMAINS || "").split(",").map((d) => d.trim()),
+    ...(process.env.ALLOWED_HOSTS || "").split(",").map((d) => d.trim()),
+    process.env.VERCEL_URL,
+    process.env.SUPABASE_URL ? new URL(process.env.SUPABASE_URL).hostname : null,
   ].filter(Boolean)
 );
+const ALLOWED_HOST_SUFFIXES = [".vercel.app", ".supabase.co"];
 
 function normalizeHost(hostHeader) {
   return (hostHeader || "").split(":")[0].toLowerCase();
@@ -34,7 +35,9 @@ function normalizeHost(hostHeader) {
 
 function isAllowedHost(hostHeader) {
   const bare = normalizeHost(hostHeader);
-  return Boolean(bare);
+  if (!bare) return false;
+  if (process.env.NODE_ENV === "production") return true;
+  return bare === "localhost" || bare === "127.0.0.1" || bare === "0.0.0.0" || ALLOWED_HOST_SUFFIXES.some((suffix) => bare.endsWith(suffix)) || [...ALLOWED_HOSTS].some((h) => bare === normalizeHost(h));
 }
 
 const SESSION_TOKENS = new Map();
@@ -145,8 +148,8 @@ function validateMessages(messages) {
 }
 
 app.post("/api/ai/chat", strictOriginCheck, tokenCheck, rateLimit, async (req, res) => {
-  if (!OPENAI_KEY_ACTUAL) {
-    res.status(503).json({ error: "AI not configured — add OPENAI_API_KEY to secrets." });
+  if (!OPENAI_API_KEY) {
+    res.status(503).json({ error: "AI not configured — set OPENAI_API_KEY in the deployment environment." });
     return;
   }
 
@@ -167,11 +170,11 @@ app.post("/api/ai/chat", strictOriginCheck, tokenCheck, rateLimit, async (req, r
     if (cmsTools.length && mod) {
       let toolRound = 0;
       while (toolRound < 2) {
-        const toolRes = await fetch(`${OPENAI_BASE}/chat/completions`, {
+        const toolRes = await fetch(`${OPENAI_BASE_URL}/chat/completions`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_KEY_ACTUAL}` },
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
           body: JSON.stringify({
-            model: "gpt-4o-mini",
+            model: OPENAI_MODEL,
             messages: chatMessages,
             tools: cmsTools,
             tool_choice: "auto",
@@ -202,14 +205,14 @@ app.post("/api/ai/chat", strictOriginCheck, tokenCheck, rateLimit, async (req, r
       }
     }
 
-    const upstream = await fetch(`${OPENAI_BASE}/chat/completions`, {
+    const upstream = await fetch(`${OPENAI_BASE_URL}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${OPENAI_KEY_ACTUAL}`,
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: OPENAI_MODEL,
         messages: chatMessages,
         stream: true,
         max_tokens: clampedTokens,
@@ -247,8 +250,8 @@ app.post("/api/ai/chat", strictOriginCheck, tokenCheck, rateLimit, async (req, r
 // AI + CMS function calling route
 // ──────────────────────────────────────────────
 app.post("/api/ai/cms-analyze", strictOriginCheck, tokenCheck, rateLimit, async (req, res) => {
-  if (!OPENAI_KEY_ACTUAL) {
-    res.status(503).json({ error: "AI not configured — add OPENAI_API_KEY to secrets." });
+  if (!OPENAI_API_KEY) {
+    res.status(503).json({ error: "AI not configured — set OPENAI_API_KEY in the deployment environment." });
     return;
   }
   const { question } = req.body;
@@ -277,18 +280,18 @@ app.post("/api/ai/cms-analyze", strictOriginCheck, tokenCheck, rateLimit, async 
     while (iterations < MAX_ITERATIONS) {
       iterations++;
       const body = {
-        model: "gpt-4o-mini",
+        model: OPENAI_MODEL,
         messages,
         max_tokens: 1000,
         tools: openaiTools.length ? openaiTools : undefined,
         tool_choice: openaiTools.length ? "auto" : undefined,
       };
 
-      const upstream = await fetch(`${OPENAI_BASE}/chat/completions`, {
+      const upstream = await fetch(`${OPENAI_BASE_URL}/chat/completions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${OPENAI_KEY_ACTUAL}`,
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
         },
         body: JSON.stringify(body),
       });
@@ -815,32 +818,10 @@ app.get("/api/cms/tools", strictOriginCheck, tokenCheck, async (req, res) => {
 // Vite / Static
 // ──────────────────────────────────────────────
 if (isDev) {
-  const replitDomains = (process.env.REPLIT_DOMAINS || "")
-    .split(",")
-    .map((domain) => domain.trim())
-    .filter(Boolean);
-  const replitHost = process.env.REPLIT_DEV_DOMAIN || replitDomains[0];
-
   const vite = await createViteServer({
     server: {
       middlewareMode: true,
-      hmr: replitHost
-        ? {
-            protocol: "wss",
-            host: replitHost,
-            clientPort: 443,
-          }
-        : true,
-      allowedHosts: [
-        "localhost",
-        "127.0.0.1",
-        "0.0.0.0",
-        ".replit.dev",
-        ".replit.app",
-        ".repl.co",
-        process.env.REPLIT_DEV_DOMAIN,
-        ...replitDomains,
-      ].filter(Boolean),
+      allowedHosts: [...ALLOWED_HOSTS].filter(Boolean),
     },
     appType: "spa",
   });

@@ -62,12 +62,3 @@ The CMS Geographic Variation dataset includes multiple years. The script auto-di
 curl "https://data.cms.gov/data-api/v1/dataset/6219697b-8f6c-4164-bed4-cd9317c58ebc/data?filter%5BBENE_GEO_LVL%5D%5Bvalue%5D=National&filter%5BBENE_AGE_LVL%5D%5Bvalue%5D=All&size=20" | node -e "const d=require('fs').readFileSync('/dev/stdin','utf8'); const j=JSON.parse(d); console.log([...new Set((j.data||j).map(r=>r.YEAR))].sort().join(', '))"
 ```
 
----
-
-## post-merge.sh — Post-Merge Setup
-
-Run automatically by the Replit platform after each task merge. Installs npm dependencies to keep the environment in sync after package changes.
-
-```bash
-bash scripts/post-merge.sh
-```
