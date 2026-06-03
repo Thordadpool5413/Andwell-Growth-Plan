@@ -125,6 +125,29 @@ function StatusBadge({ status }) {
 
 const SERVICE_OPTIONS = ["All", "Home Health", "Hospice"];
 const COUNTY_LIST = Object.keys(cmsCountyMarket);
+
+function buildSeededCmsCompetitors() {
+  const byName = new Map();
+  for (const row of namedProviderRows.filter((provider) => !provider.isAndwellCmsRecord)) {
+    const key = row.providerName.toLowerCase();
+    const current = byName.get(key) || {
+      id: key.replace(/[^a-z0-9]+/g, "-"),
+      name: row.providerName,
+      provider_type: row.service === "Hospice" ? "hospice" : "homehealth",
+      known_counties: [],
+      counties_raw: [],
+      match_status: "Bundled provider-file seed",
+      match_confidence: 0.8,
+      quality_snapshot_score: row.providerVolumeShare || 0.4,
+      estimated_beneficiaries: 0,
+    };
+    current.estimated_beneficiaries += row.beneficiaries || 0;
+    if (row.locationCounty && !current.known_counties.includes(row.locationCounty)) current.known_counties.push(row.locationCounty);
+    current.counties_raw = current.known_counties;
+    byName.set(key, current);
+  }
+  return [...byName.values()];
+}
 const SVC_LABELS = {
   "All":        ["Home Healthcare", "Hospice"],
   "Home Health":["Home Healthcare"],
@@ -144,7 +167,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
   const [selectedCounty,  setSelectedCounty]  = useState("Statewide");
   const [selectedService, setSelectedService] = useState("All");
 
-  const [cmsCompetitors, setCmsCompetitors] = useState([]);
+  const [cmsCompetitors, setCmsCompetitors] = useState(() => buildSeededCmsCompetitors());
   const [hhvbpData,      setHhvbpData]      = useState(null);
   const [qualityData,    setQualityData]    = useState(null);
   const [loading,        setLoading]        = useState(true);
@@ -167,7 +190,9 @@ export default function MarketDynamicsView({ setActiveTab }) {
         if (r1.ok) { const d = await r1.json(); setCmsCompetitors(d.competitors || []); }
         if (r2.ok) { const d = await r2.json(); setHhvbpData(d); }
         if (r3.ok) { const d = await r3.json(); setQualityData(d); }
-      } catch (_) {}
+      } catch (_) {
+        setCmsCompetitors((current) => current.length ? current : buildSeededCmsCompetitors());
+      }
       setLoading(false);
     })();
   }, []);
@@ -681,7 +706,7 @@ export default function MarketDynamicsView({ setActiveTab }) {
             ) : filteredVelocityRows.length === 0 ? (
               <div className="px-6 py-6 text-sm" style={{ color: textMute }}>
                 {velocityRows.length === 0
-                  ? "No competitor records found. Run a CMS sync to populate data."
+                  ? "Bundled competitor seed data is unavailable for this filter; choose Statewide or another service."
                   : `No competitors found in ${selectedCounty}. Showing statewide data — select a different county or choose Statewide.`}
               </div>
             ) : (

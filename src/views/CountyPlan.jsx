@@ -49,6 +49,27 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
         revenue: [0, 0, 0],
       })),
   ];
+  const countyMarket = selectedRecord.market;
+  const sourceMarket = selectedRecord.sourceMarket;
+  const countyProviders = selectedRecord.providers || [];
+  const topCountyProviders = countyProviders.slice(0, 4);
+  const qualityRows = selectedRecord.homeHealthAgencies || [];
+  const hhvbpRows = selectedRecord.hhvbp || [];
+  const hospiceRows = selectedRecord.hospiceProviders || [];
+  const hrsaRows = selectedRecord.hrsaHospiceFacilities || [];
+  const qualityStarRows = qualityRows.filter((row) => row.star_rating != null);
+  const avgQualityStar = qualityStarRows.length
+    ? qualityStarRows.reduce((sum, row) => sum + Number(row.star_rating), 0) / qualityStarRows.length
+    : null;
+  const hhvbpValues = hhvbpRows
+    .map((row) => row.total_performance_score ?? row.overall_rating_score ?? row.care_of_patients_score)
+    .filter((value) => value != null);
+  const hhvbpDisplay = hhvbpValues.length
+    ? hhvbpValues.reduce((sum, value) => sum + Number(value), 0) / hhvbpValues.length
+    : null;
+  const cmsMarketDetail = countyMarket
+    ? `HH users ${number(countyMarket.home_health_users)} · Hospice users ${number(countyMarket.hospice_users)}`
+    : "CMS PUF county row not bundled";
 
   const [aiText, setAiText] = useState("");
   const [aiGenerating, setAiGenerating] = useState(false);
@@ -212,6 +233,57 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
               color="indigo"
               sourceType={selected.basis && selected.basis.toLowerCase().includes("cms") ? "cms" : "modeled"}
             />
+          </div>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className={"rounded-2xl border p-4 " + (dark ? "border-slate-700 bg-slate-800/70" : "border-slate-200 bg-white")}>
+              <p className={"text-[10px] font-semibold uppercase tracking-[0.16em] " + (dark ? "text-slate-500" : "text-slate-400")}>CMS county market</p>
+              <p className={"mt-2 text-2xl font-bold tabular-nums " + (dark ? "text-slate-100" : "text-slate-900")}>{countyMarket?.ffs != null ? number(countyMarket.ffs) : sourceMarket?.ffs != null ? number(sourceMarket.ffs) : "Unavailable"}</p>
+              <p className={"mt-1 text-xs " + (dark ? "text-slate-400" : "text-slate-500")}>FFS beneficiaries · {cmsMarketDetail}</p>
+            </div>
+            <div className={"rounded-2xl border p-4 " + (dark ? "border-slate-700 bg-slate-800/70" : "border-slate-200 bg-white")}>
+              <p className={"text-[10px] font-semibold uppercase tracking-[0.16em] " + (dark ? "text-slate-500" : "text-slate-400")}>CMS providers</p>
+              <p className={"mt-2 text-2xl font-bold tabular-nums " + (dark ? "text-slate-100" : "text-slate-900")}>{number(qualityRows.length + hospiceRows.length)}</p>
+              <p className={"mt-1 text-xs " + (dark ? "text-slate-400" : "text-slate-500")}>{number(qualityRows.length)} home health · {number(hospiceRows.length)} hospice records</p>
+            </div>
+            <div className={"rounded-2xl border p-4 " + (dark ? "border-slate-700 bg-slate-800/70" : "border-slate-200 bg-white")}>
+              <p className={"text-[10px] font-semibold uppercase tracking-[0.16em] " + (dark ? "text-slate-500" : "text-slate-400")}>Quality / HHVBP</p>
+              <p className={"mt-2 text-2xl font-bold tabular-nums " + (dark ? "text-slate-100" : "text-slate-900")}>{avgQualityStar != null ? avgQualityStar.toFixed(1) + " stars" : hhvbpDisplay != null ? hhvbpDisplay.toFixed(1) : "Unavailable"}</p>
+              <p className={"mt-1 text-xs " + (dark ? "text-slate-400" : "text-slate-500")}>CMS quality and value-based purchasing seed data</p>
+            </div>
+            <div className={"rounded-2xl border p-4 " + (dark ? "border-slate-700 bg-slate-800/70" : "border-slate-200 bg-white")}>
+              <p className={"text-[10px] font-semibold uppercase tracking-[0.16em] " + (dark ? "text-slate-500" : "text-slate-400")}>HRSA facilities</p>
+              <p className={"mt-2 text-2xl font-bold tabular-nums " + (dark ? "text-slate-100" : "text-slate-900")}>{number(hrsaRows.length)}</p>
+              <p className={"mt-1 text-xs " + (dark ? "text-slate-400" : "text-slate-500")}>CMS-approved hospice facility layer records</p>
+            </div>
+          </div>
+
+          <div className={"mt-4 rounded-2xl border p-4 " + (dark ? "border-blue-900/40 bg-blue-950/20" : "border-blue-100 bg-blue-50")}>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className={"text-sm font-semibold " + (dark ? "text-blue-100" : "text-blue-950")}>Selected county data context</p>
+              <Badge tone={selectedRecord.inPlan ? "blue" : "slate"}>{selectedRecord.priority}</Badge>
+              <Badge tone="green">Bundled CMS/HRSA data</Badge>
+            </div>
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+              <div>
+                <p className={"text-xs font-semibold uppercase tracking-wide " + (dark ? "text-blue-300" : "text-blue-800")}>Top located provider rows</p>
+                <div className="mt-2 space-y-2">
+                  {topCountyProviders.length ? topCountyProviders.map((provider, i) => (
+                    <div key={provider.service + provider.providerName + i} className={"rounded-xl px-3 py-2 text-xs " + (dark ? "bg-slate-900/70 text-slate-300" : "bg-white text-slate-700")}>
+                      <span className="font-semibold">{provider.providerName}</span> · {provider.service} · {number(provider.beneficiaries)} beneficiaries
+                    </div>
+                  )) : (
+                    <p className={"text-xs " + (dark ? "text-blue-300/70" : "text-blue-700")}>No provider-file headquarters row is located in this county; service-area attribution may still exist in ZIP/facility data.</p>
+                  )}
+                </div>
+              </div>
+              <div>
+                <p className={"text-xs font-semibold uppercase tracking-wide " + (dark ? "text-blue-300" : "text-blue-800")}>Source notes</p>
+                <p className={"mt-2 text-xs leading-5 " + (dark ? "text-blue-200/80" : "text-blue-900/75")}>
+                  County market figures are sourced from bundled CMS public-use seed data where available. Provider, quality, HHVBP, hospice CAHPS, ZIP service-area, and HRSA hospice facility records are bundled in src/data/generated. Modeled referrals and revenue remain planning projections, not CMS facts.
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="mt-5 grid gap-4 md:grid-cols-2">

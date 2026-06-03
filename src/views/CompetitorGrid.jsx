@@ -4,6 +4,7 @@ import VerificationBadge from "../components/VerificationBadge.jsx";
 import CmsEvidenceCard from "../components/CmsEvidenceCard.jsx";
 import Badge from "../components/Badge.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
+import { namedProviderRows } from "../data/providers.js";
 
 async function getCmsToken() {
   try {
@@ -47,6 +48,24 @@ function QualityTrendIcon({ ccn, trendMap, dark }) {
     return <span className={`text-[10px] font-semibold ${dark ? "text-red-400" : "text-red-600"}`} title="Declining">↓</span>;
   }
   return null;
+}
+
+function buildSeededCompetitors(providerType) {
+  const service = providerType === "homehealth" ? "Home Healthcare" : providerType === "hospice" ? "Hospice" : null;
+  return namedProviderRows
+    .filter((row) => !row.isAndwellCmsRecord && (!service || row.service === service))
+    .map((row, index) => ({
+      id: `provider-file-${index}`,
+      name: row.providerName,
+      provider_type: row.service === "Hospice" ? "hospice" : "homehealth",
+      known_counties: row.locationCounty ? [row.locationCounty] : [],
+      counties_raw: row.locationCounty ? [row.locationCounty] : [],
+      match_status: "Bundled provider-file seed",
+      match_confidence: 0.8,
+      quality_snapshot_score: row.providerVolumeShare || null,
+      estimated_beneficiaries: row.beneficiaries || null,
+      source_type: "bundled_provider_file",
+    }));
 }
 
 const NATIONAL_CHAINS = [
@@ -246,7 +265,7 @@ function QualityScoreBar({ score, starRating, measureName, measureValue, nationa
         </div>
       )}
       {pct == null && (
-        <p className={`text-[9px] ${dark ? "text-slate-600" : "text-slate-400"}`}>Run CMS sync to populate</p>
+        <p className={`text-[9px] ${dark ? "text-slate-600" : "text-slate-400"}`}>Bundled seed unavailable</p>
       )}
     </div>
   );
@@ -651,7 +670,7 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, a
 
 export default function CompetitorGrid({ providerType = "hospice" }) {
   const { dark } = useDarkMode();
-  const [competitors, setCompetitors] = useState([]);
+  const [competitors, setCompetitors] = useState(() => buildSeededCompetitors(providerType));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState("all");
@@ -676,7 +695,7 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
         ]);
         if (!compRes.ok) throw new Error(compRes.statusText);
         const data = await compRes.json();
-        setCompetitors(data.competitors || []);
+        setCompetitors(data.competitors?.length ? data.competitors : buildSeededCompetitors(providerType));
         if (qualRes.ok) {
           const qualData = await qualRes.json();
           const best = pickBestMeasure(qualData.quality_measures || []);
@@ -750,7 +769,7 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
       {error && (
         <div className={`rounded-xl border p-6 ${dark ? "border-amber-800 bg-amber-950/50 text-amber-300" : "border-amber-200 bg-amber-50 text-amber-900"}`}>
           <p className="font-semibold">CMS data not yet synced</p>
-          <p className="mt-1 text-sm">Run a CMS sync from the CMS Data tab → CMS Data Connection → Sync & Crawl to populate competitor intelligence.</p>
+          <p className="mt-1 text-sm">Bundled provider-file data is available; live CMS matching can be refreshed by an admin using npm run refresh:cms-data.</p>
         </div>
       )}
 
@@ -780,7 +799,7 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
       {!loading && !error && (
         <div className={`rounded-xl border p-4 text-xs ${dark ? "border-slate-700 bg-slate-800/50 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-500"}`}>
           <p className="font-semibold mb-1">Data sources and limitations</p>
-          <p>CMS verification uses the CMS Provider Data Catalog (public, no key required). Website intelligence is extracted via server-side page crawling. Match confidence is based on name normalization and location scoring. "Needs Review" means no matching CMS record was found yet — it does not confirm the provider is not Medicare-certified. Run CMS Sync + Crawl to populate all columns.</p>
+          <p>CMS verification uses the CMS Provider Data Catalog (public, no key required). Website intelligence is extracted via server-side page crawling. Match confidence is based on name normalization and location scoring. "Needs Review" means no matching CMS record was found yet — it does not confirm the provider is not Medicare-certified. Bundled provider-file and CMS seed data populate the dashboard by default; admin refresh can update generated seed files.</p>
         </div>
       )}
     </div>

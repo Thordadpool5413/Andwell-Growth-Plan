@@ -10,28 +10,11 @@ async function getToken() {
   const now = Date.now();
   if (_cachedToken && now - _tokenFetchedAt < TOKEN_TTL_MS) return _cachedToken;
   const res = await fetch("/api/ai/token");
-  if (!res.ok) {
-    const body = await readJsonOrText(res);
-    throw new Error(body?.error || body?.details || `Could not obtain AI session token (${res.status}).`);
-  }
-  const { token } = await readJsonOrText(res);
-  if (!token) throw new Error("Could not obtain AI session token.");
+  if (!res.ok) throw new Error("Could not obtain AI session token.");
+  const { token } = await res.json();
   _cachedToken = token;
   _tokenFetchedAt = now;
   return token;
-}
-
-async function readJsonOrText(res) {
-  const contentType = res.headers.get("content-type") || "";
-  const text = await res.text();
-  if (contentType.includes("json")) {
-    try {
-      return JSON.parse(text);
-    } catch {
-      return { error: "The server returned malformed JSON." };
-    }
-  }
-  return { error: text.slice(0, 220) || `HTTP ${res.status}` };
 }
 
 export async function streamChat({ messages, onChunk, onDone, onError, signal }) {
@@ -48,7 +31,7 @@ export async function streamChat({ messages, onChunk, onDone, onError, signal })
     });
 
     if (!res.ok) {
-      const errJson = await readJsonOrText(res).catch(() => ({}));
+      const errJson = await res.json().catch(() => ({}));
       throw new Error(errJson.error || `AI error ${res.status}`);
     }
 
@@ -206,11 +189,25 @@ export function buildAskPrompt(question, rows, totals, intelMap = {}, selectedCo
     .join("\n");
 
   const dashboardContext = buildDashboardAiContext({ rows, totals, selectedCounty });
+  const selected = dashboardContext.selected_county || {};
+  const selectedMarket = selected.market || selected.sourceMarket || {};
+  const selectedProviderLines = [
+    ...(selected.homeHealthAgencies || []).slice(0, 5).map((provider) => `CMS home health: ${provider.provider_name} (${provider.ccn || "CCN unavailable"}) county=${provider.county || "unassigned"} star=${provider.star_rating ?? "unavailable"}`),
+    ...(selected.hospiceProviders || []).slice(0, 5).map((provider) => `CMS hospice: ${provider.provider_name} (${provider.ccn || "CCN unavailable"}) county=${provider.county || "unassigned"}`),
+    ...(selected.hrsaHospiceFacilities || []).slice(0, 5).map((facility) => `HRSA hospice facility: ${facility.facility_name} ${facility.city || ""} ${facility.zip_code || ""}`),
+  ].join("\n") || "No selected-county provider/facility rows available in bundled seed data.";
+  const compactSelectedCountyContext = `Selected county: ${selectedCounty}
+Priority: ${selected.priority || "Not in plan"}
+CMS market: FFS=${selectedMarket.ffs ?? "unavailable"}, HH users=${selectedMarket.home_health_users ?? selectedMarket.hh?.users ?? "unavailable"}, Hospice users=${selectedMarket.hospice_users ?? selectedMarket.hos?.users ?? "unavailable"}, HH providers=${selectedMarket.home_health_provider_count ?? selectedMarket.hh?.prov ?? "unavailable"}, Hospice providers=${selectedMarket.hospice_provider_count ?? selectedMarket.hos?.prov ?? "unavailable"}
+Provider/facility rows:
+${selectedProviderLines}
+Bundled source counts: homeHealth=${dashboardContext.data_sources?.sources?.homeHealthAgencies?.maine_records ?? "n/a"}, HHCAHPS=${dashboardContext.data_sources?.sources?.homeHealthHhcahpsProvider?.maine_records ?? "n/a"}, HHVBP=${dashboardContext.data_sources?.sources?.homeHealthHhvbpAgencyData?.maine_records ?? "n/a"}, hospiceProviders=${dashboardContext.data_sources?.sources?.hospiceGeneralInformation?.maine_records ?? "n/a"}, hospiceQuality=${dashboardContext.data_sources?.sources?.hospiceProviderData?.maine_records ?? "n/a"}, hospiceCAHPS=${dashboardContext.data_sources?.sources?.hospiceCahpsProviderData?.maine_records ?? "n/a"}, HRSA facilities=${dashboardContext.data_sources?.hrsa?.cmsApprovedHospices?.maine_records ?? "n/a"}`;
+
   return [
     {
       role: "system",
       content:
-        "You are a data analyst for the Andwell Maine home health and hospice expansion plan. Answer using only the provided dashboard context. Be specific with numbers. Clearly distinguish sourced CMS or HRSA public data, generated local seed data, modeled projections, and inferred strategy notes. If the requested fact is unavailable in the context, say the data is not available instead of inventing it. End your response by citing which data fields you used, prefixed with 'Data used:'.",
+        "You are a data analyst for the Andwell Maine home health and hospice expansion plan. Answer using only the provided dashboard context. Be specific with numbers. Clearly distinguish sourced CMS or HRSA public data, bundled local seed data, modeled projections, and inferred strategy notes. If a requested fact is unavailable in the context, say what specific source is missing. End your response by citing which data fields you used, prefixed with 'Data used:'.",
     },
     {
       role: "user",
@@ -224,11 +221,14 @@ Overall scenario totals:
 - Year 1 patient starts: ${totals.y1Starts}
 - Year 1 referrals needed: ${totals.y1Referrals}
 
-County breakdown (opp=opportunity score, threat=competitive threat, pen=market penetration):
+Selected county CMS/HRSA/provider context (sourced/bundled data):
+${compactSelectedCountyContext}
+
+County breakdown (modeled planning context; opp=opportunity score, threat=competitive threat, pen=market penetration):
 ${countyLines}
 
-Normalized dashboard data context:
-${JSON.stringify(dashboardContext).slice(0, 22000)}
+Broader normalized dashboard context summary:
+${JSON.stringify({ benchmarks: dashboardContext.benchmarks, counties: dashboardContext.counties }).slice(0, 12000)}
 
 Question: ${question}`,
     },
@@ -261,15 +261,14 @@ export async function callCmsAnalyze(question) {
     body: JSON.stringify({ question }),
   });
   if (!res.ok) {
-    const errJson = await readJsonOrText(res).catch(() => ({}));
+    const errJson = await res.json().catch(() => ({}));
     throw new Error(errJson.error || `CMS AI error ${res.status}`);
   }
-  return readJsonOrText(res);
+  return res.json();
 }
 
 export function buildMarketSummaryPrompt({ velocityRows, andwellDominance, amedisysCombinedShare, northernLight, totalCompetitors, nationalChainCount }) {
   const topCompetitors = velocityRows.slice(0, 5).map((r) =>
-    `• ${r.name}: momentum ${r.momentum}%, region ${r.primaryRegion}, status ${r.status}${r.national ? " (national chain)" : ""}, provider share ${r.providerShare != null ? (r.providerShare * 100).toFixed(1) + "%" : "N/A"}`
     `• ${r.name}: momentum ${r.momentum}%, region ${r.region}, status ${r.status}${r.national ? " (national chain)" : ""}, provider share ${r.providerShare != null ? (r.providerShare * 100).toFixed(1) + "%" : "N/A"}`
   ).join("\n");
 
@@ -290,7 +289,6 @@ Competitor landscape:
 - Total named competitors in CMS file: ${totalCompetitors}
 - National chain competitors: ${nationalChainCount}
 - Amedisys combined Maine share: ${amedisysCombinedShare > 0 ? (amedisysCombinedShare * 100).toFixed(1) + "%" : "active in Penobscot"}
-${northernLight ? `- Northern Light Home Care momentum score: ${northernLight.momentum}%, primary region: ${northernLight.primaryRegion}` : ""}
 ${northernLight ? `- Northern Light Home Care momentum score: ${northernLight.momentum}%, primary region: ${northernLight.region}` : ""}
 
 Top competitors by momentum score:
