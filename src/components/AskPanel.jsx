@@ -87,7 +87,7 @@ const SUGGESTED_QUESTIONS = {
 
 const SOURCE_FOOTNOTE = "Based on CMS 2022 PUF · Andwell planning assumptions · May 2026 model";
 
-export default function AskPanel({ rows, totals, activeTab }) {
+export default function AskPanel({ rows, totals, activeTab, selectedCounty }) {
   const { dark } = useDarkMode();
   const [open, setOpen] = useState(false);
   const [question, setQuestion] = useState("");
@@ -130,7 +130,7 @@ export default function AskPanel({ rows, totals, activeTab }) {
     setQuestion("");
 
     streamChat({
-      messages: buildAskPrompt(q, rows, totals, intelMap),
+      messages: buildAskPrompt(q, rows, totals, intelMap, selectedCounty),
       signal: controller.signal,
       onChunk: (_, full) => {
         setMessages((prev) => {
@@ -153,7 +153,7 @@ export default function AskPanel({ rows, totals, activeTab }) {
         setGenerating(false);
       },
     });
-  }, [rows, totals, intelMap, generating]);
+  }, [rows, totals, intelMap, selectedCounty, generating]);
 
   const handleAsk = useCallback(() => runQuery(question), [question, runQuery]);
 

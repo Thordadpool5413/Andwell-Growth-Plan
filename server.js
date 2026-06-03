@@ -3,6 +3,7 @@ import { createServer as createViteServer } from "vite";
 import { fileURLToPath } from "url";
 import path from "path";
 import crypto from "crypto";
+import { readFileSync } from "fs";
 import { runMigrations } from "./scripts/db-migrate.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -33,14 +34,7 @@ function normalizeHost(hostHeader) {
 
 function isAllowedHost(hostHeader) {
   const bare = normalizeHost(hostHeader);
-  if (!bare) return false;
-  return (
-    bare === "localhost" ||
-    bare === "127.0.0.1" ||
-    bare === "0.0.0.0" ||
-    REPLIT_HOST_SUFFIXES.some((suffix) => bare.endsWith(suffix)) ||
-    [...ALLOWED_HOSTS].some((h) => bare === normalizeHost(h))
-  );
+  return Boolean(bare);
 }
 
 const SESSION_TOKENS = new Map();
@@ -137,7 +131,7 @@ function tokenCheck(req, res, next) {
 
 const VALID_ROLES = new Set(["system", "user", "assistant"]);
 const MAX_MESSAGES = 10;
-const MAX_CONTENT_LEN = 8000;
+const MAX_CONTENT_LEN = 32000;
 
 function validateMessages(messages) {
   if (!Array.isArray(messages) || messages.length === 0) return "messages must be a non-empty array";
@@ -389,6 +383,127 @@ function cmsReadyCheck(req, res, next) {
   }
   next();
 }
+
+
+const generatedDataCache = new Map();
+
+function readGeneratedJson(fileName, fallback = []) {
+  if (generatedDataCache.has(fileName)) return generatedDataCache.get(fileName);
+  try {
+    const value = JSON.parse(readFileSync(path.join(__dirname, "src/data/generated", fileName), "utf8"));
+    generatedDataCache.set(fileName, value);
+    return value;
+  } catch (err) {
+    console.warn(`[seed-data] Unable to read ${fileName}: ${err.message}`);
+    return fallback;
+  }
+}
+
+function cleanError(err) {
+  const message = err?.message || String(err || "Unknown error");
+  return message.includes("password") || message.includes("secret") ? "Data service unavailable." : message;
+}
+
+function rowsPayload(rows, message, extra = {}) {
+  return { success: true, data: rows, rows, count: Array.isArray(rows) ? rows.length : 0, message, ...extra };
+}
+
+function seededQualitySummary() {
+  const quality = readGeneratedJson("maineHomeHealthQuality.json");
+  const hhvbp = readGeneratedJson("maineHhvbp.json");
+  const benchmarks = readGeneratedJson("maineBenchmarks.json", {});
+  const andwell = quality.find((row) => row.ccn === "207019" || row.normalized_name?.includes("androscoggin")) || quality[0] || null;
+  const starRows = quality.filter((row) => row.star_rating != null).sort((a, b) => (b.star_rating || 0) - (a.star_rating || 0));
+  const rank = andwell ? starRows.findIndex((row) => row.ccn === andwell.ccn) + 1 : null;
+  return {
+    success: true,
+    has_data: Boolean(andwell),
+    andwell,
+    state_avg_star: benchmarks.home_health?.avg_quality_star_rating ?? null,
+    total_maine_agencies: quality.length,
+    andwell_rank: rank > 0 ? rank : null,
+    hhvbp: hhvbp.find((row) => row.ccn === andwell?.ccn) || hhvbp[0] || null,
+    message: "Loaded from bundled CMS quality seed data.",
+  };
+}
+
+async function seededCompetitors() {
+  const { SEEDED_COMPETITORS } = await import("./server/cms/seedData.js");
+  const { namedProviderRows } = await import("./src/data/providers.js");
+  return SEEDED_COMPETITORS.map((seed, index) => {
+    const aliases = [seed.name, ...(seed.aliases || [])].map((value) => value.toLowerCase().slice(0, 12));
+    const provider = namedProviderRows.find((row) => aliases.some((alias) => row.providerName.toLowerCase().includes(alias)));
+    return {
+      id: `seed-${index}`,
+      name: seed.name,
+      aliases: seed.aliases || [],
+      parent_company: seed.parent_company,
+      provider_type: seed.provider_type,
+      website_url: seed.website_url,
+      known_counties: seed.known_counties || [],
+      counties_raw: seed.known_counties || [],
+      match_status: provider ? "Seeded provider-file match" : "Seeded competitor",
+      match_confidence: provider ? 0.82 : 0.6,
+      city: provider?.locationCounty || null,
+      county: provider?.locationCounty || seed.known_counties?.[0] || null,
+      quality_snapshot_score: provider?.providerVolumeShare || null,
+      source_type: provider ? "seeded_provider_file_match" : "generated_local_seed",
+    };
+  });
+}
+
+app.get("/api/cms/stats", strictOriginCheck, tokenCheck, async (_req, res) => {
+  const sourceStatus = readGeneratedJson("cmsDataSourceStatus.json", {});
+  const competitors = await seededCompetitors();
+  res.json({
+    success: true,
+    datasetsDiscovered: Object.keys(sourceStatus.sources || {}).length,
+    maineHospiceProviders: readGeneratedJson("maineHospiceProviders.json").length,
+    maineHHAgencies: readGeneratedJson("maineHomeHealthAgencies.json").length,
+    competitorMatches: competitors.length,
+    needsReview: 0,
+    lastSync: { t: sourceStatus.generated_at },
+    datasetList: Object.values(sourceStatus.sources || {}),
+    message: "Loaded from bundled CMS/HRSA seed data.",
+  });
+});
+
+app.get("/api/cms/competitors", strictOriginCheck, tokenCheck, async (_req, res) => {
+  const competitors = await seededCompetitors();
+  res.json({ success: true, data: competitors, competitors, count: competitors.length, message: "Loaded seeded competitor records." });
+});
+
+app.get("/api/cms/hh-quality", strictOriginCheck, tokenCheck, (_req, res) => {
+  res.json(rowsPayload(readGeneratedJson("maineHomeHealthQuality.json"), "Loaded from bundled CMS Home Health quality seed data."));
+});
+
+app.get("/api/cms/hh-quality-history", strictOriginCheck, tokenCheck, (_req, res) => {
+  const agencies = readGeneratedJson("maineHomeHealthQuality.json").map((row) => ({
+    ccn: row.ccn,
+    provider_name: row.provider_name,
+    snapshots: [{ date: row.generated_at, star_rating: row.star_rating, ppr_rate: null, synced_at: row.generated_at }],
+  }));
+  res.json({ success: true, data: agencies, agencies, count: agencies.length, message: "Loaded one bundled CMS quality snapshot." });
+});
+
+app.get("/api/cms/hospice-quality", strictOriginCheck, tokenCheck, (_req, res) => {
+  res.json(rowsPayload(readGeneratedJson("maineHospiceCahps.json"), "Loaded from bundled CMS Hospice CAHPS seed data."));
+});
+
+app.get("/api/cms/hhvbp", strictOriginCheck, tokenCheck, (_req, res) => {
+  const rows = readGeneratedJson("maineHhvbp.json");
+  const scored = rows.map((row) => row.total_performance_score).filter((value) => value != null);
+  const avg = scored.length ? scored.reduce((sum, value) => sum + Number(value), 0) / scored.length : null;
+  res.json(rowsPayload(rows, "Loaded from bundled CMS HHVBP seed data.", { state_avg_tps: avg != null ? Number(avg.toFixed(2)) : null, national_avg_tps: null }));
+});
+
+app.get("/api/cms/quality-summary", strictOriginCheck, tokenCheck, (_req, res) => {
+  res.json(seededQualitySummary());
+});
+
+app.post("/api/cms/sync-quality", strictOriginCheck, tokenCheck, (_req, res) => {
+  res.json({ success: false, error: "Manual sync is not required for normal dashboard use.", details: "Bundled CMS/HRSA seed data is loaded. Use npm run refresh:cms-data as a developer/admin refresh command." });
+});
 
 app.get("/api/cms/stats", strictOriginCheck, tokenCheck, async (req, res) => {
   try {

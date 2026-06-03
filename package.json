@@ -10,7 +10,8 @@
     "build": "vite build",
     "prestart": "node scripts/apply-replit-host-fix.mjs",
     "start": "NODE_ENV=production node server.js",
-    "preview": "vite preview --host 0.0.0.0"
+    "preview": "vite preview --host 0.0.0.0",
+    "refresh:cms-data": "node scripts/refresh-dashboard-data.js"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.19",

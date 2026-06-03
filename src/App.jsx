@@ -233,7 +233,7 @@ function Dashboard() {
 
         <div className="mx-auto max-w-7xl space-y-4">
           {/* ── Navigation ── */}
-          <div className="print:hidden sticky top-3 z-20 space-y-3">
+          <div className="print:hidden space-y-3">
             <div className={`overflow-x-auto rounded-2xl border px-1 py-1 ${dark ? "border-slate-700/60 bg-slate-900/85 backdrop-blur-sm" : "border-slate-200 bg-white/90 backdrop-blur-sm"} shadow-lg shadow-slate-900/5`}>
               <div className="flex items-stretch min-w-max px-2 py-1.5 gap-0" role="tablist" aria-label="Dashboard views">
                 {TAB_GROUPS.map((group, gi) => (
@@ -381,7 +381,7 @@ function Dashboard() {
         </div>
       </div>
 
-      <AskPanel rows={rows} totals={totals} activeTab={activeTab} />
+      <AskPanel rows={rows} totals={totals} activeTab={activeTab} selectedCounty={selectedCounty} />
 
       {/* ── Scenario sidebar toggle ── */}
       <button
