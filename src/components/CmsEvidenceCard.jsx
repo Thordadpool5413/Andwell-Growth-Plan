@@ -15,11 +15,23 @@ const TIER_CONFIG = {
     label: "CMS Only",
     tooltip: "Provider found and matched in the CMS certification database. Website verification was not available or did not complete.",
   },
-  "Needs Review": {
+  "CMS matched in bundled source data": {
+    badge: "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700/60",
+    dot: "bg-emerald-500",
+    label: "Bundled CMS match",
+    tooltip: "Provider identity was matched to bundled CMS source data by CCN or normalized provider name.",
+  },
+  "Bundled provider-file presence": {
+    badge: "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700/60",
+    dot: "bg-blue-400",
+    label: "Provider-file presence",
+    tooltip: "Provider appears in the bundled CMS provider file but no complete CMS provider profile was matched.",
+  },
+  "Source pending": {
     badge: "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-700/60",
     dot: "bg-amber-400",
-    label: "Unverified",
-    tooltip: "Provider has not yet been matched against the CMS database. Data reflects the raw provider file only — treat with caution.",
+    label: "Source pending",
+    tooltip: "The bundled provider-file row does not have a matched CMS profile in the current generated data.",
   },
   "Website Verified": {
     badge: "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700/60",
@@ -31,7 +43,8 @@ const TIER_CONFIG = {
 
 function TierBadge({ status }) {
   const [open, setOpen] = useState(false);
-  const cfg = TIER_CONFIG[status] || TIER_CONFIG["Needs Review"];
+  const safeStatus = status === "Needs Review" ? "Source pending" : status;
+  const cfg = TIER_CONFIG[safeStatus] || TIER_CONFIG["Source pending"];
 
   return (
     <span className="relative inline-flex">
@@ -64,13 +77,13 @@ export default function CmsEvidenceCard({ competitor, compact = false }) {
 
   if (!competitor) return null;
 
-  const status = competitor.match_status || "Needs Review";
+  const status = competitor.match_status || "Source pending";
   const hasWebData = competitor.crawl_status === "success";
-  const displayStatus = status;
+  const displayStatus = status === "Needs Review" ? "Source pending" : status;
 
   const border = displayStatus === "CMS Verified" || displayStatus === "CMS and Website Verified"
     ? dark ? "border-emerald-800/50" : "border-emerald-200"
-    : displayStatus === "Needs Review"
+    : displayStatus === "Source pending"
       ? dark ? "border-amber-800/50" : "border-amber-200"
       : dark ? "border-slate-700" : "border-slate-200";
 
@@ -153,7 +166,7 @@ export default function CmsEvidenceCard({ competitor, compact = false }) {
       <div className="mt-3 flex items-center justify-between">
         {competitor.last_synced_at && (
           <p className={`text-[10px] ${dark ? "text-slate-600" : "text-slate-400"}`}>
-            Synced {new Date(competitor.last_synced_at).toLocaleDateString()}
+            Generated {new Date(competitor.last_synced_at).toLocaleDateString()}
           </p>
         )}
         {competitor.match_confidence != null && (

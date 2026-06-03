@@ -4,7 +4,8 @@ import VerificationBadge from "../components/VerificationBadge.jsx";
 import CmsEvidenceCard from "../components/CmsEvidenceCard.jsx";
 import Badge from "../components/Badge.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
-import { namedProviderRows } from "../data/providers.js";
+import { getProviderIntelligenceRows } from "../data/dashboardData.js";
+import { classifyProvider } from "../data/andwell.js";
 
 async function getCmsToken() {
   try {
@@ -51,31 +52,37 @@ function QualityTrendIcon({ ccn, trendMap, dark }) {
 }
 
 function buildSeededCompetitors(providerType) {
-  const service = providerType === "homehealth" ? "Home Healthcare" : providerType === "hospice" ? "Hospice" : null;
-  return namedProviderRows
-    .filter((row) => !row.isAndwellCmsRecord && (!service || row.service === service))
-    .map((row, index) => ({
-      id: `provider-file-${index}`,
-      name: row.providerName,
-      provider_type: row.service === "Hospice" ? "hospice" : "homehealth",
-      known_counties: row.locationCounty ? [row.locationCounty] : [],
-      counties_raw: row.locationCounty ? [row.locationCounty] : [],
-      match_status: "Bundled provider-file seed",
-      match_confidence: 0.8,
-      quality_snapshot_score: row.providerVolumeShare || null,
-      estimated_beneficiaries: row.beneficiaries || null,
-      source_type: "bundled_provider_file",
-    }));
+  return getProviderIntelligenceRows({ service: providerType, includeAndwell: false }).map((row, index) => ({
+    id: row.id || `provider-file-${index}`,
+    name: row.provider_name,
+    provider_type: row.provider_type === "Hospice" ? "hospice" : "homehealth",
+    known_counties: row.county ? [row.county] : [],
+    counties_raw: row.county ? [row.county] : [],
+    match_status: row.ccn ? "CMS matched in bundled source data" : "Bundled provider-file presence",
+    match_confidence: row.confidence === "high" ? 0.95 : 0.75,
+    cms_certification_number: row.ccn,
+    certification_date: row.certification_date,
+    address: row.address,
+    city: row.city,
+    zip_code: row.zip_code,
+    classification: row.classification,
+    classification_confidence: row.classification_confidence,
+    quality_snapshot_score: row.hhcahpsEvidence?.recommend_pct != null ? row.hhcahpsEvidence.recommend_pct / 100 : row.quality_star_rating != null ? row.quality_star_rating / 5 : null,
+    quality_star_rating: row.quality_star_rating,
+    quality_measure_name: row.hhcahpsEvidence?.measure_name || row.hhvbpEvidence?.measure_name || row.hospiceCahpsMeasures?.[0]?.measure_name,
+    quality_measure_value: row.hhcahpsEvidence?.measure_value ?? row.hhvbpEvidence?.measure_value ?? row.hospiceCahpsMeasures?.[0]?.score,
+    quality_state_benchmark: row.hhcahpsEvidence?.state_benchmark ?? row.hhvbpEvidence?.state_benchmark,
+    estimated_beneficiaries: row.beneficiaries || null,
+    source_type: row.source_labels.join(" · "),
+    high_quality: row.high_quality,
+    high_quality_evidence: row.high_quality_evidence,
+    missing_reasons: row.missing_reasons,
+    services_raw: [row.provider_type],
+  }));
 }
 
-const NATIONAL_CHAINS = [
-  "Amedisys", "Gentiva", "Kindred", "Compassus", "Constellation",
-  "LHC Group", "Centerwell", "Enhabit", "Bayada", "Elara Caring",
-];
-
 function isNationalChain(comp) {
-  const haystack = `${comp.name || ""} ${comp.parent_company || ""}`;
-  return NATIONAL_CHAINS.some((nc) => haystack.toLowerCase().includes(nc.toLowerCase()));
+  return (comp.classification || classifyProvider({ provider_name: comp.name, parent_company: comp.parent_company }).classification) === "National chain";
 }
 
 function resolveCounties(c) {
@@ -83,6 +90,15 @@ function resolveCounties(c) {
   if (c.known_counties?.length) return c.known_counties;
   if (c.county) return [c.county];
   return [];
+}
+
+function mergeBundledEvidence(competitors, providerType) {
+  const bundled = buildSeededCompetitors(providerType);
+  return competitors.map((competitor) => {
+    const normalized = (competitor.name || "").toLowerCase().slice(0, 14);
+    const match = bundled.find((row) => row.name.toLowerCase().includes(normalized) || normalized.includes(row.name.toLowerCase().slice(0, 14)));
+    return match ? { ...match, ...competitor, source_type: competitor.source_type || match.source_type } : competitor;
+  });
 }
 
 const SORT_KEYS = [
@@ -318,7 +334,7 @@ function SortableMatrix({ competitors, dark, providerType }) {
   const cmsStatus = (c) => {
     if (c.match_status === "CMS Verified" || c.match_status === "CMS and Website Verified") return "Verified";
     if (c.match_status === "Not Verified by CMS") return "Not verified";
-    return "Needs review";
+    return "Source pending";
   };
 
   return (
@@ -349,7 +365,7 @@ function SortableMatrix({ competitors, dark, providerType }) {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <VerificationBadge status={comp.match_status || "Needs Review"} size="xs" />
+                    <VerificationBadge status={comp.match_status || "Source pending"} size="xs" />
                   </td>
                   <td className={`px-4 py-3 ${dark ? "text-slate-300" : "text-slate-700"}`}>
                     {comp.match_confidence != null ? `${Math.round(comp.match_confidence * 100)}%` : "—"}
@@ -493,13 +509,13 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, a
 
   const getCompValue = (comp, dim) => {
     const national = isNationalChain(comp);
-    const status = comp.match_status || "Needs Review";
+    const status = comp.match_status || "Source pending";
     const countiesList = resolveCounties(comp);
     const counties = countiesList.length;
     const services = comp.services_raw?.length || 0;
     switch (dim.key) {
       case "ccn": return comp.cms_certification_number || "—";
-      case "certification_date": return "—";
+      case "certification_date": return comp.certification_date || "Unavailable: certification date not present in matched bundled profile";
       case "hospice_cert": return hasHospiceCertC(comp) ? "Yes" : "—";
       case "hh_cert": return hasHHCertC(comp) ? "Yes" : "—";
       case "national_chain": return national ? "Yes" : "No";
@@ -565,7 +581,7 @@ function ComparisonColumns({ competitors, dark, providerType, page, PAGE_SIZE, a
         {paged.map((comp) => {
           const national = isNationalChain(comp);
           const expanded = expandedId === (comp.id || comp.name);
-          const status = comp.match_status || "Needs Review";
+          const status = comp.match_status || "Source pending";
           const borderCls = status === "CMS Verified" || status === "CMS and Website Verified"
             ? dark ? "border-emerald-800/40" : "border-emerald-200"
             : dark ? "border-slate-700" : "border-slate-200";
@@ -695,7 +711,7 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
         ]);
         if (!compRes.ok) throw new Error(compRes.statusText);
         const data = await compRes.json();
-        setCompetitors(data.competitors?.length ? data.competitors : buildSeededCompetitors(providerType));
+        setCompetitors(data.competitors?.length ? mergeBundledEvidence(data.competitors, providerType) : buildSeededCompetitors(providerType));
         if (qualRes.ok) {
           const qualData = await qualRes.json();
           const best = pickBestMeasure(qualData.quality_measures || []);
@@ -711,11 +727,10 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
 
   const filtered = useMemo(() => {
     return competitors.filter((c) => {
-      if (filter === "verified") return c.match_status === "CMS Verified" || c.match_status === "CMS and Website Verified";
-      if (filter === "review") return !c.match_status || c.match_status === "Needs Review";
+      if (filter === "verified") return c.cms_certification_number || c.match_status === "CMS Verified" || c.match_status === "CMS and Website Verified" || c.match_status === "CMS matched in bundled source data";
       if (filter === "national") return isNationalChain(c);
       if (filter === "regional") return !isNationalChain(c);
-      if (filter === "high_quality") return c.quality_snapshot_score != null && c.quality_snapshot_score >= 0.8;
+      if (filter === "high_quality") return c.high_quality || c.quality_star_rating >= 4 || (c.quality_snapshot_score != null && c.quality_snapshot_score >= 0.8);
       const ptFilter = providerType === "hospice" ? ["hospice", "both"] : ["homehealth", "both"];
       if (filter === "type") return ptFilter.includes(c.provider_type);
       return true;
@@ -727,17 +742,16 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
   return (
     <div className="space-y-4">
       <SectionHeader eyebrow="Andwell comparison grid" title="Competitor intelligence matrix">
-        CMS-verified competitor data cross-referenced with website intelligence. Sort by column, filter by status, or switch to column view for a side-by-side Andwell comparison. Run a CMS Sync (CMS Data tab) to populate live certification data.
+        Provider-file competitors cross-referenced with bundled CMS, HHCAHPS, HHVBP, Hospice CAHPS, and HRSA evidence where available. Share values are provider-file presence proxies, not county market share.
       </SectionHeader>
 
       <div className="flex flex-wrap items-center gap-2">
         {[
           { id: "all", label: `All (${competitors.length})` },
           { id: "verified", label: "CMS Verified" },
-          { id: "review", label: "Needs Review" },
           { id: "national", label: "National chains" },
           { id: "regional", label: "Regional" },
-          { id: "high_quality", label: "High quality (≥80%)" },
+          { id: "high_quality", label: "High quality" },
         ].map((f) => (
           <button
             key={f.id}
@@ -768,8 +782,8 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
 
       {error && (
         <div className={`rounded-xl border p-6 ${dark ? "border-amber-800 bg-amber-950/50 text-amber-300" : "border-amber-200 bg-amber-50 text-amber-900"}`}>
-          <p className="font-semibold">CMS data not yet synced</p>
-          <p className="mt-1 text-sm">Bundled provider-file data is available; live CMS matching can be refreshed by an admin using npm run refresh:cms-data.</p>
+          <p className="font-semibold">Bundled provider evidence is available</p>
+          <p className="mt-1 text-sm">Some live CMS tool evidence could not be loaded, so the grid is using bundled CMS/provider-file records and precise missing-match notes.</p>
         </div>
       )}
 
@@ -799,7 +813,7 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
       {!loading && !error && (
         <div className={`rounded-xl border p-4 text-xs ${dark ? "border-slate-700 bg-slate-800/50 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-500"}`}>
           <p className="font-semibold mb-1">Data sources and limitations</p>
-          <p>CMS verification uses the CMS Provider Data Catalog (public, no key required). Website intelligence is extracted via server-side page crawling. Match confidence is based on name normalization and location scoring. "Needs Review" means no matching CMS record was found yet — it does not confirm the provider is not Medicare-certified. Bundled provider-file and CMS seed data populate the dashboard by default; admin refresh can update generated seed files.</p>
+          <p>CMS verification uses bundled CMS Provider Data source files and exact or normalized provider matching. Missing fields identify the specific missing match, such as no CCN, no HHCAHPS record, no HHVBP record, no Hospice CAHPS record, or no HRSA facility record. Provider-file presence is not county-attributed claims market share.</p>
         </div>
       )}
     </div>

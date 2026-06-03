@@ -1,5 +1,4 @@
 import React from "react";
-import Sparkline from "./Sparkline.jsx";
 import { useDarkMode } from "./DarkModeContext.jsx";
 
 const ACCENT_MAP = {
@@ -65,7 +64,6 @@ export default function Metric({ label, value, detail, sparkData, sparkColor, co
     >
       <div className="flex items-start justify-between gap-2">
         <p className={`text-[11px] font-semibold leading-snug uppercase tracking-[0.12em] ${dark ? "text-slate-400" : "text-slate-500"}`}>{label}</p>
-        {sparkData && <Sparkline data={sparkData} color={sparkColor} />}
       </div>
       <div className="mt-2 flex items-baseline gap-2">
         <p className={`text-2xl font-bold tabular-nums ${dark ? "text-slate-100" : "text-slate-900"}`}>{value}</p>

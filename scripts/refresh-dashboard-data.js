@@ -110,6 +110,7 @@ function normalizeName(name) {
 
 function countyFromZip(zip) {
   const z = String(zip || "").padStart(5, "0").slice(0, 5);
+  if (["04901", "04903", "04917", "04937"].includes(z)) return "Kennebec";
   const hit = ZIP_TO_COUNTY_PREFIXES.find(([pattern]) => pattern.test(z));
   return hit?.[1] || null;
 }
@@ -120,9 +121,9 @@ function assignCounty(row) {
     const county = String(rawCounty).replace(/\s+County$/i, "").trim();
     if (Object.values(COUNTY_BY_FIPS).includes(county)) return { county, countyAssignmentMethod: "source_county" };
   }
-  const zipCounty = countyFromZip(row.zip_code || row.zip || row.provider_zip || row.ZIP);
+  const zipCounty = countyFromZip(row.zip_code || row.zip || row.provider_zip || row.ZIP || row.CMS_PROVIDER_ZIP_CD);
   if (zipCounty) return { county: zipCounty, countyAssignmentMethod: "zip_prefix" };
-  const city = String(row.citytown || row.city || row.provider_city || row.CITY || "").trim().toUpperCase();
+  const city = String(row.citytown || row.city || row.provider_city || row.CITY || row.CMS_PROVIDER_CITY || "").trim().toUpperCase();
   if (CITY_TO_COUNTY[city]) return { county: CITY_TO_COUNTY[city], countyAssignmentMethod: "city_lookup" };
   return { county: null, countyAssignmentMethod: "unassigned" };
 }

@@ -133,7 +133,7 @@ Computed metrics:
 - FFS beneficiaries: ${intel?.ffs?.toLocaleString() ?? "N/A"}
 - Provider landscape: ${providerLandscape.counts?.homeHealth ?? 0} CMS home health records, ${providerLandscape.counts?.hospice ?? 0} CMS hospice records, ${providerLandscape.counts?.hrsa ?? 0} HRSA hospice facilities
 - Provider classification counts: ${JSON.stringify(providerLandscape.byClassification || {})}
-- Quality: avg HH star=${quality.avgHomeHealthStar ?? "unavailable"}, avg HHVBP=${quality.avgHhvbpScore ?? "unavailable"}, avg hospice CAHPS=${quality.avgHospiceCahpsScore ?? "unavailable"}
+- Quality: avg HH star=${quality.avgHomeHealthStar ?? "unavailable"}, avg HHCAHPS star=${quality.avgHhcahpsStar ?? "unavailable"}, avg HHCAHPS recommend=${quality.avgHhcahpsRecommend ?? "unavailable"}, avg HHVBP=${quality.avgHhvbpScore ?? "unavailable"}, avg hospice CAHPS=${quality.avgHospiceCahpsScore ?? "unavailable"}
 - Best available quality record: ${quality.bestScore ? `${quality.bestScore.provider} ${quality.bestScore.score} (${quality.bestScore.source})` : "unavailable"}
 - Lowest available quality record: ${quality.lowestScore ? `${quality.lowestScore.provider} ${quality.lowestScore.score} (${quality.lowestScore.source})` : "unavailable"}
 - Missing data notes: ${(quality.missingNotes || []).join("; ") || "none"}
@@ -148,7 +148,7 @@ export function buildBoardNarrativePrompt(countyStatus, totals) {
   const countyLines = top5
     .map(
       (c) =>
-        `• ${c.county}: opportunity score ${c.oppScore}/100 (${c.oppTier}), Y1 revenue $${Math.round(c.y1Rev).toLocaleString()}, competitive threat ${c.threatScore}/100 (${c.threatLevel}), priority ${c.launchGroup}`,
+        `• ${c.county}: opportunity score ${c.oppScore}/100, Y1 revenue $${Math.round(c.y1Rev).toLocaleString()}, competitive threat ${c.threatScore}/100 (${c.threatLevel}), launch group ${c.launchGroup}`,
     )
     .join("\n");
 
@@ -193,7 +193,6 @@ export function buildAskPrompt(question, rows, totals, intelMap = {}, selectedCo
       const service = cr.map((r) => r.service).join(", ");
       const intel = intelMap[county];
       const oppScore = intel?.opportunityScore?.score ?? "N/A";
-      const oppTier = intel?.opportunityScore?.tier ?? "N/A";
       const threatScore = intel?.threat?.score ?? "N/A";
       const threatLevel = intel?.threat?.level ?? "N/A";
       const pen = intel?.penetration;
@@ -202,7 +201,7 @@ export function buildAskPrompt(question, rows, totals, intelMap = {}, selectedCo
         const perStart = r.service === "Home Healthcare" ? 1 / 35 : r.service === "Hospice" ? 1 / 12 : 1 / 40;
         return s + Math.ceil(r.starts[0] * perStart);
       }, 0);
-      return `${county} (${launchGroup}): services=${service} | opp=${oppScore}/100 (${oppTier}) | threat=${threatScore}/100 (${threatLevel}) | Y1 pen=${y1Pen} | Y1 rev=$${Math.round(y1Rev).toLocaleString()} Y2=$${Math.round(y2Rev).toLocaleString()} Y3=$${Math.round(y3Rev).toLocaleString()} | Y1 starts=${y1Starts} Y3=${y3Starts} | Y1 referrals=${y1Referrals} | Y1 FTEs=${y1FTE}`;
+      return `${county} (${launchGroup}): services=${service} | opp=${oppScore}/100 | threat=${threatScore}/100 (${threatLevel}) | Y1 pen=${y1Pen} | Y1 rev=$${Math.round(y1Rev).toLocaleString()} Y2=$${Math.round(y2Rev).toLocaleString()} Y3=$${Math.round(y3Rev).toLocaleString()} | Y1 starts=${y1Starts} Y3=${y3Starts} | Y1 referrals=${y1Referrals} | Y1 FTEs=${y1FTE}`;
     })
     .join("\n");
 
@@ -214,6 +213,7 @@ export function buildAskPrompt(question, rows, totals, intelMap = {}, selectedCo
   const providerLandscape = selected.providerLandscape || {};
   const selectedProviderLines = [
     ...(selected.homeHealthAgencies || []).slice(0, 5).map((provider) => `CMS home health: ${provider.provider_name} (${provider.ccn || "CCN unavailable"}) county=${provider.county || "unassigned"} star=${provider.star_rating ?? "unavailable"}`),
+    ...(selected.quality?.hhcahps || []).slice(0, 5).map((provider) => `CMS HHCAHPS: ${provider.provider_name} (${provider.ccn || "CCN unavailable"}) summary_star=${provider.summary_star_rating ?? "unavailable"} recommend=${provider.recommend_pct ?? "unavailable"} source=${provider.source_dataset_id || "ccn4-8vby"}`),
     ...(selected.hospiceProviders || []).slice(0, 5).map((provider) => `CMS hospice: ${provider.provider_name} (${provider.ccn || "CCN unavailable"}) county=${provider.county || "unassigned"}`),
     ...(selected.hhvbp || []).slice(0, 5).map((provider) => `CMS HHVBP: ${provider.provider_name} (${provider.ccn || "CCN unavailable"}) display_score=${provider.display_score?.toFixed?.(1) ?? "unavailable"} payment_year=${provider.payment_year || "unavailable"}`),
     ...(selected.hrsaHospiceFacilities || []).slice(0, 5).map((facility) => `HRSA hospice facility: ${facility.facility_name} ${facility.city || ""} ${facility.zip_code || ""}`),
@@ -226,7 +226,7 @@ Priority: ${selected.priority || "Not in plan"}
 CMS market: FFS=${selectedMarket.ffs ?? "unavailable"}, HH users=${selectedMarket.home_health_users ?? selectedMarket.hh?.users ?? "unavailable"}, Hospice users=${selectedMarket.hospice_users ?? selectedMarket.hos?.users ?? "unavailable"}, HH providers=${selectedMarket.home_health_provider_count ?? selectedMarket.hh?.prov ?? "unavailable"}, Hospice providers=${selectedMarket.hospice_provider_count ?? selectedMarket.hos?.prov ?? "unavailable"}
 Map metrics: demand=${mapMetrics.demand ?? "unavailable"}, revenue=${mapMetrics.revenue ?? "unavailable"}, competition_density=${mapMetrics.competitionDensity ?? "unavailable"}, market_penetration_pct=${mapMetrics.marketPenetration ?? "unavailable"}, all_providers=${mapMetrics.allProviders ?? "unavailable"}
 Provider classification counts: ${JSON.stringify(providerLandscape.byClassification || {})}
-Quality summary: avg_hh_star=${quality.avgHomeHealthStar ?? "unavailable"}, avg_hhvbp_score=${quality.avgHhvbpScore ?? "unavailable"}, avg_hospice_cahps=${quality.avgHospiceCahpsScore ?? "unavailable"}, best=${quality.bestScore ? `${quality.bestScore.provider} ${quality.bestScore.score} ${quality.bestScore.source}` : "unavailable"}, missing=${(quality.missingNotes || []).join(" | ") || "none"}
+Quality summary: avg_hh_star=${quality.avgHomeHealthStar ?? "unavailable"}, avg_hhcahps_star=${quality.avgHhcahpsStar ?? "unavailable"}, avg_hhcahps_recommend=${quality.avgHhcahpsRecommend ?? "unavailable"}, avg_hhvbp_score=${quality.avgHhvbpScore ?? "unavailable"}, avg_hospice_cahps=${quality.avgHospiceCahpsScore ?? "unavailable"}, best=${quality.bestScore ? `${quality.bestScore.provider} ${quality.bestScore.score} ${quality.bestScore.source}` : "unavailable"}, missing=${(quality.missingNotes || []).join(" | ") || "none"}
 Provider/facility rows:
 ${selectedProviderLines}
 Bundled source counts: homeHealth=${dashboardContext.data_sources?.sources?.homeHealthAgencies?.maine_records ?? "n/a"}, HHCAHPS=${dashboardContext.data_sources?.sources?.homeHealthHhcahpsProvider?.maine_records ?? "n/a"}, HHVBP=${dashboardContext.data_sources?.sources?.homeHealthHhvbpAgencyData?.maine_records ?? "n/a"}, hospiceProviders=${dashboardContext.data_sources?.sources?.hospiceGeneralInformation?.maine_records ?? "n/a"}, hospiceQuality=${dashboardContext.data_sources?.sources?.hospiceProviderData?.maine_records ?? "n/a"}, hospiceCAHPS=${dashboardContext.data_sources?.sources?.hospiceCahpsProviderData?.maine_records ?? "n/a"}, HRSA facilities=${dashboardContext.data_sources?.hrsa?.cmsApprovedHospices?.maine_records ?? "n/a"}`;

@@ -174,7 +174,7 @@ export default function CmsDataPanel() {
               <div className="flex flex-wrap gap-2">
                 {stats.matchStatusBreakdown.map((row) => (
                   <div key={row.match_status} className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs ${dark ? "bg-slate-700/40" : "bg-slate-50"}`}>
-                    <span className={`h-2 w-2 rounded-full ${row.match_status?.includes("Verified") ? "bg-emerald-500" : row.match_status === "Needs Review" ? "bg-amber-400" : "bg-slate-400"}`} />
+                    <span className={`h-2 w-2 rounded-full ${row.match_status?.includes("Verified") ? "bg-emerald-500" : row.match_status ? "bg-amber-400" : "bg-slate-400"}`} />
                     <span className={dark ? "text-slate-300" : "text-slate-700"}>{row.match_status || "Unknown"}</span>
                     <span className={`font-semibold tabular-nums ${dark ? "text-white" : "text-slate-950"}`}>{row.c}</span>
                   </div>
@@ -237,7 +237,7 @@ export default function CmsDataPanel() {
           {!loadingComps && competitors.length === 0 && (
             <div className={`rounded-xl border p-6 text-center ${dark ? "border-amber-800 bg-amber-950/20" : "border-amber-200 bg-amber-50"}`}>
               <p className={`text-sm font-semibold ${dark ? "text-amber-300" : "text-amber-900"}`}>No competitor records yet</p>
-              <p className={`mt-1 text-xs ${dark ? "text-amber-400" : "text-amber-700"}`}>Run a CMS Sync from the Sync & Crawl tab to populate data.</p>
+              <p className={`mt-1 text-xs ${dark ? "text-amber-400" : "text-amber-700"}`}>No CMS records are available for this admin view. Use the developer refresh workflow if this data must be regenerated.</p>
             </div>
           )}
           {!loadingComps && competitors.map((comp) => (
@@ -249,7 +249,7 @@ export default function CmsDataPanel() {
                     {comp.provider_type} {comp.parent_company ? `· ${comp.parent_company}` : ""}
                   </p>
                 </div>
-                <VerificationBadge status={comp.match_status || "Needs Review"} />
+                <VerificationBadge status={comp.match_status || "Source pending"} />
               </div>
               <div className="mt-3 grid grid-cols-3 gap-3 text-xs">
                 <div>

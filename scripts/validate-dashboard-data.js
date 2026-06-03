@@ -7,7 +7,9 @@ import {
   buildDashboardAiContext,
   dashboardData,
   getCountyDashboardRecord,
+  getHighQualityProviders,
   getMapMetricValue,
+  getProviderProfileByCcn,
   getReferralSummary,
   getRevenueMix,
 } from "../src/data/dashboardData.js";
@@ -43,6 +45,12 @@ assert(hospiceCcns.size === dashboardData.hospiceProviders.filter((row) => row.c
 
 const linkedHhvbp = dashboardData.hhvbp.filter((row) => row.ccn && homeHealthCcns.has(row.ccn));
 assert(linkedHhvbp.length > 0, "No HHVBP records link to home health agencies by CCN.");
+const linkedHhcahps = dashboardData.hhcahps.filter((row) => row.ccn && homeHealthCcns.has(row.ccn));
+assert(linkedHhcahps.length > 0, "No HHCAHPS records link to home health agencies by CCN.");
+const assignedHrsa = dashboardData.hrsaHospiceFacilities.filter((row) => row.county);
+assert(assignedHrsa.length > 0, "No HRSA hospice facilities have a county assignment.");
+assert(getProviderProfileByCcn("207019")?.hhcahps, "Andwell provider profile is missing HHCAHPS evidence.");
+assert(getHighQualityProviders({ service: "homehealth" }).length > 0, "High quality provider selector returned no home health evidence.");
 
 const referralSummary = getReferralSummary(rows);
 assert(referralSummary.totals.referrals > 0, "Referral model produced no Year 1 referrals.");
@@ -64,6 +72,8 @@ console.log(JSON.stringify({
   homeHealthAgencies: dashboardData.homeHealthAgencies.length,
   hospiceProviders: dashboardData.hospiceProviders.length,
   linkedHhvbp: linkedHhvbp.length,
+  linkedHhcahps: linkedHhcahps.length,
+  assignedHrsa: assignedHrsa.length,
   referralRows: referralSummary.byCounty.length,
   revenueServiceLines: revenueMix.byService.length,
 }, null, 2));

@@ -298,7 +298,7 @@ function Dashboard() {
               aria-labelledby={`tab-${activeTab.replace(/\s+/g, "-").toLowerCase()}`}
             >
               {activeTab === "Executive View" && <ExecutiveView rows={rows} totals={totals} />}
-              {activeTab === "County Plan" && <CountyPlan rows={rows} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} competitorProviderType={competitorProviderType} setCompetitorProviderType={setCompetitorProviderType} mapLayer={mapLayer} setMapLayer={setMapLayer} />}
+              {activeTab === "County Plan" && <CountyPlan rows={rows} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} mapLayer={mapLayer} setMapLayer={setMapLayer} />}
               {activeTab === "Referral Plan" && <ReferralPlan rows={rows} />}
               {activeTab === "Competitive View" && <CompetitiveView selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} competitorProviderType={competitorProviderType} setCompetitorProviderType={setCompetitorProviderType} />}
               {activeTab === "Market Dynamics" && <MarketDynamicsView setActiveTab={setActiveTab} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} />}

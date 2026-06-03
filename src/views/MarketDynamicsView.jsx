@@ -276,12 +276,10 @@ export default function MarketDynamicsView({ setActiveTab, selectedCounty: appSe
       (r) => r.locationCounty === selectedCounty && svcs.includes(r.service)
     );
 
-    const andwellCountyShare = countyRows
-      .filter((r) => r.isAndwellCmsRecord)
-      .reduce((s, r) => s + r.providerVolumeShare, 0);
     const compCountyShare = countyRows
       .filter((r) => !r.isAndwellCmsRecord)
       .reduce((s, r) => s + r.providerVolumeShare, 0);
+    const andwellServiceShare = selectedService === "Hospice" ? hosSummary.andwellShare || 0 : selectedService === "Home Health" ? hhSummary.andwellShare || 0 : statewideAndwellDominance;
 
     const hhUsers  = svcs.includes("Home Healthcare") ? (mkt.hh?.users  ?? 0) : 0;
     const hosUsers = svcs.includes("Hospice")         ? (mkt.hos?.users ?? 0) : 0;
@@ -293,7 +291,7 @@ export default function MarketDynamicsView({ setActiveTab, selectedCounty: appSe
     const hhRate = svcs.includes("Home Healthcare") ? (mkt.hh?.rate ?? null) : null;
 
     return {
-      andwellDominance: andwellCountyShare,
+      andwellDominance: andwellServiceShare,
       competitionShare: compCountyShare,
       velocityPct: hhRate != null ? Math.round(hhRate * 100 * 100) / 10 : null,
       totalUsers,
@@ -301,7 +299,7 @@ export default function MarketDynamicsView({ setActiveTab, selectedCounty: appSe
       ffs: mkt.ffs,
       mkt,
     };
-  }, [selectedCounty, selectedService]);
+  }, [selectedCounty, selectedService, hhSummary, hosSummary, statewideAndwellDominance, activeSvcLabels]);
 
   /* derived KPI values — county overrides statewide when available */
   const isCountyView = selectedCounty !== "Statewide";
@@ -397,11 +395,11 @@ export default function MarketDynamicsView({ setActiveTab, selectedCounty: appSe
     (r.provider_name || "").toLowerCase().includes("androscoggin"));
 
   const hcahpsRank = andwellQuality?.star_rating
-    ? `${parseFloat(andwellQuality.star_rating).toFixed(1)}★`
-    : "Top 4%";
+    ? `${parseFloat(andwellQuality.star_rating).toFixed(1)} quality stars`
+    : "Unavailable";
   const vbpAdj     = andwellHhvbp?.payment_adjustment_pct
     ? `${andwellHhvbp.payment_adjustment_pct > 0 ? "+" : ""}${parseFloat(andwellHhvbp.payment_adjustment_pct).toFixed(2)}%`
-    : "+1.85%";
+    : "Unavailable";
 
   const displayConfidence = dataConfidence ?? (loading ? null : 98);
 
@@ -442,7 +440,7 @@ export default function MarketDynamicsView({ setActiveTab, selectedCounty: appSe
       nationalChainCount
     );
     return () => { aiAbortRef.current?.abort(); };
-  }, [loading]);
+  }, [loading, selectedCounty, selectedService, andwellDominance, amedisysShare, northernLight, nationalChainCount, velocityRows, generateAiSummary]);
 
   return (
     <div style={{ color: textMain }} className="space-y-6">
@@ -472,24 +470,6 @@ export default function MarketDynamicsView({ setActiveTab, selectedCounty: appSe
           <p className="mt-1 text-sm" style={{ color: textSub }}>
             Maine Clinical Market · Strategic Execution Cluster
           </p>
-        </div>
-        {/* Executive / Tactical toggle */}
-        <div
-          className="flex items-center gap-1 rounded-xl p-1 self-start md:self-end"
-          style={{ background: surfMed, border: `1px solid ${divider}` }}
-        >
-          <button
-            className="px-4 py-1.5 rounded-lg text-sm font-bold text-white transition-all"
-            style={{ background: C.primary, boxShadow: "0 2px 6px rgba(0,75,198,0.35)" }}
-          >
-            Executive View
-          </button>
-          <button
-            className="px-4 py-1.5 rounded-lg text-sm font-bold transition-all hover:opacity-70"
-            style={{ color: textSub }}
-          >
-            Tactical Ops
-          </button>
         </div>
       </header>
 
@@ -561,14 +541,14 @@ export default function MarketDynamicsView({ setActiveTab, selectedCounty: appSe
       {/* ── KPI Cards ──────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
 
-        {/* 1 — Andwell Dominance */}
+        {/* 1 — Andwell provider-file footprint */}
         <div
           className="rounded-2xl p-5 relative group"
           style={{ ...card({ borderLeft: `4px solid ${C.primary}` }) }}
         >
           <div className="flex justify-between items-start mb-3">
             <span className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: textSub }}>
-              Andwell Dominance
+              Andwell provider-file footprint
             </span>
             <svg className="w-5 h-5 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2">
               <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -578,7 +558,7 @@ export default function MarketDynamicsView({ setActiveTab, selectedCounty: appSe
             {percent(andwellDominance)}
           </div>
           <div className="mt-1 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: C.primary }}>
-            {!isCountyView ? "+2.4% vs Prev Qtr" : `Provider file · ${selectedCounty}`}
+            {!isCountyView ? "Statewide CMS provider-file proxy" : `Statewide share shown for ${selectedCounty} context`}
           </div>
           <MiniBar pct={andwellDominance * 100} color={C.primary} />
         </div>
@@ -970,45 +950,17 @@ export default function MarketDynamicsView({ setActiveTab, selectedCounty: appSe
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Data Implication Cluster</p>
             </div>
             <p className="relative z-10 text-sm leading-6 text-white opacity-90">
-              The current CMS data indicates that Andwell's dominance in Portland metro is largely
-              insulated by high patient experience scores, creating a competitive moat against
-              volume-driven entrants. VBP of <strong>{vbpAdj}</strong> and HCAHPS rank of{" "}
-              <strong>{hcahpsRank}</strong> reinforce clinical and financial authority.
+              The current CMS data indicates that Andwell's statewide provider-file footprint should be interpreted as a
+              presence proxy, not county market share. VBP status of <strong>{vbpAdj}</strong> and CMS quality status of{" "}
+              <strong>{hcahpsRank}</strong> are shown only when bundled CMS evidence is available.
             </p>
           </div>
         </CommandCard>
 
         {/* Geographic Opportunity Density */}
-        <div className="rounded-2xl overflow-hidden relative min-h-[380px]" style={{ boxShadow: commandCard.boxShadow }}>
-          <img
-            src="/maine-map.png"
-            alt="Maine geographic opportunity density map"
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ filter: "saturate(1.5) contrast(1.15)", mixBlendMode: "luminosity" }}
-          />
-          <div
-            className="absolute inset-0"
-            style={{ background: `linear-gradient(to top, ${C.inverseSurf}f0 0%, ${C.inverseSurf}60 40%, transparent 100%)` }}
-          />
-          {/* Legend */}
-          <div className="absolute top-4 right-4 space-y-2 z-10">
-            <div
-              className="flex items-center gap-2.5 rounded-xl px-3 py-2 backdrop-blur-md"
-              style={{ background: `${C.inverseSurf}e6`, border: "1px solid rgba(255,255,255,0.1)" }}
-            >
-              <span className="h-3 w-3 rounded-full shrink-0" style={{ background: C.primary, boxShadow: `0 0 10px ${C.primary}` }} />
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white">Andwell Core Hubs</span>
-            </div>
-            <div
-              className="flex items-center gap-2.5 rounded-xl px-3 py-2 backdrop-blur-md"
-              style={{ background: `${C.inverseSurf}e6`, border: "1px solid rgba(255,255,255,0.1)" }}
-            >
-              <span className="h-3 w-3 rounded-full shrink-0" style={{ background: C.tertiaryC, boxShadow: `0 0 10px ${C.tertiaryC}` }} />
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white">Expansion Targets</span>
-            </div>
-          </div>
-          {/* Bottom text */}
-          <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
+        <div className="rounded-2xl overflow-hidden relative min-h-[380px] p-5" style={{ ...card(), background: C.inverseSurf }}>
+          <div className="absolute inset-0 pointer-events-none" style={{ ...dotMatrix, opacity: 0.04 }} />
+          <div className="relative z-10">
             <div
               className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.2em] text-white mb-2"
               style={{ background: C.primary }}
@@ -1022,6 +974,15 @@ export default function MarketDynamicsView({ setActiveTab, selectedCounty: appSe
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/70 mt-1 mb-4">
               Visualizing {Object.keys(cmsCountyMarket).length} target counties in active model
             </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {filteredEmergingMarkets.map((row) => (
+                <div key={row.county} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-white/60">{row.county}</p>
+                  <p className="mt-1 text-2xl font-black text-white">{row.score}/100</p>
+                  <p className="mt-1 text-xs leading-5 text-white/70">Opportunity score from the shared county model. Open County Plan for the interactive boundary map and layer details.</p>
+                </div>
+              ))}
+            </div>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setActiveTab?.("County Plan")}
