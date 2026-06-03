@@ -1,9 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { useDarkMode } from "./DarkModeContext.jsx";
 import { HEATMAP_MODES } from "../data/constants.js";
-import { getHeatmapValue, getCompetitiveThreatScore } from "../utils/calculations.js";
 import { namedProviderRows } from "../data/providers.js";
-import { MAINE_COUNTIES, getCountyPriority } from "../data/dashboardData.js";
+import { MAINE_COUNTIES, getCountyPriority, getCountyMapMetrics, getMapMetricValue } from "../data/dashboardData.js";
 import MAINE_COUNTY_GEOJSON from "../data/generated/maineCountyBoundaries.json";
 
 const priorityColors = {
@@ -21,7 +20,7 @@ const darkPriorityColors = {
 };
 
 function getFeatureName(feature) {
-  return feature.properties?.name || feature.properties?.NAME;
+  return (feature.properties?.name || feature.properties?.NAME || "").replace(/\s+County$/i, "");
 }
 
 function flattenCoords(geometry) {
@@ -93,19 +92,10 @@ function interpolateColor(value, min, max, dark) {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-function competitionColor(score, dark) {
-  if (score >= 70) return dark ? "#991b1b" : "#fecaca";
-  if (score >= 50) return dark ? "#92400e" : "#fed7aa";
-  if (score >= 30) return dark ? "#1e40af" : "#bfdbfe";
-  return dark ? "#166534" : "#bbf7d0";
-}
-
 function countyFill({ county, rows, rowMap, heatmapMode, heatValues, min, max, dark }) {
   const priority = getCountyPriority(county, rows);
   if (heatmapMode === "priority") return (dark ? darkPriorityColors : priorityColors)[priority] || (dark ? "#334155" : "#cbd5e1");
-  if (priority === "Not in plan") return dark ? "#1e293b" : "#e2e8f0";
-  if (heatmapMode === "competition") return competitionColor(getCompetitiveThreatScore(county)?.score || 0, dark);
-  const row = rowMap[county];
+  const row = rowMap[county] || getCountyMapMetrics(county, rows);
   if (!row) return dark ? "#1e293b" : "#e2e8f0";
   return interpolateColor(heatValues[county] || 0, min, max, dark);
 }
@@ -124,16 +114,21 @@ function Legend({ heatmapMode, dark, min, max }) {
   }
   return (
     <div className={`flex items-center justify-center gap-2 text-xs font-semibold ${dark ? "text-slate-400" : "text-slate-600"}`}>
-      <span>{heatmapMode === "competition" ? "Low" : Math.round(min).toLocaleString()}</span>
-      <span className="h-3 w-40 rounded-full" style={{ background: heatmapMode === "competition" ? "linear-gradient(to right,#bbf7d0,#bfdbfe,#fed7aa,#fecaca)" : "linear-gradient(to right,#e2e8f0,#2563eb)" }} />
-      <span>{heatmapMode === "competition" ? "High" : Math.round(max).toLocaleString()}</span>
+      <span>{Math.round(min).toLocaleString()}</span>
+      <span className="h-3 w-40 rounded-full" style={{ background: "linear-gradient(to right,#e2e8f0,#2563eb)" }} />
+      <span>{Math.round(max).toLocaleString()}</span>
     </div>
   );
 }
 
-export default function MaineMap({ rows, selectedCounty, onSelectCounty, providerTypeFilter, onProviderTypeFilterChange }) {
+export default function MaineMap({ rows, selectedCounty, onSelectCounty, providerTypeFilter, onProviderTypeFilterChange, heatmapMode: controlledHeatmapMode, onHeatmapModeChange }) {
   const { dark } = useDarkMode();
-  const [heatmapMode, setHeatmapMode] = useState("priority");
+  const [internalHeatmapMode, setInternalHeatmapMode] = useState("priority");
+  const heatmapMode = controlledHeatmapMode || internalHeatmapMode;
+  const setHeatmapMode = (nextMode) => {
+    setInternalHeatmapMode(nextMode);
+    onHeatmapModeChange?.(nextMode);
+  };
   const [hoverCounty, setHoverCounty] = useState(null);
   const features = MAINE_COUNTY_GEOJSON.features || [];
   const width = 720;
@@ -143,14 +138,14 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty, provide
   const rowMap = useMemo(() => Object.fromEntries(rows.map((row) => [row.county, row])), [rows]);
   const heatValues = useMemo(() => {
     const values = {};
-    for (const county of Object.keys(rowMap)) values[county] = getHeatmapValue(county, heatmapMode, rows);
+    for (const county of MAINE_COUNTIES.map((item) => item.name)) values[county] = getMapMetricValue(county, heatmapMode, rows);
     return values;
-  }, [heatmapMode, rowMap, rows]);
+  }, [heatmapMode, rows]);
   const vals = Object.values(heatValues).filter((value) => Number.isFinite(value));
   const min = vals.length ? Math.min(...vals) : 0;
   const max = vals.length ? Math.max(...vals) : 1;
   const countyCount = MAINE_COUNTIES.length;
-  const activeCount = rows.length;
+  const activeCount = new Set(rows.map((row) => row.county)).size;
   const visibleProviders = namedProviderRows.filter((provider) => {
     if (providerProviderType(providerTypeFilter) === "all") return true;
     return providerProviderType(providerTypeFilter) === provider.service;
@@ -158,6 +153,9 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty, provide
 
   const selectedFeature = features.find((feature) => getFeatureName(feature) === selectedCounty);
   const selectedPriority = getCountyPriority(selectedCounty, rows);
+  const hoverMetrics = hoverCounty ? getCountyMapMetrics(hoverCounty, rows) : null;
+  const selectedMetrics = getCountyMapMetrics(selectedCounty, rows);
+  const activeLayer = HEATMAP_MODES.find((mode) => mode.key === heatmapMode)?.label || "Priority Group";
 
   return (
     <div className="space-y-4">
@@ -194,11 +192,13 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty, provide
                 onMouseEnter={() => setHoverCounty(county)}
                 onMouseLeave={() => setHoverCounty(null)}
                 fill={countyFill({ county, rows, rowMap, heatmapMode, heatValues, min, max, dark })}
-                fillOpacity={isSelected ? 0.92 : priority === "Not in plan" ? 0.42 : 0.72}
+                fillOpacity={isSelected ? 0.92 : priority === "Not in plan" && heatmapMode === "priority" ? 0.42 : 0.72}
                 stroke={isSelected ? (dark ? "#f8fafc" : "#0f172a") : isHovered ? "#38bdf8" : dark ? "#475569" : "#ffffff"}
                 strokeWidth={isSelected ? 4 : isHovered ? 2.5 : 1.2}
                 className="cursor-pointer transition-all duration-150 outline-none"
-              />
+              >
+                <title>{`${county} County · ${activeLayer}: ${Math.round(heatValues[county] || 0).toLocaleString()}`}</title>
+              </path>
             );
           })}
           {features.map((feature) => {
@@ -212,6 +212,25 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty, provide
       </div>
 
       <Legend heatmapMode={heatmapMode} dark={dark} min={min} max={max} />
+
+      {(hoverMetrics || selectedMetrics) && (
+        <div className={`rounded-2xl border p-4 text-sm ${dark ? "border-slate-700 bg-slate-800/60" : "border-slate-200 bg-white"}`}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className={dark ? "text-slate-500" : "text-slate-400"}>{hoverMetrics ? "Hover county" : "Selected county"}</p>
+              <p className="font-bold">{(hoverMetrics || selectedMetrics).county} · {activeLayer}</p>
+            </div>
+            <p className="text-lg font-bold tabular-nums">{Math.round(getMapMetricValue((hoverMetrics || selectedMetrics).county, heatmapMode, rows)).toLocaleString()}</p>
+          </div>
+          <div className="mt-3 grid gap-2 text-xs sm:grid-cols-4">
+            <div><span className={dark ? "text-slate-500" : "text-slate-400"}>Demand</span><p className="font-semibold tabular-nums">{Math.round((hoverMetrics || selectedMetrics).demand).toLocaleString()}</p></div>
+            <div><span className={dark ? "text-slate-500" : "text-slate-400"}>Y1 revenue</span><p className="font-semibold tabular-nums">${Math.round((hoverMetrics || selectedMetrics).revenue).toLocaleString()}</p></div>
+            <div><span className={dark ? "text-slate-500" : "text-slate-400"}>Providers</span><p className="font-semibold tabular-nums">{(hoverMetrics || selectedMetrics).allProviders}</p></div>
+            <div><span className={dark ? "text-slate-500" : "text-slate-400"}>Penetration</span><p className="font-semibold tabular-nums">{((hoverMetrics || selectedMetrics).marketPenetration || 0).toFixed(1)}%</p></div>
+          </div>
+          {(hoverMetrics || selectedMetrics).missingNote && <p className={`mt-2 text-xs ${dark ? "text-amber-300" : "text-amber-700"}`}>{(hoverMetrics || selectedMetrics).missingNote}</p>}
+        </div>
+      )}
 
       <div className={`grid gap-3 rounded-2xl border p-4 text-sm sm:grid-cols-4 ${dark ? "border-slate-700 bg-slate-800/60" : "border-slate-200 bg-white"}`}>
         <div><p className={dark ? "text-slate-500" : "text-slate-400"}>County boundaries</p><p className="font-bold">US Census TIGERweb</p></div>

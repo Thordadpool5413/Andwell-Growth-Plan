@@ -14,13 +14,12 @@ import { getCountyIntelligence, getOpportunityScore } from "../utils/calculation
 import { streamChat, buildCountyPrompt, AI_AVAILABLE } from "../utils/ai.js";
 import { currency, number, percent } from "../utils/formatters.js";
 import { themeClasses } from "../utils/themeClasses.js";
-import { MAINE_COUNTIES, getCountyDashboardRecord } from "../data/dashboardData.js";
+import { MAINE_COUNTIES, getCountyDashboardRecord, getFreshness } from "../data/dashboardData.js";
 
-const CMS_LAST_SYNCED = "2026-05-01";
-
-export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, competitorProviderType, setCompetitorProviderType }) {
+export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, competitorProviderType, setCompetitorProviderType, mapLayer, setMapLayer }) {
   const { dark } = useDarkMode();
   const selectedRecord = getCountyDashboardRecord(selectedCounty, rows);
+  const freshness = getFreshness();
   const selected = rows.find((row) => row.county === selectedCounty) || {
     county: selectedCounty,
     service: "Not in current launch plan",
@@ -56,7 +55,10 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
   const qualityRows = selectedRecord.homeHealthAgencies || [];
   const hhvbpRows = selectedRecord.hhvbp || [];
   const hospiceRows = selectedRecord.hospiceProviders || [];
+  const hospiceCahpsRows = selectedRecord.hospiceCahps || [];
   const hrsaRows = selectedRecord.hrsaHospiceFacilities || [];
+  const qualitySummary = selectedRecord.quality;
+  const providerLandscape = selectedRecord.providerLandscape;
   const qualityStarRows = qualityRows.filter((row) => row.star_rating != null);
   const avgQualityStar = qualityStarRows.length
     ? qualityStarRows.reduce((sum, row) => sum + Number(row.star_rating), 0) / qualityStarRows.length
@@ -110,7 +112,7 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
       <div className="space-y-6">
         {/* Map Card */}
         <Card title="Maine county map" eyebrow="Geographic view">
-          <MaineMap rows={rows} selectedCounty={selectedCounty} onSelectCounty={setSelectedCounty} providerTypeFilter={competitorProviderType} onProviderTypeFilterChange={setCompetitorProviderType} />
+          <MaineMap rows={rows} selectedCounty={selectedCounty} onSelectCounty={setSelectedCounty} providerTypeFilter={competitorProviderType} onProviderTypeFilterChange={setCompetitorProviderType} heatmapMode={mapLayer} onHeatmapModeChange={setMapLayer} />
         </Card>
 
         {/* County Selection List */}
@@ -201,8 +203,7 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
       <div className="space-y-6">
         <Card title={`${selected.county} County`} eyebrow="County detail">
           <div className="mb-3 flex items-center gap-2">
-            <FreshnessChip lastSynced={CMS_LAST_SYNCED} label="CMS data" />
-            <Badge tone={selectedRecord.inPlan ? "blue" : "slate"}>{selectedRecord.priority}</Badge>
+            <FreshnessChip lastSynced={freshness.generatedAt} label="CMS/HRSA data" syncType="Bundled source registry" />
             <Badge tone={selectedRecord.inPlan ? "blue" : "slate"}>{selectedRecord.priority}</Badge>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
@@ -243,13 +244,13 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
             </div>
             <div className={"rounded-2xl border p-4 " + (dark ? "border-slate-700 bg-slate-800/70" : "border-slate-200 bg-white")}>
               <p className={"text-[10px] font-semibold uppercase tracking-[0.16em] " + (dark ? "text-slate-500" : "text-slate-400")}>CMS providers</p>
-              <p className={"mt-2 text-2xl font-bold tabular-nums " + (dark ? "text-slate-100" : "text-slate-900")}>{number(qualityRows.length + hospiceRows.length)}</p>
-              <p className={"mt-1 text-xs " + (dark ? "text-slate-400" : "text-slate-500")}>{number(qualityRows.length)} home health · {number(hospiceRows.length)} hospice records</p>
+              <p className={"mt-2 text-2xl font-bold tabular-nums " + (dark ? "text-slate-100" : "text-slate-900")}>{number(providerLandscape.counts.homeHealth + providerLandscape.counts.hospice)}</p>
+              <p className={"mt-1 text-xs " + (dark ? "text-slate-400" : "text-slate-500")}>{number(providerLandscape.counts.homeHealth)} home health · {number(providerLandscape.counts.hospice)} hospice records</p>
             </div>
             <div className={"rounded-2xl border p-4 " + (dark ? "border-slate-700 bg-slate-800/70" : "border-slate-200 bg-white")}>
               <p className={"text-[10px] font-semibold uppercase tracking-[0.16em] " + (dark ? "text-slate-500" : "text-slate-400")}>Quality / HHVBP</p>
-              <p className={"mt-2 text-2xl font-bold tabular-nums " + (dark ? "text-slate-100" : "text-slate-900")}>{avgQualityStar != null ? avgQualityStar.toFixed(1) + " stars" : hhvbpDisplay != null ? hhvbpDisplay.toFixed(1) : "Unavailable"}</p>
-              <p className={"mt-1 text-xs " + (dark ? "text-slate-400" : "text-slate-500")}>CMS quality and value-based purchasing seed data</p>
+              <p className={"mt-2 text-2xl font-bold tabular-nums " + (dark ? "text-slate-100" : "text-slate-900")}>{avgQualityStar != null ? avgQualityStar.toFixed(1) + " stars" : hhvbpDisplay != null ? hhvbpDisplay.toFixed(1) : qualitySummary.avgHospiceCahpsScore != null ? qualitySummary.avgHospiceCahpsScore.toFixed(0) : "Unavailable"}</p>
+              <p className={"mt-1 text-xs " + (dark ? "text-slate-400" : "text-slate-500")}>{number(qualityRows.length)} HH quality · {number(hhvbpRows.length)} HHVBP · {number(hospiceCahpsRows.length)} hospice CAHPS</p>
             </div>
             <div className={"rounded-2xl border p-4 " + (dark ? "border-slate-700 bg-slate-800/70" : "border-slate-200 bg-white")}>
               <p className={"text-[10px] font-semibold uppercase tracking-[0.16em] " + (dark ? "text-slate-500" : "text-slate-400")}>HRSA facilities</p>
@@ -264,26 +265,30 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
               <Badge tone={selectedRecord.inPlan ? "blue" : "slate"}>{selectedRecord.priority}</Badge>
               <Badge tone="green">Bundled CMS/HRSA data</Badge>
             </div>
-            <div className="mt-3 grid gap-3 md:grid-cols-2">
-              <div>
-                <p className={"text-xs font-semibold uppercase tracking-wide " + (dark ? "text-blue-300" : "text-blue-800")}>Top located provider rows</p>
-                <div className="mt-2 space-y-2">
-                  {topCountyProviders.length ? topCountyProviders.map((provider, i) => (
-                    <div key={provider.service + provider.providerName + i} className={"rounded-xl px-3 py-2 text-xs " + (dark ? "bg-slate-900/70 text-slate-300" : "bg-white text-slate-700")}>
-                      <span className="font-semibold">{provider.providerName}</span> · {provider.service} · {number(provider.beneficiaries)} beneficiaries
-                    </div>
-                  )) : (
-                    <p className={"text-xs " + (dark ? "text-blue-300/70" : "text-blue-700")}>No provider-file headquarters row is located in this county; service-area attribution may still exist in ZIP/facility data.</p>
-                  )}
+            <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {[
+                { label: "County identity", value: `${selected.county} County`, detail: `${selectedRecord.fips || "FIPS unavailable"} · ${selectedRecord.priority}` },
+                { label: "Demand and opportunity", value: countyMarket ? `${number((countyMarket.home_health_users || 0) + (countyMarket.hospice_users || 0))} users` : "Unavailable", detail: cmsMarketDetail },
+                { label: "Provider landscape", value: `${number(providerLandscape.counts.all)} records`, detail: `${providerLandscape.counts.homeHealth} home health · ${providerLandscape.counts.hospice} hospice · ${providerLandscape.counts.hrsa} HRSA` },
+                { label: "Quality and HHVBP", value: qualitySummary.bestScore ? `${qualitySummary.bestScore.score.toFixed(qualitySummary.bestScore.score > 10 ? 0 : 1)} best available` : "Unavailable", detail: qualitySummary.bestScore ? `${qualitySummary.bestScore.provider} · ${qualitySummary.bestScore.source}` : qualitySummary.missingNotes[0] || "No matched score" },
+                { label: "Referral math", value: `${number(selected.referrals[0])} referrals`, detail: `${number(selected.starts[0])} starts at modeled conversion` },
+                { label: "Revenue math", value: currency(selected.revenue[0]), detail: `${selected.basis} · modeled output` },
+              ].map((item) => (
+                <div key={item.label} className={"rounded-xl px-3 py-3 text-xs " + (dark ? "bg-slate-900/70 text-slate-300" : "bg-white text-slate-700")}>
+                  <p className={"font-semibold uppercase tracking-wide " + (dark ? "text-blue-300" : "text-blue-800")}>{item.label}</p>
+                  <p className="mt-1 text-base font-bold">{item.value}</p>
+                  <p className={"mt-1 leading-5 " + (dark ? "text-slate-400" : "text-slate-500")}>{item.detail}</p>
                 </div>
-              </div>
-              <div>
-                <p className={"text-xs font-semibold uppercase tracking-wide " + (dark ? "text-blue-300" : "text-blue-800")}>Source notes</p>
-                <p className={"mt-2 text-xs leading-5 " + (dark ? "text-blue-200/80" : "text-blue-900/75")}>
-                  County market figures are sourced from bundled CMS public-use seed data where available. Provider, quality, HHVBP, hospice CAHPS, ZIP service-area, and HRSA hospice facility records are bundled in src/data/generated. Modeled referrals and revenue remain planning projections, not CMS facts.
-                </p>
-              </div>
+              ))}
             </div>
+            {qualitySummary.missingNotes.length > 0 && (
+              <div className={"mt-3 rounded-xl border px-3 py-2 text-xs " + (dark ? "border-amber-800/50 bg-amber-950/20 text-amber-200" : "border-amber-200 bg-amber-50 text-amber-800")}>
+                <span className="font-semibold">Missing data notes: </span>{qualitySummary.missingNotes.join(" ")}
+              </div>
+            )}
+            <p className={"mt-3 text-xs leading-5 " + (dark ? "text-blue-200/80" : "text-blue-900/75")}>
+              CMS/HRSA records are sourced public data. Referral goals, starts, revenue, opportunity scores, and strategic notes are modeled planning outputs. Provider file share is not true county market share.
+            </p>
           </div>
 
           <div className="mt-5 grid gap-4 md:grid-cols-2">

@@ -19,20 +19,14 @@ import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
 import cmsCountyMarket from "../data/cmsCountyMarket.js";
 import { namedProviderRows, marketShareBuildRows, marketShareFormulaRows } from "../data/providers.js";
+import { classifyProvider } from "../data/andwell.js";
+import { getFreshness, MAINE_COUNTIES } from "../data/dashboardData.js";
 import { getProviderSummary, getCompetitiveThreatScore } from "../utils/calculations.js";
 import { currency, number, percent, badgeTone } from "../utils/formatters.js";
 import { exportCompetitiveCSV } from "../utils/csvExport.js";
 
-const CMS_LAST_SYNCED = "2026-05-01";
-
-const NATIONAL_CHAINS = [
-  "amedisys", "centerwell", "gentiva", "kindred", "compassus",
-  "elara", "constellation", "enhabit", "lhc group", "bayada",
-];
-
 function isNationalChain(name) {
-  const lower = (name || "").toLowerCase();
-  return NATIONAL_CHAINS.some((c) => lower.includes(c));
+  return classifyProvider({ provider_name: name }).classification === "National chain";
 }
 
 const COMPETITIVE_TABS = [
@@ -43,6 +37,7 @@ const COMPETITIVE_TABS = [
 
 export default function CompetitiveView({ selectedCounty, setSelectedCounty, competitorProviderType = "all", setCompetitorProviderType }) {
   const { dark } = useDarkMode();
+  const freshness = getFreshness();
 
   const derivedService = competitorProviderType === "hospice" ? "Hospice" : "Home Healthcare";
   const [service, setServiceState] = useState(derivedService);
@@ -94,7 +89,7 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
       </SectionHeader>
 
       <div className="flex items-center gap-2 flex-wrap">
-        <FreshnessChip lastSynced={CMS_LAST_SYNCED} label="CMS data" />
+        <FreshnessChip lastSynced={freshness.generatedAt} label="CMS/HRSA data" syncType="Bundled source registry" />
       </div>
 
       <MethodologyCallout title="How is the competitive threat score calculated?">
@@ -103,10 +98,10 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
         </p>
         <div className="grid gap-2 sm:grid-cols-2">
           {[
-            { name: "Competitor count", weight: "30%", desc: "Number of active named providers in the county. More competitors = higher threat." },
+            { name: "Competitor count", weight: "25%", desc: "Number of active named providers in the county. More competitors = higher threat." },
             { name: "Competitor share concentration", weight: "30%", desc: "Combined provider file share held by competitors. High concentration signals entrenched incumbents." },
             { name: "National chain presence", weight: "20%", desc: "Whether a national chain (Amedisys, Gentiva, LHC Group, etc.) operates locally. National chains have significant scale advantages." },
-            { name: "Provider density", weight: "20%", desc: "Providers per 10,000 FFS beneficiaries. High density indicates a crowded market." },
+            { name: "Provider density", weight: "25%", desc: "Providers per 10,000 FFS beneficiaries. High density indicates a crowded market." },
           ].map((f) => (
             <div key={f.name} className={`rounded-xl border p-3 ${dark ? "border-slate-700 bg-slate-800/60" : "border-slate-200 bg-white"}`}>
               <div className="flex items-center justify-between gap-2">
@@ -131,8 +126,8 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
 
       {/* National chain vs. local breakdown */}
       {(() => {
-        const national = providers.filter((p) => isNationalChain(p.name));
-        const local = providers.filter((p) => !isNationalChain(p.name));
+        const national = providers.filter((p) => isNationalChain(p.providerName));
+        const local = providers.filter((p) => !isNationalChain(p.providerName));
         const nationalBens = national.reduce((s, p) => s + (p.beneficiaries || 0), 0);
         const localBens = local.reduce((s, p) => s + (p.beneficiaries || 0), 0);
         const totalBens = nationalBens + localBens;
@@ -145,7 +140,7 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
         return (
           <div className="grid gap-4 md:grid-cols-2">
             <div className={`rounded-xl border p-5 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
-              <p className={`text-xs font-medium uppercase tracking-wide mb-3 ${dark ? "text-slate-400" : "text-slate-500"}`}>National chains vs. local providers</p>
+              <p className={`text-xs font-medium uppercase tracking-wide mb-3 ${dark ? "text-slate-400" : "text-slate-500"}`}>National chains vs. other providers</p>
               <div className="flex items-center gap-4">
                 <div style={{ width: 90, height: 90 }}>
                   <PieChart width={90} height={90}>
@@ -160,7 +155,7 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
                     <span className={`text-xs font-semibold tabular-nums ${dark ? "text-red-400" : "text-red-600"}`}>{national.length} providers · {natPct}%</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 text-xs"><span className="h-2 w-2 rounded-full bg-blue-500" /><span className={dark ? "text-slate-300" : "text-slate-700"}>Local/regional</span></span>
+                    <span className="flex items-center gap-1.5 text-xs"><span className="h-2 w-2 rounded-full bg-blue-500" /><span className={dark ? "text-slate-300" : "text-slate-700"}>Regional, health-system, local, or unknown</span></span>
                     <span className={`text-xs font-semibold tabular-nums ${dark ? "text-blue-400" : "text-blue-700"}`}>{local.length} providers · {locPct}%</span>
                   </div>
                   <div className={`mt-1 h-2 w-full overflow-hidden rounded-full ${dark ? "bg-slate-700" : "bg-slate-100"}`}>
@@ -243,7 +238,7 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
                   {item}
                 </button>
               ))}
-              {Object.keys(cmsCountyMarket).map((county) => (
+              {MAINE_COUNTIES.map(({ name: county }) => (
                 <button key={county} onClick={() => setSelectedCounty(county)} className={`rounded-lg px-4 py-2 text-sm font-medium transition ${selectedCounty === county ? dark ? "bg-slate-100 text-slate-950" : "bg-slate-950 text-white" : dark ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"}`}>
                   {county}
                 </button>
@@ -295,7 +290,7 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       {provider.isAndwellCmsRecord ? <Badge tone="blue">Andwell CMS record</Badge> : <Badge tone="slate">Competitor</Badge>}
-                      {!provider.isAndwellCmsRecord && isNationalChain(provider.providerName) && <Badge tone="red">National chain</Badge>}
+                      {!provider.isAndwellCmsRecord && <Badge tone={classifyProvider(provider).confidence === "low" ? "slate" : isNationalChain(provider.providerName) ? "red" : "blue"}>{classifyProvider(provider).classification}</Badge>}
                     </div>
                   </div>
                   <div className="mt-3 grid grid-cols-3 gap-3 text-sm">

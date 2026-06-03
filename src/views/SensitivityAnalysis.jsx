@@ -8,6 +8,39 @@ import { COLORS } from "../data/constants.js";
 import { getSensitivityAnalysis } from "../utils/calculations.js";
 import { currency, percent } from "../utils/formatters.js";
 
+const VARIABLE_DETAILS = {
+  conversionRate: {
+    definition: "Share of gross referrals expected to become patient starts.",
+    lever: "Referral quality, intake speed, payer fit, and clinician availability.",
+    source: "Modeled / user adjustable",
+  },
+  hhCapture: {
+    definition: "First-year share of the CMS home health demand pool Andwell plans to capture.",
+    lever: "Sales coverage, referral relationships, and launch readiness.",
+    source: "Modeled / user adjustable",
+  },
+  woundCapture: {
+    definition: "First-year share of the wound-care planning proxy Andwell plans to capture.",
+    lever: "Specialist capacity, physician outreach, and service-line positioning.",
+    source: "Modeled / user adjustable",
+  },
+  therapyCapture: {
+    definition: "First-year share of the therapy-care planning proxy Andwell plans to capture.",
+    lever: "Therapy staffing, hospital discharge channels, and partner development.",
+    source: "Modeled / user adjustable",
+  },
+  hhReimbursement: {
+    definition: "Revenue per home health start used in the modeled projection.",
+    lever: "Payer mix, episode acuity, utilization, and reimbursement environment.",
+    source: "CMS-informed modeled assumption",
+  },
+  woundReimbursement: {
+    definition: "Revenue per wound-care start used in the modeled projection.",
+    lever: "Service intensity, payer mix, and visit design.",
+    source: "Modeled assumption",
+  },
+};
+
 function TornadoBar({ variable, maxRange, dark }) {
   const barWidth = 400;
   const center   = barWidth / 2;
@@ -131,6 +164,23 @@ export default function SensitivityAnalysis({ rows }) {
         Each bar shows how Y1 revenue changes when a single variable moves from its low to high bound while all others stay at baseline. Variables are ranked by total revenue impact range. The shaded band shows the full confidence range.
       </SectionHeader>
 
+      <Card title="How to read this model" eyebrow="What changes and what stays constant">
+        <div className={`grid gap-3 text-sm md:grid-cols-3 ${dark ? "text-slate-300" : "text-slate-700"}`}>
+          <div className={`rounded-xl border p-4 ${dark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
+            <p className="font-semibold">What is being tested</p>
+            <p className="mt-2 text-xs leading-5">One variable changes at a time across its low, base, and high values to isolate revenue impact.</p>
+          </div>
+          <div className={`rounded-xl border p-4 ${dark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
+            <p className="font-semibold">What stays constant</p>
+            <p className="mt-2 text-xs leading-5">County list, launch sequence, baseline demand pools, and all other scenario assumptions remain fixed.</p>
+          </div>
+          <div className={`rounded-xl border p-4 ${dark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
+            <p className="font-semibold">Leadership use</p>
+            <p className="mt-2 text-xs leading-5">Use the largest impact range to identify which operational lever deserves the most management attention.</p>
+          </div>
+        </div>
+      </Card>
+
       <div className="grid gap-4 md:grid-cols-4">
         <Metric label="Baseline Y1 revenue"   value={currency(baseRevenue)}              detail="Revenue at default scenario assumptions."          color="indigo" />
         <Metric label="Most sensitive lever"  value={topLever?.label || "—"}             detail={`Revenue range: ${currency(topLever?.range || 0)}`} color="amber" />
@@ -218,6 +268,8 @@ export default function SensitivityAnalysis({ rows }) {
                 <th className="px-5 py-4 text-right">Base revenue</th>
                 <th className="px-5 py-4 text-right">High revenue</th>
                 <th className="px-5 py-4 text-right">Impact range</th>
+                <th className="px-5 py-4">Why it matters</th>
+                <th className="px-5 py-4">Source type</th>
               </tr>
             </thead>
             <tbody className={`divide-y ${dark ? "divide-slate-700/60" : "divide-slate-100"}`}>
@@ -225,7 +277,7 @@ export default function SensitivityAnalysis({ rows }) {
                 const fmt = v.format === "percent" ? (x) => `${(x * 100).toFixed(0)}%` : (x) => currency(x);
                 return (
                   <tr key={v.key} className={dark ? i % 2 === 1 ? "bg-slate-800/40 hover:bg-slate-700/40" : "hover:bg-slate-700/40" : i % 2 === 1 ? "bg-slate-50/60 hover:bg-slate-50" : "hover:bg-slate-50"}>
-                    <td className={`px-5 py-4 font-semibold ${dark ? "text-slate-100" : "text-slate-800"}`}>{v.label}</td>
+                    <td className={`px-5 py-4 font-semibold ${dark ? "text-slate-100" : "text-slate-800"}`}>{v.label}<p className={`mt-1 text-xs font-normal leading-5 ${dark ? "text-slate-500" : "text-slate-400"}`}>{VARIABLE_DETAILS[v.key]?.definition}</p></td>
                     <td className={`px-5 py-4 text-right tabular-nums ${dark ? "text-red-400" : "text-red-600"}`}>{fmt(v.low)}</td>
                     <td className={`px-5 py-4 text-right tabular-nums ${dark ? "text-slate-300" : "text-slate-600"}`}>{fmt(v.base)}</td>
                     <td className={`px-5 py-4 text-right tabular-nums ${dark ? "text-emerald-400" : "text-emerald-600"}`}>{fmt(v.high)}</td>
@@ -233,6 +285,8 @@ export default function SensitivityAnalysis({ rows }) {
                     <td className={`px-5 py-4 text-right tabular-nums ${dark ? "text-slate-300" : "text-slate-600"}`}>{currency(v.baseRevenue)}</td>
                     <td className={`px-5 py-4 text-right tabular-nums ${dark ? "text-emerald-400" : "text-emerald-600"}`}>{currency(v.highRevenue)}</td>
                     <td className={`px-5 py-4 text-right font-semibold tabular-nums ${dark ? "text-blue-400" : "text-blue-700"}`}>{currency(v.range)}</td>
+                    <td className={`px-5 py-4 text-xs leading-5 ${dark ? "text-slate-400" : "text-slate-600"}`}>{VARIABLE_DETAILS[v.key]?.lever || "Operational performance lever."}</td>
+                    <td className={`px-5 py-4 text-xs ${dark ? "text-slate-400" : "text-slate-600"}`}>{VARIABLE_DETAILS[v.key]?.source || "Modeled"}</td>
                   </tr>
                 );
               })}

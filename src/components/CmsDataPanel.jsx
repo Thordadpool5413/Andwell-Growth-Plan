@@ -284,7 +284,7 @@ export default function CmsDataPanel() {
       {activePanel === "sync" && (
         <div className="space-y-4">
           <div className={`rounded-xl border p-6 ${dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
-            <p className={`font-semibold mb-4 ${dark ? "text-white" : "text-slate-950"}`}>CMS Data Sync</p>
+            <p className={`font-semibold mb-4 ${dark ? "text-white" : "text-slate-950"}`}>CMS Admin Refresh</p>
             <div className="flex flex-wrap items-center gap-3">
               <select
                 value={syncType}
@@ -300,7 +300,7 @@ export default function CmsDataPanel() {
                 disabled={syncing}
                 className={`rounded-lg px-6 py-2.5 text-sm font-medium transition disabled:opacity-50 ${dark ? "bg-blue-600 text-white hover:bg-blue-500" : "bg-blue-600 text-white hover:bg-blue-700"}`}
               >
-                {syncing ? "Syncing…" : "Sync CMS Data"}
+                {syncing ? "Refreshing…" : "Refresh CMS Data"}
               </button>
             </div>
             <p className={`mt-3 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>

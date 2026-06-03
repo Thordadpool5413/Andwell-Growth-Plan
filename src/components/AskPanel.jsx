@@ -35,12 +35,6 @@ const SUGGESTED_QUESTIONS = {
     "Which market has the most fragmented competition?",
     "What is the competitive threat level in York County?",
   ],
-  "Service Lines": [
-    "How does Home Healthcare revenue compare to Hospice across counties?",
-    "Which service line has the stronger Year 3 growth trajectory?",
-    "Which county is best positioned for a Hospice-first launch?",
-    "What staffing ratios differ between Home Health and Hospice?",
-  ],
   "CMS Data": [
     "How many CMS-certified providers operate in Maine?",
     "Which counties have the fewest certified home health agencies?",
@@ -87,7 +81,7 @@ const SUGGESTED_QUESTIONS = {
 
 const SOURCE_FOOTNOTE = "Based on CMS 2022 PUF · Andwell planning assumptions · May 2026 model";
 
-export default function AskPanel({ rows, totals, activeTab, selectedCounty }) {
+export default function AskPanel({ rows, totals, activeTab, selectedCounty, mapLayer, competitorProviderType }) {
   const { dark } = useDarkMode();
   const [open, setOpen] = useState(false);
   const [question, setQuestion] = useState("");
@@ -130,7 +124,7 @@ export default function AskPanel({ rows, totals, activeTab, selectedCounty }) {
     setQuestion("");
 
     streamChat({
-      messages: buildAskPrompt(q, rows, totals, intelMap, selectedCounty),
+      messages: buildAskPrompt(q, rows, totals, intelMap, selectedCounty, { activeTab, mapLayer, competitorProviderType }),
       signal: controller.signal,
       onChunk: (_, full) => {
         setMessages((prev) => {
@@ -153,7 +147,7 @@ export default function AskPanel({ rows, totals, activeTab, selectedCounty }) {
         setGenerating(false);
       },
     });
-  }, [rows, totals, intelMap, selectedCounty, generating]);
+  }, [rows, totals, intelMap, selectedCounty, activeTab, mapLayer, competitorProviderType, generating]);
 
   const handleAsk = useCallback(() => runQuery(question), [question, runQuery]);
 

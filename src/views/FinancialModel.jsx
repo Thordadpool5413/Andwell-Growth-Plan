@@ -13,6 +13,7 @@ import Abbr from "../components/Abbr.jsx";
 import Badge from "../components/Badge.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
+import { getRevenueMix } from "../data/dashboardData.js";
 import { currency, number } from "../utils/formatters.js";
 import { exportFinancialCSV } from "../utils/csvExport.js";
 
@@ -36,6 +37,7 @@ export default function FinancialModel({ rows }) {
   const totalRevenue = yearRows.reduce((s, y) => s + y.revenue, 0);
   const totalContribution = yearRows.reduce((s, y) => s + y.contribution, 0);
   const revenueGrowth = yearRows[0].revenue > 0 ? ((yearRows[2].revenue - yearRows[0].revenue) / yearRows[0].revenue * 100) : 0;
+  const revenueMix = getRevenueMix(rows);
 
   const services = [...new Set(rows.map((r) => r.service))];
   const serviceColors = {
@@ -62,6 +64,23 @@ export default function FinancialModel({ rows }) {
       <SectionHeader eyebrow="Financial model" title="3-year revenue and contribution projections">
         Revenue is modeled from CMS beneficiary volumes multiplied by internal capture rate assumptions and Medicare reimbursement rates. Contribution margin reflects the modeled gross margin per service line. Use the Scenario Model sliders to stress-test different capture and <Abbr term="Conversion Rate">conversion rate</Abbr> assumptions.
       </SectionHeader>
+
+      <Card title="Revenue model overview" eyebrow="Inputs, assumptions, and outputs">
+        <div className={`grid gap-3 text-sm md:grid-cols-3 ${dark ? "text-slate-300" : "text-slate-700"}`}>
+          <div className={`rounded-xl border p-4 ${dark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
+            <p className="font-semibold">CMS verified inputs</p>
+            <p className="mt-2 text-xs leading-5">CMS county beneficiary volumes and provider-file reimbursement fields are used when a county/service line has direct CMS market support.</p>
+          </div>
+          <div className={`rounded-xl border p-4 ${dark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
+            <p className="font-semibold">Modeled inputs</p>
+            <p className="mt-2 text-xs leading-5">Capture rates, referral conversion, ramp assumptions, and service-line margins come from the active scenario and planning model.</p>
+          </div>
+          <div className={`rounded-xl border p-4 ${dark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
+            <p className="font-semibold">Calculated outputs</p>
+            <p className="mt-2 text-xs leading-5">Starts, gross referrals, revenue, contribution, and growth rates are calculated outputs, not CMS-reported facts.</p>
+          </div>
+        </div>
+      </Card>
 
       <div className="grid gap-4 md:grid-cols-4">
         <Metric
@@ -193,6 +212,28 @@ export default function FinancialModel({ rows }) {
             ))}
           </AreaChart>
         </ChartContainer>
+      </Card>
+
+      <Card title="Revenue by county" eyebrow="Modeled county contribution">
+        <div className={`overflow-x-auto rounded-lg border ${dark ? "border-slate-700/60" : "border-slate-200"}`}>
+          <table className="w-full text-left text-sm">
+            <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-700/40 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
+              <tr><th className="px-5 py-3">County</th><th className="px-5 py-3">Priority</th><th className="px-5 py-3 text-right">Year 1</th><th className="px-5 py-3 text-right">Year 2</th><th className="px-5 py-3 text-right">Year 3</th><th className="px-5 py-3">Source</th></tr>
+            </thead>
+            <tbody className={`divide-y ${dark ? "divide-slate-700/60" : "divide-slate-100"}`}>
+              {revenueMix.byCounty.map((row, i) => (
+                <tr key={row.county} className={dark ? i % 2 === 1 ? "bg-slate-800/40 hover:bg-slate-700/40" : "hover:bg-slate-700/40" : i % 2 === 1 ? "bg-slate-50/60 hover:bg-slate-50" : "hover:bg-slate-50"}>
+                  <td className={`px-5 py-3 font-semibold ${dark ? "text-slate-100" : "text-slate-800"}`}>{row.county}</td>
+                  <td className="px-5 py-3">{row.priority}</td>
+                  <td className="px-5 py-3 text-right font-semibold tabular-nums">{currency(row.y1)}</td>
+                  <td className="px-5 py-3 text-right tabular-nums">{currency(row.y2)}</td>
+                  <td className="px-5 py-3 text-right tabular-nums">{currency(row.y3)}</td>
+                  <td className="px-5 py-3">Modeled from shared revenue model</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Card>
 
       <Card title="Annual financial detail" eyebrow="Detailed breakdown by year">

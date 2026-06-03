@@ -3,6 +3,7 @@ import cmsCountyMarket from "../data/cmsCountyMarket.js";
 import launchPlan from "../data/launchPlan.js";
 import { namedProviderRows } from "../data/providers.js";
 import { DEFAULT_SCENARIO, STAFFING_RATIOS, SENSITIVITY_VARIABLES, OPPORTUNITY_WEIGHTS } from "../data/constants.js";
+import { classifyProvider } from "../data/andwell.js";
 
 const SMART_SCENARIO_BASES = {
   conversionRate: [0.65, 0.7, 0.75, 0.8, 0.85, 0.9],
@@ -312,11 +313,6 @@ export function getProviderSummary(service) {
   };
 }
 
-const NATIONAL_CHAINS = [
-  "amedisys", "centerwell", "gentiva", "kindred", "compassus",
-  "elara", "constellation", "enhabit", "lhc group", "bayada",
-];
-
 export function getCompetitiveThreatScore(county) {
   const market = cmsCountyMarket[county];
   if (!market) return null;
@@ -332,9 +328,7 @@ export function getCompetitiveThreatScore(county) {
   const competitorCount = allCompetitors.length;
   const totalBeneficiaries = allCompetitors.reduce((s, p) => s + p.beneficiaries, 0);
   const totalShare = allCompetitors.reduce((s, p) => s + p.providerVolumeShare, 0);
-  const hasNationalChain = allCompetitors.some((p) =>
-    NATIONAL_CHAINS.some((chain) => p.providerName.toLowerCase().includes(chain)),
-  );
+  const hasNationalChain = allCompetitors.some((p) => classifyProvider(p).classification === "National chain");
   const providerDensity = (market.hh.prov + market.hos.prov) / (market.ffs / 10000);
 
   const countScore = Math.min(competitorCount / 8, 1) * 25;
