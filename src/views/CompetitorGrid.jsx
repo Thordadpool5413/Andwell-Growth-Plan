@@ -4,8 +4,8 @@ import VerificationBadge from "../components/VerificationBadge.jsx";
 import CmsEvidenceCard from "../components/CmsEvidenceCard.jsx";
 import Badge from "../components/Badge.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
-import { getProviderIntelligenceRows } from "../data/dashboardData.js";
-import { classifyProvider } from "../data/andwell.js";
+import { getProviderIntelligenceRows, getProviderProfileByCcn } from "../data/dashboardData.js";
+import { ANDWELL_CCN, classifyProvider } from "../data/andwell.js";
 
 async function getCmsToken() {
   try {
@@ -692,7 +692,10 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
   const [filter, setFilter] = useState("all");
   const [page, setPage] = useState(0);
   const [viewMode, setViewMode] = useState("columns");
-  const [andwellQuality, setAndwellQuality] = useState(null);
+  const [andwellQuality] = useState(() => {
+    const profile = getProviderProfileByCcn(ANDWELL_CCN);
+    return profile?.hhcahpsEvidence || profile?.hhvbpEvidence || null;
+  });
   const PAGE_SIZE = 6;
 
   useEffect(() => {
@@ -701,22 +704,10 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
       try {
         const tr = await fetch("/api/ai/token");
         const { token } = tr.ok ? await tr.json() : { token: "" };
-        const [compRes, qualRes] = await Promise.all([
-          fetch("/api/cms/competitors", { headers: { "x-ai-token": token } }),
-          fetch("/api/cms/tool", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "x-ai-token": token },
-            body: JSON.stringify({ tool_name: "get_provider_quality_snapshot", args: { provider_name: "Andwell", provider_type: providerType } }),
-          }),
-        ]);
+        const compRes = await fetch("/api/cms/competitors", { headers: { "x-ai-token": token } });
         if (!compRes.ok) throw new Error(compRes.statusText);
         const data = await compRes.json();
         setCompetitors(data.competitors?.length ? mergeBundledEvidence(data.competitors, providerType) : buildSeededCompetitors(providerType));
-        if (qualRes.ok) {
-          const qualData = await qualRes.json();
-          const best = pickBestMeasure(qualData.quality_measures || []);
-          setAndwellQuality(best || null);
-        }
       } catch (err) {
         setError(err.toString());
       } finally {
