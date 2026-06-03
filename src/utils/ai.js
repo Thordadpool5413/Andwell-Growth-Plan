@@ -1,3 +1,5 @@
+import { buildDashboardAiContext } from "../data/dashboardData.js";
+
 export const AI_AVAILABLE = true;
 
 let _cachedToken = null;
@@ -8,11 +10,28 @@ async function getToken() {
   const now = Date.now();
   if (_cachedToken && now - _tokenFetchedAt < TOKEN_TTL_MS) return _cachedToken;
   const res = await fetch("/api/ai/token");
-  if (!res.ok) throw new Error("Could not obtain AI session token.");
-  const { token } = await res.json();
+  if (!res.ok) {
+    const body = await readJsonOrText(res);
+    throw new Error(body?.error || body?.details || `Could not obtain AI session token (${res.status}).`);
+  }
+  const { token } = await readJsonOrText(res);
+  if (!token) throw new Error("Could not obtain AI session token.");
   _cachedToken = token;
   _tokenFetchedAt = now;
   return token;
+}
+
+async function readJsonOrText(res) {
+  const contentType = res.headers.get("content-type") || "";
+  const text = await res.text();
+  if (contentType.includes("json")) {
+    try {
+      return JSON.parse(text);
+    } catch {
+      return { error: "The server returned malformed JSON." };
+    }
+  }
+  return { error: text.slice(0, 220) || `HTTP ${res.status}` };
 }
 
 export async function streamChat({ messages, onChunk, onDone, onError, signal }) {
@@ -29,7 +48,7 @@ export async function streamChat({ messages, onChunk, onDone, onError, signal })
     });
 
     if (!res.ok) {
-      const errJson = await res.json().catch(() => ({}));
+      const errJson = await readJsonOrText(res).catch(() => ({}));
       throw new Error(errJson.error || `AI error ${res.status}`);
     }
 
@@ -158,7 +177,7 @@ Write a 2–3 paragraph executive summary covering: (1) the overall financial op
   ];
 }
 
-export function buildAskPrompt(question, rows, totals, intelMap = {}) {
+export function buildAskPrompt(question, rows, totals, intelMap = {}, selectedCounty = "York") {
   const counties = [...new Set(rows.map((r) => r.county))];
   const countyLines = counties
     .map((county) => {
@@ -186,11 +205,12 @@ export function buildAskPrompt(question, rows, totals, intelMap = {}) {
     })
     .join("\n");
 
+  const dashboardContext = buildDashboardAiContext({ rows, totals, selectedCounty });
   return [
     {
       role: "system",
       content:
-        "You are a data analyst for the Andwell Maine home health and hospice expansion plan. Answer questions using only the provided context data. Be specific with numbers. If the answer cannot be determined from the data, say so clearly. End your response by citing which data fields you used, prefixed with 'Data used:'.",
+        "You are a data analyst for the Andwell Maine home health and hospice expansion plan. Answer using only the provided dashboard context. Be specific with numbers. Clearly distinguish sourced CMS or HRSA public data, generated local seed data, modeled projections, and inferred strategy notes. If the requested fact is unavailable in the context, say the data is not available instead of inventing it. End your response by citing which data fields you used, prefixed with 'Data used:'.",
     },
     {
       role: "user",
@@ -206,6 +226,9 @@ Overall scenario totals:
 
 County breakdown (opp=opportunity score, threat=competitive threat, pen=market penetration):
 ${countyLines}
+
+Normalized dashboard data context:
+${JSON.stringify(dashboardContext).slice(0, 22000)}
 
 Question: ${question}`,
     },
@@ -238,10 +261,10 @@ export async function callCmsAnalyze(question) {
     body: JSON.stringify({ question }),
   });
   if (!res.ok) {
-    const errJson = await res.json().catch(() => ({}));
+    const errJson = await readJsonOrText(res).catch(() => ({}));
     throw new Error(errJson.error || `CMS AI error ${res.status}`);
   }
-  return res.json();
+  return readJsonOrText(res);
 }
 
 export function buildMarketSummaryPrompt({ velocityRows, andwellDominance, amedisysCombinedShare, northernLight, totalCompetitors, nationalChainCount }) {

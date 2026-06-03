@@ -278,15 +278,15 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
                 <YAxis type="category" dataKey="providerName" width={170} tick={{ fontSize: 11, fill: dark ? "#94a3b8" : "#475569" }} />
                 <CustomTooltip formatter={(value, name) => name === "sharePct" ? `${value}%` : number(value)} />
                 <Bar dataKey="sharePct" name="Provider file share" radius={[0, 8, 8, 0]}>
-                  {chartRows.map((row) => <Cell key={row.providerName} fill={row.isAndwellCmsRecord ? COLORS.blue : COLORS.slate} />)}
+                  {chartRows.map((row, i) => <Cell key={`${row.service}-${row.providerName}-${row.locationCounty}-${i}`} fill={row.isAndwellCmsRecord ? COLORS.blue : COLORS.slate} />)}
                 </Bar>
               </BarChart>
             </ChartContainer>
           </Card>
           <Card title={`${selectedCounty} named providers`} eyebrow="County located providers">
             <div className="space-y-3">
-              {countyProviders.length ? countyProviders.map((provider) => (
-                <div key={`${provider.service}-${provider.providerName}`} className={`rounded-xl border p-4 ${provider.isAndwellCmsRecord ? dark ? "border-blue-700 bg-blue-950/50" : "border-blue-300 bg-blue-50" : dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
+              {countyProviders.length ? countyProviders.map((provider, i) => (
+                <div key={`${provider.service}-${provider.providerName}-${provider.locationCounty}-${i}`} className={`rounded-xl border p-4 ${provider.isAndwellCmsRecord ? dark ? "border-blue-700 bg-blue-950/50" : "border-blue-300 bg-blue-50" : dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white"}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className={`font-semibold ${dark ? "text-slate-100" : "text-slate-800"}`}>{provider.providerName}</p>

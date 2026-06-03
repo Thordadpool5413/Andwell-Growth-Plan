@@ -1,0 +1,136 @@
+{
+  "generated_at": "2026-06-03T02:33:31.748Z",
+  "sources": {
+    "hospiceProviderData": {
+      "program": "Hospice",
+      "name": "Hospice Provider Data",
+      "identifier": "252m-zfp9",
+      "metadata_endpoint": "https://data.cms.gov/provider-data/api/1/metastore/schemas/dataset/items/252m-zfp9",
+      "data_endpoint": "https://data.cms.gov/provider-data/api/1/datastore/query/252m-zfp9/0",
+      "purpose": "Hospice provider list and hospice quality measures.",
+      "maine_records": 17,
+      "status": "loaded"
+    },
+    "hospiceStateData": {
+      "program": "Hospice",
+      "name": "Hospice State Data",
+      "identifier": "eda0-92f0",
+      "metadata_endpoint": "https://data.cms.gov/provider-data/api/1/metastore/schemas/dataset/items/eda0-92f0",
+      "data_endpoint": "https://data.cms.gov/provider-data/api/1/datastore/query/eda0-92f0/0",
+      "purpose": "State-level hospice dataset.",
+      "maine_records": null,
+      "status": "configured"
+    },
+    "hospiceNationalData": {
+      "program": "Hospice",
+      "name": "Hospice National Data",
+      "identifier": "3xeb-u9wp",
+      "metadata_endpoint": "https://data.cms.gov/provider-data/api/1/metastore/schemas/dataset/items/3xeb-u9wp",
+      "data_endpoint": "https://data.cms.gov/provider-data/api/1/datastore/query/3xeb-u9wp/0",
+      "purpose": "National hospice benchmark dataset.",
+      "maine_records": null,
+      "status": "configured"
+    },
+    "hospiceCahpsProviderData": {
+      "program": "Hospice",
+      "name": "Hospice CAHPS Provider Data",
+      "identifier": "gxki-hrr8",
+      "metadata_endpoint": "https://data.cms.gov/provider-data/api/1/metastore/schemas/dataset/items/gxki-hrr8",
+      "data_endpoint": "https://data.cms.gov/provider-data/api/1/datastore/query/gxki-hrr8/0",
+      "purpose": "Hospice CAHPS provider survey data.",
+      "maine_records": 17,
+      "status": "loaded"
+    },
+    "hospiceGeneralInformation": {
+      "program": "Hospice",
+      "name": "Hospice General Information",
+      "identifier": "yc9t-dgbk",
+      "metadata_endpoint": "https://data.cms.gov/provider-data/api/1/metastore/schemas/dataset/items/yc9t-dgbk",
+      "data_endpoint": "https://data.cms.gov/provider-data/api/1/datastore/query/yc9t-dgbk/0",
+      "purpose": "Hospice general provider information.",
+      "maine_records": 17,
+      "status": "loaded"
+    },
+    "hospiceZipData": {
+      "program": "Hospice",
+      "name": "Hospice ZIP Data",
+      "identifier": "95rg-2usp",
+      "metadata_endpoint": "https://data.cms.gov/provider-data/api/1/metastore/schemas/dataset/items/95rg-2usp",
+      "data_endpoint": "https://data.cms.gov/provider-data/api/1/datastore/query/95rg-2usp/0",
+      "purpose": "Hospice ZIP-level service area data.",
+      "maine_records": 1635,
+      "status": "loaded"
+    },
+    "homeHealthAgencies": {
+      "program": "Home health",
+      "name": "Home Health Care Agencies",
+      "identifier": "6jpm-sxkc",
+      "metadata_endpoint": "https://data.cms.gov/provider-data/api/1/metastore/schemas/dataset/items/6jpm-sxkc",
+      "data_endpoint": "https://data.cms.gov/provider-data/api/1/datastore/query/6jpm-sxkc/0",
+      "purpose": "Registered home health agencies with addresses and quality ratings.",
+      "maine_records": 19,
+      "status": "loaded"
+    },
+    "homeHealthHhcahpsProvider": {
+      "program": "Home health",
+      "name": "Home Health Care Patient Survey HHCAHPS",
+      "identifier": "ccn4-8vby",
+      "metadata_endpoint": "https://data.cms.gov/provider-data/api/1/metastore/schemas/dataset/items/ccn4-8vby",
+      "data_endpoint": "https://data.cms.gov/provider-data/api/1/datastore/query/ccn4-8vby/0",
+      "purpose": "HHCAHPS patient survey data.",
+      "maine_records": 19,
+      "status": "loaded"
+    },
+    "homeHealthHhcahpsMeasureDates": {
+      "program": "Home health",
+      "name": "Home Health Care HHCAHPS Measure Dates",
+      "identifier": "fa88-6ff2",
+      "metadata_endpoint": "https://data.cms.gov/provider-data/api/1/metastore/schemas/dataset/items/fa88-6ff2",
+      "data_endpoint": "https://data.cms.gov/provider-data/api/1/datastore/query/fa88-6ff2/0",
+      "purpose": "HHCAHPS measure date reference data.",
+      "maine_records": null,
+      "status": "configured"
+    },
+    "homeHealthHhcahpsStateData": {
+      "program": "Home health",
+      "name": "Home Health Care HHCAHPS State Data",
+      "identifier": "m5jg-jg7i",
+      "metadata_endpoint": "https://data.cms.gov/provider-data/api/1/metastore/schemas/dataset/items/m5jg-jg7i",
+      "data_endpoint": "https://data.cms.gov/provider-data/api/1/datastore/query/m5jg-jg7i/0",
+      "purpose": "State-level HHCAHPS benchmark data.",
+      "maine_records": null,
+      "status": "configured"
+    },
+    "homeHealthHhcahpsNationalData": {
+      "program": "Home health",
+      "name": "Home Health Care HHCAHPS National Data",
+      "identifier": "vxub-6swi",
+      "metadata_endpoint": "https://data.cms.gov/provider-data/api/1/metastore/schemas/dataset/items/vxub-6swi",
+      "data_endpoint": "https://data.cms.gov/provider-data/api/1/datastore/query/vxub-6swi/0",
+      "purpose": "National HHCAHPS benchmark data.",
+      "maine_records": null,
+      "status": "configured"
+    },
+    "homeHealthHhvbpAgencyData": {
+      "program": "Home health",
+      "name": "Expanded Home Health Value Based Purchasing Model Agency Data",
+      "identifier": "56d7-4994",
+      "metadata_endpoint": "https://data.cms.gov/provider-data/api/1/metastore/schemas/dataset/items/56d7-4994",
+      "data_endpoint": "https://data.cms.gov/provider-data/api/1/datastore/query/56d7-4994/0",
+      "purpose": "HHVBP agency performance data.",
+      "maine_records": 19,
+      "status": "loaded"
+    }
+  },
+  "hrsa": {
+    "cmsApprovedHospices": {
+      "program": "HRSA Data Warehouse",
+      "name": "CMS Approved Facilities Hospices",
+      "sourceType": "ArcGIS REST service",
+      "endpoint": "https://gisportal.hrsa.gov/server/rest/services/HealthCareFacilities/CMSApprovedFacilities_FS/MapServer/4/query?where=CMS_PROVIDER_STATE_ABBR%3D%27ME%27&outFields=FACILITY_NM,CMS_PROVIDER_ADDRESS,CMS_PROVIDER_CITY,CMS_PROVIDER_STATE_ABBR,CMS_PROVIDER_ZIP_CD,CMS_PROVIDER_NUM,PHONE_NUM&returnGeometry=true&outSR=4326&f=pjson",
+      "purpose": "National hospice facility layer derived from CMS QIES and published by HRSA.",
+      "maine_records": 17,
+      "status": "loaded"
+    }
+  }
+}

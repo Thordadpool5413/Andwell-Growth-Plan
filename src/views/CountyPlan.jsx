@@ -14,13 +14,41 @@ import { getCountyIntelligence, getOpportunityScore } from "../utils/calculation
 import { streamChat, buildCountyPrompt, AI_AVAILABLE } from "../utils/ai.js";
 import { currency, number, percent } from "../utils/formatters.js";
 import { themeClasses } from "../utils/themeClasses.js";
+import { MAINE_COUNTIES, getCountyDashboardRecord } from "../data/dashboardData.js";
 
 const CMS_LAST_SYNCED = "2026-05-01";
 
 export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, competitorProviderType, setCompetitorProviderType }) {
   const { dark } = useDarkMode();
-  const selected = rows.find((row) => row.county === selectedCounty) || rows[0];
+  const selectedRecord = getCountyDashboardRecord(selectedCounty, rows);
+  const selected = rows.find((row) => row.county === selectedCounty) || {
+    county: selectedCounty,
+    service: "Not in current launch plan",
+    launchGroup: "Not in plan",
+    starts: [0, 0, 0],
+    referrals: [0, 0, 0],
+    revenue: [0, 0, 0],
+    meta: { unit: "No modeled starts" },
+    basis: "No modeled planning row",
+    reason: "This county is shown with official Maine county boundaries but is not currently included in the active launch plan.",
+    current: "No active Andwell launch-plan row in this model.",
+    missing: "No service-line gap is modeled for this county in the current plan.",
+    accounts: [],
+  };
   const intel = getCountyIntelligence(selected.county, rows);
+  const displayRows = [
+    ...rows,
+    ...MAINE_COUNTIES
+      .filter((county) => !rows.some((row) => row.county === county.name))
+      .map((county) => ({
+        county: county.name,
+        service: "Not in plan",
+        launchGroup: "Not in plan",
+        starts: [0, 0, 0],
+        referrals: [0, 0, 0],
+        revenue: [0, 0, 0],
+      })),
+  ];
 
   const [aiText, setAiText] = useState("");
   const [aiGenerating, setAiGenerating] = useState(false);
@@ -86,11 +114,12 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
             />
           </div>
           <div className="space-y-2">
-            {rows.filter((r) => !search || r.county.toLowerCase().includes(search.toLowerCase())).map((row, index) => {
+            {displayRows.filter((r) => !search || r.county.toLowerCase().includes(search.toLowerCase())).map((row, index) => {
               const rowIntel = getCountyIntelligence(row.county, rows);
               const oppScore = getOpportunityScore(row.county, rows);
               const score = oppScore?.score ?? 0;
               const isSelected = selectedCounty === row.county;
+              const isPlanned = row.launchGroup !== "Not in plan";
               return (
                 <button
                   key={row.county}
@@ -119,13 +148,13 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
                               ⚔ {rowIntel.threat.score}
                             </Badge>
                           )}
-                          <Badge tone={row.launchGroup.includes("1") ? "green" : row.launchGroup.includes("2") ? "blue" : "amber"}>
-                            P{row.launchGroup.match(/\d/)?.[0] || "?"}
+                          <Badge tone={!isPlanned ? "slate" : row.launchGroup.includes("1") ? "green" : row.launchGroup.includes("2") ? "blue" : "amber"}>
+                            {isPlanned ? `P${row.launchGroup.match(/\d/)?.[0] || "?"}` : "Not in plan"}
                           </Badge>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 mt-1">
-                        <ServiceBadge service={row.service} />
+                        {isPlanned ? <ServiceBadge service={row.service} /> : <Badge tone="slate">Official county boundary</Badge>}
                         <div className="flex-1">
                           <div className={`h-1.5 w-full overflow-hidden rounded-full ${dark ? "bg-slate-700" : "bg-slate-100"}`}>
                             <div
@@ -152,6 +181,8 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
         <Card title={`${selected.county} County`} eyebrow="County detail">
           <div className="mb-3 flex items-center gap-2">
             <FreshnessChip lastSynced={CMS_LAST_SYNCED} label="CMS data" />
+            <Badge tone={selectedRecord.inPlan ? "blue" : "slate"}>{selectedRecord.priority}</Badge>
+            <Badge tone={selectedRecord.inPlan ? "blue" : "slate"}>{selectedRecord.priority}</Badge>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             <Metric

@@ -1,49 +1,96 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { APIProvider, Map, useMap, AdvancedMarker, InfoWindow } from "@vis.gl/react-google-maps";
+import React, { useMemo, useState } from "react";
 import { useDarkMode } from "./DarkModeContext.jsx";
 import { HEATMAP_MODES } from "../data/constants.js";
 import { getHeatmapValue, getCompetitiveThreatScore } from "../utils/calculations.js";
-import MAINE_HOSPITALS from "../data/maineHospitals.js";
-import ANDWELL_OFFICES from "../data/andwellOffices.js";
-import MAINE_COUNTY_GEOJSON from "../data/maineCountyGeoJson.js";
-
-const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-
-const MAINE_CENTER = { lat: 45.25, lng: -69.45 };
-const MAINE_ZOOM = 7;
-
-const launchCounties = new Set([
-  "York", "Cumberland", "Penobscot", "Kennebec",
-  "Knox", "Lincoln", "Sagadahoc", "Washington",
-  "Aroostook", "Oxford", "Somerset", "Franklin",
-]);
+import { namedProviderRows } from "../data/providers.js";
+import { MAINE_COUNTIES, getCountyPriority } from "../data/dashboardData.js";
+import MAINE_COUNTY_GEOJSON from "../data/generated/maineCountyBoundaries.json";
 
 const priorityColors = {
   "Priority 1": "#2563eb",
   "Priority 2": "#7c3aed",
   "Priority 3": "#f59e0b",
+  "Not in plan": "#94a3b8",
 };
+
+const darkPriorityColors = {
+  "Priority 1": "#60a5fa",
+  "Priority 2": "#a78bfa",
+  "Priority 3": "#fbbf24",
+  "Not in plan": "#334155",
+};
+
+function getFeatureName(feature) {
+  return feature.properties?.name || feature.properties?.NAME;
+}
+
+function flattenCoords(geometry) {
+  if (!geometry) return [];
+  if (geometry.type === "Polygon") return geometry.coordinates.flat();
+  if (geometry.type === "MultiPolygon") return geometry.coordinates.flat(2);
+  return [];
+}
+
+function boundsForFeatures(features) {
+  const coords = features.flatMap((feature) => flattenCoords(feature.geometry));
+  const xs = coords.map(([lng]) => lng);
+  const ys = coords.map(([, lat]) => lat);
+  return {
+    minLng: Math.min(...xs),
+    maxLng: Math.max(...xs),
+    minLat: Math.min(...ys),
+    maxLat: Math.max(...ys),
+  };
+}
+
+function makeProjector(bounds, width, height, padding) {
+  const lngSpan = bounds.maxLng - bounds.minLng;
+  const latSpan = bounds.maxLat - bounds.minLat;
+  const scale = Math.min((width - padding * 2) / lngSpan, (height - padding * 2) / latSpan);
+  const usedWidth = lngSpan * scale;
+  const usedHeight = latSpan * scale;
+  const offsetX = (width - usedWidth) / 2;
+  const offsetY = (height - usedHeight) / 2;
+  return ([lng, lat]) => [offsetX + (lng - bounds.minLng) * scale, offsetY + (bounds.maxLat - lat) * scale];
+}
+
+function ringPath(ring, project) {
+  return ring.map((coord, index) => {
+    const [x, y] = project(coord);
+    return `${index === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ") + " Z";
+}
+
+function featurePath(feature, project) {
+  const geometry = feature.geometry;
+  if (geometry.type === "Polygon") return geometry.coordinates.map((ring) => ringPath(ring, project)).join(" ");
+  if (geometry.type === "MultiPolygon") return geometry.coordinates.flatMap((polygon) => polygon.map((ring) => ringPath(ring, project))).join(" ");
+  return "";
+}
+
+function centroid(feature, project) {
+  const coords = flattenCoords(feature.geometry);
+  if (!coords.length) return [0, 0];
+  const sum = coords.reduce((acc, coord) => {
+    const [x, y] = project(coord);
+    acc[0] += x;
+    acc[1] += y;
+    return acc;
+  }, [0, 0]);
+  return [sum[0] / coords.length, sum[1] / coords.length];
+}
 
 function interpolateColor(value, min, max, dark) {
   const ratio = max > min ? (value - min) / (max - min) : 0;
   const clamped = Math.max(0, Math.min(1, ratio));
   if (dark) {
-    const r = Math.round(30 + clamped * 90);
-    const g = Math.round(41 + (1 - clamped) * 60);
-    const b = Math.round(59 + clamped * 180);
-    return `rgb(${r},${g},${b})`;
+    const b = Math.round(90 + clamped * 140);
+    return `rgb(30, ${Math.round(60 + clamped * 70)}, ${b})`;
   }
-  const r = Math.round(219 - clamped * 185);
-  const g = Math.round(234 - clamped * 140);
-  const b = Math.round(254 - clamped * 19);
-  return `rgb(${r},${g},${b})`;
-}
-
-function interpolateColorHex(value, min, max, dark) {
-  const css = interpolateColor(value, min, max, dark);
-  const m = css.match(/rgb\((\d+),(\d+),(\d+)\)/);
-  if (!m) return "#3b82f6";
-  return "#" + [m[1], m[2], m[3]].map((n) => parseInt(n).toString(16).padStart(2, "0")).join("");
+  const r = Math.round(226 - clamped * 170);
+  const g = Math.round(232 - clamped * 100);
+  const b = Math.round(240 - clamped * 30);
+  return `rgb(${r}, ${g}, ${b})`;
 }
 
 function competitionColor(score, dark) {
@@ -53,766 +100,132 @@ function competitionColor(score, dark) {
   return dark ? "#166534" : "#bbf7d0";
 }
 
-function haversineKm(lat1, lng1, lat2, lng2) {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLng / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+function countyFill({ county, rows, rowMap, heatmapMode, heatValues, min, max, dark }) {
+  const priority = getCountyPriority(county, rows);
+  if (heatmapMode === "priority") return (dark ? darkPriorityColors : priorityColors)[priority] || (dark ? "#334155" : "#cbd5e1");
+  if (priority === "Not in plan") return dark ? "#1e293b" : "#e2e8f0";
+  if (heatmapMode === "competition") return competitionColor(getCompetitiveThreatScore(county)?.score || 0, dark);
+  const row = rowMap[county];
+  if (!row) return dark ? "#1e293b" : "#e2e8f0";
+  return interpolateColor(heatValues[county] || 0, min, max, dark);
 }
 
-function nearestOffice(hospital) {
-  let best = null;
-  let bestKm = Infinity;
-  for (const office of ANDWELL_OFFICES) {
-    const km = haversineKm(hospital.lat, hospital.lng, office.lat, office.lng);
-    if (km < bestKm) { bestKm = km; best = office; }
-  }
-  const miles = (bestKm * 0.621371).toFixed(0);
-  return { office: best, miles };
-}
-
-const DRIVE_TIME_RINGS = [
-  { minutes: 30, radiusKm: 32, color: "#22c55e", fillOpacity: 0.07, strokeOpacity: 0.7 },
-  { minutes: 60, radiusKm: 64, color: "#f59e0b", fillOpacity: 0.05, strokeOpacity: 0.6 },
-  { minutes: 90, radiusKm: 96, color: "#ef4444", fillOpacity: 0.04, strokeOpacity: 0.5 },
-];
-
-const DARK_MAP_STYLE = [
-  { elementType: "geometry", stylers: [{ color: "#1e293b" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#94a3b8" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#1e293b" }] },
-  { featureType: "administrative", elementType: "geometry.stroke", stylers: [{ color: "#334155" }] },
-  { featureType: "administrative.land_parcel", stylers: [{ visibility: "off" }] },
-  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#0f172a" }] },
-  { featureType: "poi", stylers: [{ visibility: "off" }] },
-  { featureType: "road", stylers: [{ visibility: "simplified" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#334155" }] },
-  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#64748b" }] },
-  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#475569" }] },
-  { featureType: "transit", stylers: [{ visibility: "off" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0c1a2e" }] },
-  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#475569" }] },
-];
-
-function CountyLayer({ heatmapMode, rows, selectedCounty, onSelectCounty, dark }) {
-  const map = useMap();
-  const dataLayerRef = useRef(null);
-
-  const rowMap = {};
-  if (rows) rows.forEach((r) => { rowMap[r.county] = r; });
-
-  const heatValues = {};
-  if (heatmapMode !== "priority" && rows) {
-    Object.keys(rowMap).forEach((county) => {
-      if (launchCounties.has(county)) {
-        heatValues[county] = getHeatmapValue(county, heatmapMode, rows);
-      }
-    });
-  }
-  const heatVals = Object.values(heatValues);
-  const heatMin = heatVals.length ? Math.min(...heatVals) : 0;
-  const heatMax = heatVals.length ? Math.max(...heatVals) : 1;
-
-  function getFill(countyName) {
-    const isActive = launchCounties.has(countyName);
-    if (!isActive) return dark ? "#1e293b" : "#e2e8f0";
-    if (heatmapMode === "priority") {
-      const row = rowMap[countyName];
-      return row ? priorityColors[row.launchGroup] || (dark ? "#334155" : "#e2e8f0") : dark ? "#475569" : "#93c5fd";
-    }
-    if (heatmapMode === "competition") {
-      const threat = getCompetitiveThreatScore(countyName);
-      return competitionColor(threat ? threat.score : 0, dark);
-    }
-    const val = heatValues[countyName] || 0;
-    return interpolateColorHex(val, heatMin, heatMax, dark);
-  }
-
-  useEffect(() => {
-    if (!map) return;
-
-    if (dataLayerRef.current) {
-      dataLayerRef.current.forEach((f) => map.data.remove(f));
-    }
-
-    const features = map.data.addGeoJson(MAINE_COUNTY_GEOJSON);
-    dataLayerRef.current = features;
-
-    map.data.setStyle((feature) => {
-      const name = feature.getProperty("name");
-      const isSelected = name === selectedCounty;
-      const isActive = launchCounties.has(name);
-      return {
-        fillColor: isSelected ? (dark ? "#1d4ed8" : "#1e3a5f") : getFill(name),
-        fillOpacity: isSelected ? 0.75 : isActive ? 0.65 : 0.35,
-        strokeColor: isSelected ? "#3b82f6" : dark ? "#475569" : "#94a3b8",
-        strokeWeight: isSelected ? 2.5 : 1,
-        cursor: isActive ? "pointer" : "default",
-      };
-    });
-
-    const clickListener = map.data.addListener("click", (event) => {
-      const name = event.feature.getProperty("name");
-      if (launchCounties.has(name) && onSelectCounty) onSelectCounty(name);
-    });
-
-    return () => {
-      if (dataLayerRef.current) {
-        dataLayerRef.current.forEach((f) => map.data.remove(f));
-      }
-      google.maps.event.removeListener(clickListener);
-    };
-  }, [map, heatmapMode, selectedCounty, dark, rows]);
-
-  return null;
-}
-
-function DriveTimeRings({ visible, dark }) {
-  const map = useMap();
-  const circlesRef = useRef([]);
-
-  useEffect(() => {
-    circlesRef.current.forEach((c) => c.setMap(null));
-    circlesRef.current = [];
-    if (!map || !visible) return;
-
-    for (const office of ANDWELL_OFFICES) {
-      for (const ring of DRIVE_TIME_RINGS) {
-        const circle = new google.maps.Circle({
-          map,
-          center: { lat: office.lat, lng: office.lng },
-          radius: ring.radiusKm * 1000,
-          fillColor: ring.color,
-          fillOpacity: ring.fillOpacity,
-          strokeColor: ring.color,
-          strokeOpacity: ring.strokeOpacity,
-          strokeWeight: 1.5,
-          clickable: false,
-        });
-        circlesRef.current.push(circle);
-      }
-    }
-
-    return () => {
-      circlesRef.current.forEach((c) => c.setMap(null));
-      circlesRef.current = [];
-    };
-  }, [map, visible, dark]);
-
-  return null;
-}
-
-function OfficeMarkers({ visible, dark }) {
-  if (!visible) return null;
-  return ANDWELL_OFFICES.map((office) => (
-    <AdvancedMarker key={office.id} position={{ lat: office.lat, lng: office.lng }}>
-      <div
-        title={office.name}
-        style={{
-          width: 14,
-          height: 14,
-          borderRadius: "50%",
-          background: dark ? "#60a5fa" : "#1d4ed8",
-          border: "2.5px solid white",
-          boxShadow: "0 0 0 2px #3b82f6, 0 2px 6px rgba(0,0,0,0.4)",
-        }}
-      />
-    </AdvancedMarker>
-  ));
-}
-
-function HospitalMarkers({ visible, dark, selectedHospital, onSelect }) {
-  if (!visible) return null;
-  return MAINE_HOSPITALS.map((h) => {
-    const isSelected = selectedHospital?.id === h.id;
+function Legend({ heatmapMode, dark, min, max }) {
+  if (heatmapMode === "priority") {
     return (
-      <AdvancedMarker
-        key={h.id}
-        position={{ lat: h.lat, lng: h.lng }}
-        onClick={() => onSelect(isSelected ? null : h)}
-      >
-        <div
-          title={h.name}
-          style={{
-            width: isSelected ? 14 : 10,
-            height: isSelected ? 14 : 10,
-            borderRadius: "50%",
-            background: isSelected ? "#f97316" : dark ? "#f87171" : "#dc2626",
-            border: `2px solid ${isSelected ? "#fff" : dark ? "#1e293b" : "#fff"}`,
-            boxShadow: isSelected ? "0 0 0 2px #f97316, 0 2px 6px rgba(0,0,0,0.4)" : "0 1px 4px rgba(0,0,0,0.3)",
-            transition: "all 0.15s",
-            cursor: "pointer",
-          }}
-        />
-      </AdvancedMarker>
-    );
-  });
-}
-
-function HospitalInfoWindow({ hospital, onClose, dark }) {
-  if (!hospital) return null;
-  const { office, miles } = nearestOffice(hospital);
-  return (
-    <InfoWindow
-      position={{ lat: hospital.lat, lng: hospital.lng }}
-      onCloseClick={onClose}
-      pixelOffset={[0, -10]}
-    >
-      <div style={{ fontFamily: "system-ui, sans-serif", minWidth: 180, maxWidth: 240, padding: "2px 0" }}>
-        <p style={{ margin: 0, fontWeight: 800, fontSize: 13, color: "#0f172a", lineHeight: 1.3 }}>{hospital.name}</p>
-        <p style={{ margin: "3px 0 0", fontSize: 11, color: "#475569" }}>{hospital.system}</p>
-        <p style={{ margin: "4px 0 0", fontSize: 11, color: "#475569" }}>
-          <span style={{ fontWeight: 700 }}>County:</span> {hospital.county}
-        </p>
-        <div style={{ marginTop: 6, paddingTop: 6, borderTop: "1px solid #e2e8f0" }}>
-          <p style={{ margin: 0, fontSize: 11, color: "#475569" }}>
-            <span style={{ fontWeight: 700 }}>Nearest Andwell:</span>
-          </p>
-          <p style={{ margin: "2px 0 0", fontSize: 11, color: "#1d4ed8", fontWeight: 700 }}>{office?.name}</p>
-          <p style={{ margin: "1px 0 0", fontSize: 11, color: "#475569" }}>~{miles} mi as the crow flies</p>
-        </div>
+      <div className="flex flex-wrap justify-center gap-3">
+        {Object.entries(dark ? darkPriorityColors : priorityColors).map(([label, color]) => (
+          <div key={label} className={`flex items-center gap-1.5 text-xs font-semibold ${dark ? "text-slate-400" : "text-slate-600"}`}>
+            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />{label}
+          </div>
+        ))}
       </div>
-    </InfoWindow>
-  );
-}
-
-function MapLegend({ isGradientMode, gradientLow, gradientHigh, heatmapMode, heatMin, heatMax, dark, showHospitals, showRings }) {
-  const discreteLegendItems = heatmapMode === "priority"
-    ? [
-        ...Object.entries(priorityColors).map(([label, color]) => ({ label, color })),
-        { label: "Not in plan", color: dark ? "#334155" : "#d1d5db" },
-      ]
-    : [
-        { label: "Low (<30)", color: dark ? "#166534" : "#bbf7d0" },
-        { label: "Moderate (30–49)", color: dark ? "#1e40af" : "#bfdbfe" },
-        { label: "High (50–69)", color: dark ? "#92400e" : "#fed7aa" },
-        { label: "Fortress (70+)", color: dark ? "#991b1b" : "#fecaca" },
-      ];
-
-  const formatVal = (v) => {
-    if (heatmapMode === "penetration") return `${v.toFixed(1)}%`;
-    if (heatmapMode === "revenue") return `$${Math.round(v).toLocaleString()}`;
-    return Math.round(v).toLocaleString();
-  };
-
-  return (
-    <div className="mt-4 space-y-2">
-      {isGradientMode ? (
-        <div className="flex flex-col items-center gap-1">
-          <p className={`text-[10px] font-semibold uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-400"}`}>
-            {heatmapMode === "penetration" ? "Market penetration" : heatmapMode === "revenue" ? "Modeled Y1 revenue" : "65+ population"} — low to high
-          </p>
-          <div className="flex w-48 items-center gap-2">
-            <span className={`text-[10px] font-semibold ${dark ? "text-slate-400" : "text-slate-600"}`}>{formatVal(heatMin)}</span>
-            <div className="h-3 flex-1 rounded-full" style={{ background: `linear-gradient(to right, ${gradientLow}, ${gradientHigh})` }} />
-            <span className={`text-[10px] font-semibold ${dark ? "text-slate-400" : "text-slate-600"}`}>{formatVal(heatMax)}</span>
-          </div>
-          <div className={`flex items-center gap-1.5 text-[10px] font-semibold ${dark ? "text-slate-500" : "text-slate-400"}`}>
-            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: dark ? "#334155" : "#d1d5db" }} />
-            Not in plan
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-wrap justify-center gap-3">
-          {discreteLegendItems.map(({ label, color }) => (
-            <div key={label} className={`flex items-center gap-1.5 text-xs font-semibold ${dark ? "text-slate-400" : "text-slate-600"}`}>
-              <span className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />
-              {label}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {showRings && (
-        <div className="flex flex-wrap justify-center gap-3">
-          {DRIVE_TIME_RINGS.map((r) => (
-            <div key={r.minutes} className={`flex items-center gap-1.5 text-[10px] font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>
-              <span className="h-2.5 w-2.5 rounded-full border-2" style={{ borderColor: r.color, background: "transparent" }} />
-              {r.minutes} min
-            </div>
-          ))}
-          <span className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>drive-time from each Andwell office</span>
-        </div>
-      )}
-
-      {showHospitals && (
-        <div className={`flex items-center justify-center gap-1.5 text-[10px] font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>
-          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#dc2626" }} />
-          Hospital / Health System — click for details
-        </div>
-      )}
-    </div>
-  );
-}
-
-const COUNTY_COORDS = {
-  Cumberland: { lat: 43.82, lng: -70.38 },
-  York: { lat: 43.45, lng: -70.72 },
-  Penobscot: { lat: 44.93, lng: -68.67 },
-  Kennebec: { lat: 44.41, lng: -69.77 },
-  Knox: { lat: 44.07, lng: -69.18 },
-  Lincoln: { lat: 43.98, lng: -69.57 },
-  Androscoggin: { lat: 44.18, lng: -70.23 },
-  Sagadahoc: { lat: 43.93, lng: -69.87 },
-  Aroostook: { lat: 46.72, lng: -68.01 },
-  Somerset: { lat: 45.52, lng: -69.96 },
-  Franklin: { lat: 44.97, lng: -70.44 },
-  Oxford: { lat: 44.22, lng: -70.74 },
-  Washington: { lat: 44.99, lng: -67.64 },
-  Hancock: { lat: 44.56, lng: -68.39 },
-  Waldo: { lat: 44.44, lng: -69.13 },
-  Piscataquis: { lat: 45.81, lng: -69.28 },
-};
-
-const ANDWELL_COUNTIES = new Set(["Cumberland", "York", "Penobscot", "Kennebec", "Knox", "Lincoln", "Sagadahoc", "Washington", "Aroostook", "Oxford", "Somerset", "Franklin"]);
-const NATIONAL_CHAIN_NAMES = ["amedisys", "gentiva", "kindred", "compassus", "constellation", "lhc group", "centerwell", "enhabit", "bayada", "elara caring"];
-function isNationalChainComp(c) {
-  const hay = `${c.name || ""} ${c.parent_company || ""}`.toLowerCase();
-  return NATIONAL_CHAIN_NAMES.some((ch) => hay.includes(ch));
-}
-function resolveCounties(c) {
-  if (c.counties_raw?.length) return c.counties_raw;
-  if (c.known_counties?.length) return c.known_counties;
-  if (c.county) return [c.county];
-  return [];
-}
-function competitorOverlapsAndwell(c) {
-  const counties = resolveCounties(c);
-  return counties.some((cn) => ANDWELL_COUNTIES.has(cn));
-}
-
-function pinColor(c, dark) {
-  if (isNationalChainComp(c)) return dark ? "#f87171" : "#ef4444";
-  const st = c.match_status || "";
-  if (st === "CMS Verified" || st === "CMS and Website Verified") return dark ? "#34d399" : "#059669";
-  if (st === "Needs Review") return dark ? "#fbbf24" : "#d97706";
-  return dark ? "#a78bfa" : "#7c3aed";
-}
-
-function placedPin(c, idx, ci) {
-  if (c.geocoded_lat && c.geocoded_lng) {
-    const lat = parseFloat(c.geocoded_lat);
-    const lng = parseFloat(c.geocoded_lng);
-    if (!isNaN(lat) && !isNaN(lng)) return { lat, lng, geocoded: true };
+    );
   }
-  const counties = resolveCounties(c);
-  const county = counties[ci] || counties[0];
-  const base = COUNTY_COORDS[county];
-  if (!base) return null;
-  const jitter = (idx * 0.03 + ci * 0.015);
-  return { lat: base.lat + jitter, lng: base.lng + jitter, geocoded: false, county };
-}
-
-function CompetitorMarkers({ visible, dark, competitors }) {
-  const [selected, setSelected] = useState(null);
-  if (!visible || !competitors?.length) return null;
-
-  const placed = competitors
-    .flatMap((c, idx) => {
-      if (c.geocoded_lat && c.geocoded_lng) {
-        const coords = placedPin(c, idx, 0);
-        if (coords) return [{ ...c, county: c.county || resolveCounties(c)[0] || null, ...coords }];
-      }
-      const counties = resolveCounties(c);
-      return counties.map((county, ci) => {
-        const coords = placedPin({ ...c, county }, idx, ci);
-        if (!coords) return null;
-        return { ...c, county, ...coords };
-      }).filter(Boolean);
-    })
-    .slice(0, 60);
-
   return (
-    <>
-      {placed.map((comp, i) => {
-        const sel = selected?.name === comp.name && selected?.county === comp.county && selected?.id === comp.id;
-        const national = isNationalChainComp(comp);
-        const color = pinColor(comp, dark);
-        const overlaps = competitorOverlapsAndwell(comp);
-        return (
-          <React.Fragment key={`${comp.id || comp.name}-${comp.county || ""}-${i}`}>
-            <AdvancedMarker
-              position={{ lat: comp.lat, lng: comp.lng }}
-              onClick={() => setSelected(sel ? null : { ...comp, _selKey: i })}
-            >
-              <div
-                title={comp.name}
-                style={{
-                  width: sel ? 15 : national ? 12 : 10,
-                  height: sel ? 15 : national ? 12 : 10,
-                  borderRadius: "50%",
-                  background: color,
-                  border: `2px solid ${sel ? "#fff" : overlaps ? "#f59e0b" : dark ? "#1e293b" : "#fff"}`,
-                  boxShadow: sel ? `0 0 0 2px ${color}, 0 2px 8px rgba(0,0,0,0.5)` : "0 1px 4px rgba(0,0,0,0.3)",
-                  transition: "all 0.15s",
-                  cursor: "pointer",
-                  outline: overlaps && !sel ? "1.5px dashed #f59e0b" : "none",
-                  outlineOffset: "2px",
-                }}
-              />
-            </AdvancedMarker>
-            {sel && (
-              <InfoWindow
-                position={{ lat: comp.lat, lng: comp.lng }}
-                onCloseClick={() => setSelected(null)}
-                pixelOffset={[0, -10]}
-              >
-                <div style={{ fontFamily: "system-ui, sans-serif", minWidth: 190, maxWidth: 250, padding: "2px 0" }}>
-                  <p style={{ margin: 0, fontWeight: 800, fontSize: 13, color: "#0f172a", lineHeight: 1.3 }}>{comp.name}</p>
-                  {comp.parent_company && <p style={{ margin: "2px 0 0", fontSize: 11, color: "#475569" }}>{comp.parent_company}</p>}
-                  {(() => {
-                    const allCounties = resolveCounties(comp);
-                    const label = allCounties.length > 1 ? "Counties" : "County";
-                    const display = allCounties.length > 0 ? allCounties.join(", ") : comp.county;
-                    return display ? (
-                      <p style={{ margin: "5px 0 0", fontSize: 12, color: "#1e3a5f", fontWeight: 700, letterSpacing: 0 }}>
-                        {label}: <span style={{ fontWeight: 600 }}>{display}</span>
-                      </p>
-                    ) : null;
-                  })()}
-                  {comp.provider_type && <p style={{ margin: "2px 0 0", fontSize: 11, color: "#475569" }}><span style={{ fontWeight: 700 }}>Type:</span> {comp.provider_type}</p>}
-                  {comp.address && <p style={{ margin: "2px 0 0", fontSize: 10, color: "#64748b" }}>{comp.address}{comp.city ? `, ${comp.city}` : ""}</p>}
-                  {comp.match_status && (
-                    <p style={{ margin: "4px 0 0", fontSize: 11, fontWeight: 700, color: comp.match_status === "CMS Verified" || comp.match_status === "CMS and Website Verified" ? "#059669" : comp.match_status === "Needs Review" ? "#d97706" : "#6b7280" }}>
-                      {comp.match_status}
-                      {comp.match_confidence != null ? ` (${Math.round(comp.match_confidence * 100)}%)` : ""}
-                    </p>
-                  )}
-                  {comp.geocode_source === "cms_address" && <p style={{ margin: "3px 0 0", fontSize: 9, color: "#94a3b8" }}>CMS address geocoded</p>}
-                  {national && <p style={{ margin: "4px 0 0", fontSize: 10, color: "#dc2626", fontWeight: 700 }}>National chain</p>}
-                  {overlaps && (() => {
-                    const overlapCounties = resolveCounties(comp).filter(cn => ANDWELL_COUNTIES.has(cn));
-                    return (
-                      <p style={{ margin: "2px 0 0", fontSize: 10, color: "#d97706", fontWeight: 700 }}>
-                        ⚡ Andwell overlap{overlapCounties.length > 0 ? `: ${overlapCounties.join(", ")}` : " county"}
-                      </p>
-                    );
-                  })()}
-                </div>
-              </InfoWindow>
-            )}
-          </React.Fragment>
-        );
-      })}
-    </>
-  );
-}
-
-function MapInner({ heatmapMode, rows, selectedCounty, onSelectCounty, dark, showHospitals, showRings, showOffices, showCompetitors, competitors }) {
-  const [selectedHospital, setSelectedHospital] = useState(null);
-
-  return (
-    <>
-      <CountyLayer
-        heatmapMode={heatmapMode}
-        rows={rows}
-        selectedCounty={selectedCounty}
-        onSelectCounty={onSelectCounty}
-        dark={dark}
-      />
-      <DriveTimeRings visible={showRings} dark={dark} />
-      <OfficeMarkers visible={showOffices || showRings} dark={dark} />
-      <HospitalMarkers
-        visible={showHospitals}
-        dark={dark}
-        selectedHospital={selectedHospital}
-        onSelect={setSelectedHospital}
-      />
-      <HospitalInfoWindow
-        hospital={selectedHospital}
-        onClose={() => setSelectedHospital(null)}
-        dark={dark}
-      />
-      <CompetitorMarkers visible={showCompetitors} dark={dark} competitors={competitors} />
-    </>
+    <div className={`flex items-center justify-center gap-2 text-xs font-semibold ${dark ? "text-slate-400" : "text-slate-600"}`}>
+      <span>{heatmapMode === "competition" ? "Low" : Math.round(min).toLocaleString()}</span>
+      <span className="h-3 w-40 rounded-full" style={{ background: heatmapMode === "competition" ? "linear-gradient(to right,#bbf7d0,#bfdbfe,#fed7aa,#fecaca)" : "linear-gradient(to right,#e2e8f0,#2563eb)" }} />
+      <span>{heatmapMode === "competition" ? "High" : Math.round(max).toLocaleString()}</span>
+    </div>
   );
 }
 
 export default function MaineMap({ rows, selectedCounty, onSelectCounty, providerTypeFilter, onProviderTypeFilterChange }) {
   const { dark } = useDarkMode();
   const [heatmapMode, setHeatmapMode] = useState("priority");
-  const [showHospitals, setShowHospitals] = useState(false);
-  const [showRings, setShowRings] = useState(false);
-  const [showCompetitors, setShowCompetitors] = useState(false);
-  const [competitors, setCompetitors] = useState([]);
-  const [compFilter, setCompFilter] = useState({ cmsStatus: "all", nationalOnly: false, overlapOnly: false, parentSearch: "", countyFilter: "all", healthSystemOnly: false, seededOnly: false });
+  const [hoverCounty, setHoverCounty] = useState(null);
+  const features = MAINE_COUNTY_GEOJSON.features || [];
+  const width = 720;
+  const height = 720;
+  const bounds = useMemo(() => boundsForFeatures(features), [features]);
+  const project = useMemo(() => makeProjector(bounds, width, height, 32), [bounds]);
+  const rowMap = useMemo(() => Object.fromEntries(rows.map((row) => [row.county, row])), [rows]);
+  const heatValues = useMemo(() => {
+    const values = {};
+    for (const county of Object.keys(rowMap)) values[county] = getHeatmapValue(county, heatmapMode, rows);
+    return values;
+  }, [heatmapMode, rowMap, rows]);
+  const vals = Object.values(heatValues).filter((value) => Number.isFinite(value));
+  const min = vals.length ? Math.min(...vals) : 0;
+  const max = vals.length ? Math.max(...vals) : 1;
+  const countyCount = MAINE_COUNTIES.length;
+  const activeCount = rows.length;
+  const visibleProviders = namedProviderRows.filter((provider) => {
+    if (providerProviderType(providerTypeFilter) === "all") return true;
+    return providerProviderType(providerTypeFilter) === provider.service;
+  });
 
-  const providerType = providerTypeFilter !== undefined ? providerTypeFilter : "all";
-  const setProviderType = onProviderTypeFilterChange || (() => {});
-
-  React.useEffect(() => {
-    if (showCompetitors && competitors.length === 0) {
-      (async () => {
-        try {
-          const tr = await fetch("/api/ai/token");
-          const { token } = tr.ok ? await tr.json() : { token: "" };
-          const r = await fetch("/api/cms/competitors", { headers: { "x-ai-token": token } });
-          const d = r.ok ? await r.json() : { competitors: [] };
-          setCompetitors(d.competitors || []);
-        } catch (_) {}
-      })();
-    }
-  }, [showCompetitors]);
-
-  const HEALTH_SYSTEMS_MAP = ["northern light", "mainhealth", "mainehealth", "emhs", "mercy", "central maine", "mount desert"];
-  const hasHealthSystem = (c) => {
-    const hay = `${c.name || ""} ${c.parent_company || ""}`.toLowerCase();
-    return HEALTH_SYSTEMS_MAP.some((h) => hay.includes(h));
-  };
-
-  const filteredCompetitors = React.useMemo(() => {
-    return competitors.filter((c) => {
-      if (providerType !== "all" && c.provider_type !== providerType) return false;
-      if (compFilter.cmsStatus !== "all" && c.match_status !== compFilter.cmsStatus) return false;
-      if (compFilter.nationalOnly && !isNationalChainComp(c)) return false;
-      if (compFilter.overlapOnly && !competitorOverlapsAndwell(c)) return false;
-      if (compFilter.healthSystemOnly && !hasHealthSystem(c)) return false;
-      if (compFilter.seededOnly && c.cms_only) return false;
-      if (compFilter.countyFilter !== "all") {
-        const counties = [...(c.known_counties || []), ...(c.counties_raw || [])].map((x) => x.toLowerCase());
-        if (!counties.includes(compFilter.countyFilter.toLowerCase())) return false;
-      }
-      if (compFilter.parentSearch) {
-        const q = compFilter.parentSearch.toLowerCase();
-        const match = (c.name || "").toLowerCase().includes(q) || (c.parent_company || "").toLowerCase().includes(q);
-        if (!match) return false;
-      }
-      return true;
-    });
-  }, [competitors, compFilter, providerType]);
-
-  const rowMap = {};
-  if (rows) rows.forEach((row) => { rowMap[row.county] = row; });
-
-  const heatValues = {};
-  if (heatmapMode !== "priority" && rows) {
-    Object.keys(rowMap).forEach((county) => {
-      if (launchCounties.has(county)) {
-        heatValues[county] = getHeatmapValue(county, heatmapMode, rows);
-      }
-    });
-  }
-  const heatVals = Object.values(heatValues);
-  const heatMin = heatVals.length ? Math.min(...heatVals) : 0;
-  const heatMax = heatVals.length ? Math.max(...heatVals) : 1;
-  const isGradientMode = heatmapMode !== "priority" && heatmapMode !== "competition";
-  const gradientLow = interpolateColor(0, 0, 1, dark);
-  const gradientHigh = interpolateColor(1, 0, 1, dark);
-
-  if (!API_KEY) {
-    return (
-      <div className={`flex h-64 items-center justify-center rounded-xl border text-sm font-semibold ${dark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-500"}`}>
-        Google Maps API key not configured (VITE_GOOGLE_MAPS_API_KEY)
-      </div>
-    );
-  }
-
-  const toggleBtn = (label, active, onClick, color, ariaLabel) => (
-    <button
-      onClick={onClick}
-      aria-label={ariaLabel}
-      aria-pressed={active}
-      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-        active
-          ? `${color} text-white`
-          : dark
-            ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700"
-            : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
-      }`}
-    >
-      {label}
-    </button>
-  );
+  const selectedFeature = features.find((feature) => getFeatureName(feature) === selectedCounty);
+  const selectedPriority = getCountyPriority(selectedCounty, rows);
 
   return (
-    <div className="relative space-y-3">
-      <div className="flex flex-wrap gap-1.5">
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2">
         {HEATMAP_MODES.map((mode) => (
-          <button
-            key={mode.key}
-            onClick={() => setHeatmapMode(mode.key)}
-            className={`rounded-lg px-3 py-1 text-xs font-medium transition ${
-              heatmapMode === mode.key
-                ? "bg-blue-600 text-white"
-                : dark
-                  ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700"
-                  : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-blue-50"
-            }`}
-          >
-            {mode.label}
-          </button>
+          <button key={mode.key} onClick={() => setHeatmapMode(mode.key)} className={`rounded-xl px-3 py-2 text-xs font-semibold transition ${heatmapMode === mode.key ? "bg-blue-600 text-white" : dark ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"}`}>{mode.label}</button>
         ))}
-      </div>
-
-      <div className={`flex flex-wrap items-center gap-1.5 rounded-xl border px-3 py-2 ${dark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
-        <span className={`mr-1 text-[10px] font-medium uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>Layers:</span>
-        {toggleBtn("Hospitals", showHospitals, () => setShowHospitals((p) => !p), "bg-red-600", "Toggle Hospitals layer")}
-        {toggleBtn("Drive-time rings", showRings, () => setShowRings((p) => !p), "bg-emerald-600", "Toggle Drive-time rings layer")}
-        {toggleBtn("Competitors", showCompetitors, () => setShowCompetitors((p) => !p), "bg-blue-600", "Toggle Competitors layer")}
-        {showCompetitors && (
-          <>
-            <span className={`ml-2 text-[10px] font-medium uppercase tracking-widest ${dark ? "text-slate-600" : "text-slate-400"}`}>|</span>
-            <span className={`ml-1 text-[10px] font-medium uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>Type:</span>
-            {[
-              { value: "all", label: "All" },
-              { value: "homehealth", label: "Home Health" },
-              { value: "hospice", label: "Hospice" },
-              { value: "both", label: "Both" },
-            ].map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => setProviderType(opt.value)}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                  providerType === opt.value
-                    ? "bg-blue-600 text-white"
-                    : dark
-                      ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700"
-                      : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </>
+        {onProviderTypeFilterChange && (
+          <select value={providerTypeFilter || "all"} onChange={(event) => onProviderTypeFilterChange(event.target.value)} className={`ml-auto rounded-xl border px-3 py-2 text-xs font-semibold ${dark ? "border-slate-700 bg-slate-800 text-slate-200" : "border-slate-200 bg-white text-slate-700"}`}>
+            <option value="all">All providers</option>
+            <option value="homehealth">Home health</option>
+            <option value="hospice">Hospice</option>
+          </select>
         )}
       </div>
 
-      <APIProvider apiKey={API_KEY}>
-        <div style={{ width: "100%", height: 480, borderRadius: 16, overflow: "hidden" }}>
-          <Map
-            defaultCenter={MAINE_CENTER}
-            defaultZoom={MAINE_ZOOM}
-            mapId="maine-map"
-            styles={dark ? DARK_MAP_STYLE : undefined}
-            gestureHandling="cooperative"
-            disableDefaultUI={false}
-            mapTypeControl={false}
-            streetViewControl={false}
-            fullscreenControl={true}
-            zoomControl={true}
-            clickableIcons={false}
-          >
-            <MapInner
-              heatmapMode={heatmapMode}
-              rows={rows}
-              selectedCounty={selectedCounty}
-              onSelectCounty={onSelectCounty}
-              dark={dark}
-              showHospitals={showHospitals}
-              showRings={showRings}
-              showOffices={showRings}
-              showCompetitors={showCompetitors}
-              competitors={filteredCompetitors}
-            />
-          </Map>
-        </div>
-      </APIProvider>
+      <div className={`rounded-[24px] border p-3 ${dark ? "border-slate-700 bg-slate-950" : "border-slate-200 bg-slate-50"}`}>
+        <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Interactive Maine county strategy map" className="h-[32rem] w-full max-h-[70vh]">
+          <rect width={width} height={height} rx="24" fill={dark ? "#0f172a" : "#f8fafc"} />
+          {features.map((feature) => {
+            const county = getFeatureName(feature);
+            const isSelected = county === selectedCounty;
+            const isHovered = county === hoverCounty;
+            const priority = getCountyPriority(county, rows);
+            return (
+              <path
+                key={county}
+                d={featurePath(feature, project)}
+                role="button"
+                tabIndex={0}
+                aria-label={`${county} County, ${priority}`}
+                onClick={() => onSelectCounty?.(county)}
+                onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") onSelectCounty?.(county); }}
+                onMouseEnter={() => setHoverCounty(county)}
+                onMouseLeave={() => setHoverCounty(null)}
+                fill={countyFill({ county, rows, rowMap, heatmapMode, heatValues, min, max, dark })}
+                fillOpacity={isSelected ? 0.92 : priority === "Not in plan" ? 0.42 : 0.72}
+                stroke={isSelected ? (dark ? "#f8fafc" : "#0f172a") : isHovered ? "#38bdf8" : dark ? "#475569" : "#ffffff"}
+                strokeWidth={isSelected ? 4 : isHovered ? 2.5 : 1.2}
+                className="cursor-pointer transition-all duration-150 outline-none"
+              />
+            );
+          })}
+          {features.map((feature) => {
+            const county = getFeatureName(feature);
+            const [x, y] = centroid(feature, project);
+            const showLabel = county === selectedCounty || ["York", "Cumberland", "Penobscot", "Kennebec", "Aroostook"].includes(county);
+            if (!showLabel) return null;
+            return <text key={`label-${county}`} x={x} y={y} textAnchor="middle" fontSize={county === selectedCounty ? 18 : 12} fontWeight="800" fill={dark ? "#f8fafc" : "#0f172a"} paintOrder="stroke" stroke={dark ? "#0f172a" : "#ffffff"} strokeWidth="4">{county}</text>;
+          })}
+        </svg>
+      </div>
 
-      <MapLegend
-        isGradientMode={isGradientMode}
-        gradientLow={gradientLow}
-        gradientHigh={gradientHigh}
-        heatmapMode={heatmapMode}
-        heatMin={heatMin}
-        heatMax={heatMax}
-        dark={dark}
-        showHospitals={showHospitals}
-        showRings={showRings}
-      />
-      {showCompetitors && (
-        <div className="space-y-2">
-          <div className={`flex flex-wrap items-center gap-2 rounded-xl border px-3 py-2 ${dark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
-            <span className={`text-[10px] font-medium uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>Filter:</span>
-            <select
-              value={compFilter.cmsStatus}
-              onChange={(e) => setCompFilter((f) => ({ ...f, cmsStatus: e.target.value }))}
-              className={`rounded-lg border px-2 py-1 text-xs font-semibold ${dark ? "border-slate-600 bg-slate-700 text-slate-200" : "border-slate-200 bg-white text-slate-700"}`}
-            >
-              <option value="all">All CMS status</option>
-              <option value="CMS Verified">CMS Verified</option>
-              <option value="Needs Review">Needs Review</option>
-              <option value="Not Verified by CMS">Not CMS Verified</option>
-            </select>
-            <input
-              type="text"
-              value={compFilter.parentSearch}
-              onChange={(e) => setCompFilter((f) => ({ ...f, parentSearch: e.target.value }))}
-              placeholder="Name / parent company…"
-              className={`rounded-lg border px-2 py-1 text-xs w-40 ${dark ? "border-slate-600 bg-slate-700 text-slate-200 placeholder-slate-500" : "border-slate-200 bg-white text-slate-700 placeholder-slate-400"}`}
-            />
-            <label className={`flex items-center gap-1.5 text-xs font-semibold cursor-pointer ${dark ? "text-slate-300" : "text-slate-700"}`}>
-              <input
-                type="checkbox"
-                checked={compFilter.nationalOnly}
-                onChange={(e) => setCompFilter((f) => ({ ...f, nationalOnly: e.target.checked }))}
-                className="rounded"
-              />
-              National chains
-            </label>
-            <label className={`flex items-center gap-1.5 text-xs font-semibold cursor-pointer ${dark ? "text-slate-300" : "text-slate-700"}`}>
-              <input
-                type="checkbox"
-                checked={compFilter.overlapOnly}
-                onChange={(e) => setCompFilter((f) => ({ ...f, overlapOnly: e.target.checked }))}
-                className="rounded"
-              />
-              Andwell overlap
-            </label>
-            <label className={`flex items-center gap-1.5 text-xs font-semibold cursor-pointer ${dark ? "text-slate-300" : "text-slate-700"}`}>
-              <input
-                type="checkbox"
-                checked={compFilter.healthSystemOnly}
-                onChange={(e) => setCompFilter((f) => ({ ...f, healthSystemOnly: e.target.checked }))}
-                className="rounded"
-              />
-              Health system
-            </label>
-            <label className={`flex items-center gap-1.5 text-xs font-semibold cursor-pointer ${dark ? "text-slate-300" : "text-slate-700"}`}>
-              <input
-                type="checkbox"
-                checked={compFilter.seededOnly}
-                onChange={(e) => setCompFilter((f) => ({ ...f, seededOnly: e.target.checked }))}
-                className="rounded"
-              />
-              Seeded only
-            </label>
-            <select
-              value={compFilter.countyFilter}
-              onChange={(e) => setCompFilter((f) => ({ ...f, countyFilter: e.target.value }))}
-              className={`rounded-lg border px-2 py-1 text-xs font-semibold ${dark ? "border-slate-600 bg-slate-700 text-slate-200" : "border-slate-200 bg-white text-slate-700"}`}
-            >
-              <option value="all">All counties</option>
-              {["Androscoggin","Aroostook","Cumberland","Franklin","Hancock","Kennebec","Knox","Lincoln","Oxford","Penobscot","Piscataquis","Sagadahoc","Somerset","Waldo","Washington","York"].map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-            <span className={`ml-auto text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>
-              {filteredCompetitors.length} of {competitors.length} shown
-            </span>
-          </div>
-          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5">
-            {[
-              { color: "#ef4444", label: "National chain" },
-              { color: "#059669", label: "CMS Verified" },
-              { color: "#d97706", label: "Needs Review" },
-              { color: "#7c3aed", label: "Not verified / unknown" },
-            ].map(({ color, label }) => (
-              <div key={label} className={`flex items-center gap-1.5 text-[10px] font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>
-                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
-                {label}
-              </div>
-            ))}
-            <span className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>
-              · dashed border = Andwell overlap county · CMS address geocoded pins · click pin for details
-            </span>
-          </div>
-        </div>
-      )}
+      <Legend heatmapMode={heatmapMode} dark={dark} min={min} max={max} />
+
+      <div className={`grid gap-3 rounded-2xl border p-4 text-sm sm:grid-cols-4 ${dark ? "border-slate-700 bg-slate-800/60" : "border-slate-200 bg-white"}`}>
+        <div><p className={dark ? "text-slate-500" : "text-slate-400"}>County boundaries</p><p className="font-bold">US Census TIGERweb</p></div>
+        <div><p className={dark ? "text-slate-500" : "text-slate-400"}>Counties shown</p><p className="font-bold">{countyCount}</p></div>
+        <div><p className={dark ? "text-slate-500" : "text-slate-400"}>Counties in plan</p><p className="font-bold">{activeCount}</p></div>
+        <div><p className={dark ? "text-slate-500" : "text-slate-400"}>Selected</p><p className="font-bold">{selectedFeature ? `${selectedCounty} (${selectedPriority})` : "None"}</p></div>
+      </div>
+      <p className={`text-xs ${dark ? "text-slate-500" : "text-slate-500"}`}>Provider filter context loaded: {visibleProviders.length} provider-file rows. Provider file share is not county market share.</p>
     </div>
   );
+}
+
+function providerProviderType(filter) {
+  if (filter === "homehealth") return "Home Healthcare";
+  if (filter === "hospice") return "Hospice";
+  return "all";
 }

@@ -1,0 +1,134 @@
+[
+  {
+    "county": "York",
+    "ffs": 32287,
+    "home_health_users": 2191,
+    "home_health_provider_count": 5,
+    "hospice_users": 851,
+    "hospice_provider_count": 1,
+    "hospice_zip_records": 362,
+    "source_type": "sourced_cms_and_seeded_puf",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "county": "Cumberland",
+    "ffs": 35113,
+    "home_health_users": 2196,
+    "home_health_provider_count": 4,
+    "hospice_users": 1011,
+    "hospice_provider_count": 7,
+    "hospice_zip_records": 161,
+    "source_type": "sourced_cms_and_seeded_puf",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "county": "Penobscot",
+    "ffs": 20564,
+    "home_health_users": 1056,
+    "home_health_provider_count": 4,
+    "hospice_users": 473,
+    "hospice_provider_count": 5,
+    "hospice_zip_records": 262,
+    "source_type": "sourced_cms_and_seeded_puf",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "county": "Kennebec",
+    "ffs": 15639,
+    "home_health_users": 708,
+    "home_health_provider_count": 5,
+    "hospice_users": 407,
+    "hospice_provider_count": 2,
+    "hospice_zip_records": 89,
+    "source_type": "sourced_cms_and_seeded_puf",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "county": "Knox",
+    "ffs": 6927,
+    "home_health_users": 351,
+    "home_health_provider_count": 2,
+    "hospice_users": 176,
+    "hospice_provider_count": 4,
+    "hospice_zip_records": 59,
+    "source_type": "sourced_cms_and_seeded_puf",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "county": "Lincoln",
+    "ffs": 5990,
+    "home_health_users": 319,
+    "home_health_provider_count": 4,
+    "hospice_users": 157,
+    "hospice_provider_count": 3,
+    "hospice_zip_records": 102,
+    "source_type": "sourced_cms_and_seeded_puf",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "county": "Sagadahoc",
+    "ffs": 5475,
+    "home_health_users": 267,
+    "home_health_provider_count": 3,
+    "hospice_users": 131,
+    "hospice_provider_count": 3,
+    "hospice_zip_records": 0,
+    "source_type": "sourced_cms_and_seeded_puf",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "county": "Washington",
+    "ffs": 6508,
+    "home_health_users": 174,
+    "home_health_provider_count": 1,
+    "hospice_users": 99,
+    "hospice_provider_count": 2,
+    "hospice_zip_records": 0,
+    "source_type": "sourced_cms_and_seeded_puf",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "county": "Aroostook",
+    "ffs": 11867,
+    "home_health_users": 689,
+    "home_health_provider_count": 2,
+    "hospice_users": 172,
+    "hospice_provider_count": 1,
+    "hospice_zip_records": 66,
+    "source_type": "sourced_cms_and_seeded_puf",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "county": "Oxford",
+    "ffs": 8359,
+    "home_health_users": 389,
+    "home_health_provider_count": 1,
+    "hospice_users": 210,
+    "hospice_provider_count": 2,
+    "hospice_zip_records": 0,
+    "source_type": "sourced_cms_and_seeded_puf",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "county": "Somerset",
+    "ffs": 7342,
+    "home_health_users": 367,
+    "home_health_provider_count": 1,
+    "hospice_users": 171,
+    "hospice_provider_count": 5,
+    "hospice_zip_records": 189,
+    "source_type": "sourced_cms_and_seeded_puf",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  },
+  {
+    "county": "Franklin",
+    "ffs": 3543,
+    "home_health_users": 181,
+    "home_health_provider_count": 2,
+    "hospice_users": 96,
+    "hospice_provider_count": 2,
+    "hospice_zip_records": 0,
+    "source_type": "sourced_cms_and_seeded_puf",
+    "generated_at": "2026-06-03T02:33:31.748Z"
+  }
+]
