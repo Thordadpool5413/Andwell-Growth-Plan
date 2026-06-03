@@ -178,11 +178,12 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
               <div className="space-y-2">
                 {providers.slice(0, 5).map((p, i) => {
                   const pct = totalBens > 0 ? (p.beneficiaries / totalBens) * 100 : 0;
-                  const isChain = isNationalChain(p.name);
+                  const providerLabel = p.providerName || p.name || "Unknown provider";
+                  const isChain = isNationalChain(providerLabel);
                   return (
-                    <div key={p.name} className="flex items-center gap-2">
+                    <div key={`${p.service}-${providerLabel}-${p.locationCounty}-${i}`} className="flex items-center gap-2">
                       <span className={`text-[10px] font-medium w-4 text-right tabular-nums ${dark ? "text-slate-500" : "text-slate-400"}`}>{i + 1}</span>
-                      <div className={`flex-1 text-xs truncate font-semibold ${dark ? "text-slate-200" : "text-slate-700"}`}>{p.name}</div>
+                      <div className={`flex-1 text-xs truncate font-semibold ${dark ? "text-slate-200" : "text-slate-700"}`}>{providerLabel}</div>
                       <div className={`w-20 h-2 rounded-full overflow-hidden ${dark ? "bg-slate-700" : "bg-slate-100"}`}>
                         <div className={`h-full rounded-full ${isChain ? "bg-red-500" : "bg-blue-500"}`} style={{ width: `${Math.min(pct * 5, 100)}%` }} />
                       </div>
