@@ -2,29 +2,52 @@ import React from "react";
 import { useDarkMode } from "./DarkModeContext.jsx";
 
 const ACCENT_MAP = {
-  emerald: { light: "border-t-2 border-t-emerald-500", dark: "border-t-2 border-t-emerald-500" },
-  amber:   { light: "border-t-2 border-t-amber-500",  dark: "border-t-2 border-t-amber-500" },
-  blue:    { light: "border-t-2 border-t-blue-500",   dark: "border-t-2 border-t-blue-500" },
-  indigo:  { light: "border-t-2 border-t-blue-500",   dark: "border-t-2 border-t-blue-500" },
-  red:     { light: "border-t-2 border-t-red-500",    dark: "border-t-2 border-t-red-500" },
-  violet:  { light: "border-t-2 border-t-blue-500",   dark: "border-t-2 border-t-blue-500" },
+  emerald: {
+    border: "border-t-[2px] border-t-emerald-500",
+    glow: { light: "shadow-emerald-100/70", dark: "shadow-emerald-950/30" },
+    tint: { light: "from-emerald-50/40 to-white", dark: "from-emerald-950/20 to-slate-900/90" },
+  },
+  amber: {
+    border: "border-t-[2px] border-t-amber-500",
+    glow: { light: "shadow-amber-100/70", dark: "shadow-amber-950/30" },
+    tint: { light: "from-amber-50/40 to-white", dark: "from-amber-950/20 to-slate-900/90" },
+  },
+  blue: {
+    border: "border-t-[2px] border-t-blue-500",
+    glow: { light: "shadow-blue-100/70", dark: "shadow-blue-950/30" },
+    tint: { light: "from-blue-50/40 to-white", dark: "from-blue-950/20 to-slate-900/90" },
+  },
+  indigo: {
+    border: "border-t-[2px] border-t-blue-500",
+    glow: { light: "shadow-blue-100/70", dark: "shadow-blue-950/30" },
+    tint: { light: "from-blue-50/40 to-white", dark: "from-blue-950/20 to-slate-900/90" },
+  },
+  red: {
+    border: "border-t-[2px] border-t-red-500",
+    glow: { light: "shadow-red-100/70", dark: "shadow-red-950/30" },
+    tint: { light: "from-red-50/40 to-white", dark: "from-red-950/20 to-slate-900/90" },
+  },
+  violet: {
+    border: "border-t-[2px] border-t-violet-500",
+    glow: { light: "shadow-violet-100/70", dark: "shadow-violet-950/30" },
+    tint: { light: "from-violet-50/40 to-white", dark: "from-violet-950/20 to-slate-900/90" },
+  },
 };
+
+const DEFAULT_TINT = { light: "from-white to-slate-50/60", dark: "from-slate-900/90 to-slate-800/70" };
 
 const SOURCE_CONFIG = {
   cms: {
     dot: "bg-emerald-500",
     label: "Source: CMS Provider Files 2022",
-    labelClass: { light: "text-slate-400", dark: "text-slate-500" },
   },
   modeled: {
     dot: "bg-amber-400",
     label: "Modeled — internal assumptions",
-    labelClass: { light: "text-slate-400", dark: "text-slate-500" },
   },
   derived: {
     dot: "bg-blue-400",
     label: "Derived — NAHC/industry benchmarks",
-    labelClass: { light: "text-slate-400", dark: "text-slate-500" },
   },
 };
 
@@ -36,44 +59,50 @@ function TrendArrow({ sparkData }) {
   const pct = first !== 0 ? Math.abs(Math.round((diff / first) * 100)) : 0;
 
   if (diff > 0) return (
-    <span className="inline-flex items-center gap-0.5 text-xs font-medium text-emerald-600" title={`+${pct}% over period`}>
+    <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/12 px-1.5 py-0.5 text-[11px] font-bold text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" title={`+${pct}% over period`}>
       ↑{pct}%
     </span>
   );
   if (diff < 0) return (
-    <span className="inline-flex items-center gap-0.5 text-xs font-medium text-red-500" title={`−${pct}% over period`}>
+    <span className="inline-flex items-center gap-0.5 rounded-full bg-red-500/10 px-1.5 py-0.5 text-[11px] font-bold text-red-600 dark:bg-red-900/30 dark:text-red-400" title={`−${pct}% over period`}>
       ↓{pct}%
     </span>
   );
-  return <span className="text-xs text-slate-400" title="No change">—</span>;
+  return <span className="text-xs text-slate-400">—</span>;
 }
 
 export default function Metric({ label, value, detail, sparkData, sparkColor, color, sourceType }) {
   const { dark } = useDarkMode();
   const accent = color ? ACCENT_MAP[color] : null;
+  const tint = accent ? (dark ? accent.tint.dark : accent.tint.light) : (dark ? DEFAULT_TINT.dark : DEFAULT_TINT.light);
+  const borderClass = accent ? accent.border : "";
+  const glowClass = accent ? (dark ? accent.glow.dark : accent.glow.light) : "";
   const src = sourceType ? SOURCE_CONFIG[sourceType] : null;
-  const accentClass = accent ? (dark ? accent.dark : accent.light) : "";
 
   return (
     <div
-      className={`rounded-[22px] border p-5 backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${accentClass} ${
+      className={`rounded-[18px] border p-5 backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-br ${tint} ${borderClass} ${
         dark
-          ? "border-slate-700/60 bg-gradient-to-br from-slate-900/85 to-slate-800/65 shadow-sm shadow-slate-950/20"
-          : "border-slate-200 bg-gradient-to-br from-white via-white to-slate-50 shadow-sm shadow-slate-200/60"
+          ? `border-slate-700/50 shadow-sm ${glowClass} hover:border-slate-600/60 hover:shadow-md`
+          : `border-slate-200/80 shadow-sm ${glowClass} hover:border-slate-300/60 hover:shadow-md`
       }`}
     >
       <div className="flex items-start justify-between gap-2">
-        <p className={`text-[11px] font-semibold leading-snug uppercase tracking-[0.12em] ${dark ? "text-slate-400" : "text-slate-500"}`}>{label}</p>
+        <p className={`text-[10px] font-bold uppercase tracking-[0.16em] leading-tight ${dark ? "text-slate-500" : "text-slate-400"}`}>
+          {label}
+        </p>
       </div>
-      <div className="mt-2 flex items-baseline gap-2">
-        <p className={`text-2xl font-bold tabular-nums ${dark ? "text-slate-100" : "text-slate-900"}`}>{value}</p>
+      <div className="mt-2.5 flex items-baseline gap-2 flex-wrap">
+        <p className={`text-2xl font-bold tabular-nums leading-none ${dark ? "text-slate-100" : "text-slate-900"}`}>
+          {value}
+        </p>
         <TrendArrow sparkData={sparkData} />
       </div>
       {detail && (
-        <p className={`mt-1.5 text-xs leading-5 ${dark ? "text-slate-500" : "text-slate-500"}`}>{detail}</p>
+        <p className={`mt-2 text-xs leading-5 ${dark ? "text-slate-500" : "text-slate-500"}`}>{detail}</p>
       )}
       {src && (
-        <p className={`mt-2 flex items-center gap-1.5 text-[11px] ${dark ? src.labelClass.dark : src.labelClass.light}`}>
+        <p className={`mt-2.5 flex items-center gap-1.5 text-[10px] font-medium ${dark ? "text-slate-600" : "text-slate-400"}`}>
           <span className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${src.dot}`} />
           {src.label}
         </p>

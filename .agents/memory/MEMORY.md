@@ -1,0 +1,3 @@
+- [Contribution data fix](contribution-data.md) — `contributions` per-year array added to each row in `getCountyMath`; all views must use it instead of re-computing.
+- [CountyPlan duplicate bug](countyplan-bug.md) — App.jsx previously rendered CountyPlan twice on lines 301-302; merged into one call with all props.
+- [Calculation data flow](calc-data-flow.md) — `buildRows` → `getCountyMath` is the single source of truth; views should never recompute margin × revenue independently.

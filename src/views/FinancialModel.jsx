@@ -31,7 +31,7 @@ export default function FinancialModel({ rows }) {
     starts: rows.reduce((sum, row) => sum + row.starts[index], 0),
     referrals: rows.reduce((sum, row) => sum + row.referrals[index], 0),
     revenue: rows.reduce((sum, row) => sum + row.revenue[index], 0),
-    contribution: rows.reduce((sum, row) => sum + Math.round(row.revenue[index] * row.meta.margin), 0),
+    contribution: rows.reduce((sum, row) => sum + (row.contributions?.[index] ?? Math.round(row.revenue[index] * row.meta.margin)), 0),
   }));
 
   const totalRevenue = yearRows.reduce((s, y) => s + y.revenue, 0);

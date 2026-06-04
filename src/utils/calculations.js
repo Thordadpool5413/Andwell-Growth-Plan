@@ -263,6 +263,7 @@ export function getCountyMath(row, scenario = DEFAULT_SCENARIO) {
   const starts = capture.map((rate) => Math.round(demandPool * rate));
   const referrals = starts.map((value) => Math.ceil(value / conversionRate));
   const revenue = starts.map((value) => value * reimbursement);
+  const contributions = revenue.map((rev) => Math.round(rev * margin));
 
   return {
     ...row,
@@ -274,10 +275,11 @@ export function getCountyMath(row, scenario = DEFAULT_SCENARIO) {
     starts,
     referrals,
     revenue,
+    contributions,
     totalStarts: starts.reduce((a, b) => a + b, 0),
     totalReferrals: referrals.reduce((a, b) => a + b, 0),
     totalRevenue: revenue.reduce((a, b) => a + b, 0),
-    totalContribution: revenue.reduce((a, b) => a + Math.round(b * margin), 0),
+    totalContribution: contributions.reduce((a, b) => a + b, 0),
   };
 }
 
