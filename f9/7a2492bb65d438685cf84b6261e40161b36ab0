@@ -1,0 +1,46 @@
+src/App.jsx
+  s_e3540d5e18be27::t_2928ea1ac6f49f 190,201
+  s_e3540d5e18be27::t_09902e0c7ce712 27,254,295,303,442-443,447,449,453,476,551,596-597,603,618,621
+scripts/refresh-dashboard-data.js
+  s_e3540d5e18be27::t_ce8388b6bdf0c3 101-110,199-210,356-357
+src/components/ScenarioSidebar.jsx
+  s_e3540d5e18be27::t_b5c4fa0e7cfc9e 63,71,78-83,161,394
+src/views/OpportunityScore.jsx
+  s_e3540d5e18be27::t_2e3f1b39d335a8 94
+src/components/SectionHeader.jsx
+  s_e3540d5e18be27::t_ef90909af49221 7,13,23,27
+src/index.css
+  s_e3540d5e18be27::t_ef90909af49221 50,489-492
+src/components/Metric.jsx
+  s_e3540d5e18be27::t_ef90909af49221 84,96
+src/data/dashboardData.js
+  s_e3540d5e18be27::t_2f44dcf3f42a66 182-313,449
+src/views/CmsData.jsx
+  s_e3540d5e18be27::t_577b02deeb7deb 11,177-220,224-233,237-243,245-246,255,257-266,269-271,273,275,278-296,302-304
+server.js
+  s_e3540d5e18be27::t_45204e82df21fc 372-403,411-494,498-506,508-509,512-524
+src/store/scenarioStore.js
+  s_e3540d5e18be27::t_9bc90715d46050 6-13,30,39-52,54-57,62,67,75,90-91,93-96,108,124
+src/components/Card.jsx
+  s_e3540d5e18be27::t_ef90909af49221 17,35
+src/views/ExecutiveView.jsx
+  s_e3540d5e18be27::t_1019c2dca609b9 19,67-68,83-88,120-126,162,178,214-217,219-221,228-230,232-234
+  s_e3540d5e18be27::t_aa342376526e0e 182
+  s_e3540d5e18be27::t_72975a436472a2 218,231
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "f97a2492bb65d438685cf84b6261e40161b36ab0",
+  "prompts": {},
+  "sessions": {
+    "s_e3540d5e18be27": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e90a3-a51b-7252-9005-e366e766a2b5",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Thordadpool5413 <nick.lynch.coaching@outlook.com>"
+    }
+  }
+}
