@@ -1,0 +1,19 @@
+src/App.jsx
+  s_e3540d5e18be27::t_f9cdb9b7a12615 446,450,469,473,507,512-530,532-533,537
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "131fbf2b5b43528bedaf3e75ac816fca0aa44d91",
+  "prompts": {},
+  "sessions": {
+    "s_e3540d5e18be27": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e90a3-a51b-7252-9005-e366e766a2b5",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Thordadpool5413 <nick.lynch.coaching@outlook.com>"
+    }
+  }
+}
