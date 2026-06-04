@@ -10,12 +10,8 @@ import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
 import dashboardData, { getProviderProfileByCcn, hhvbpDisplayScore } from "../data/dashboardData.js";
 import { ANDWELL_CCN } from "../data/andwell.js";
-import { number } from "../utils/formatters.js";
-import cmsCountyMarket from "../data/cmsCountyMarket.js";
 import { number, currency } from "../utils/formatters.js";
 import { exportCmsCSV } from "../utils/csvExport.js";
-import dashboardData, { hhvbpDisplayScore } from "../data/dashboardData.js";
-import { ANDWELL_CCN } from "../data/andwell.js";
 
 function generatedDate() {
   return dashboardData.generatedAt || dashboardData.cmsMeta.fetchedAt;
@@ -242,9 +238,9 @@ function CatalogTab({ dark }) {
       <Card title="Data source status" eyebrow="CMS and HRSA registry">
         <div className={`overflow-x-auto rounded-xl border ${dark ? "border-slate-700" : "border-slate-200"}`}>
           <table className="w-full min-w-[900px] text-left text-sm">
-            <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700"}`}><tr><th className="px-4 py-3">Dataset</th><th className="px-4 py-3">Endpoint</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Last synced</th></tr></thead>
+            <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700"}`}><tr><th className="px-4 py-3">Dataset</th><th className="px-4 py-3">Program</th><th className="px-4 py-3">Identifier</th><th className="px-4 py-3 text-right">Records</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Purpose</th></tr></thead>
             <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-slate-200"}`}>
-              {[...sources, hrsa].filter(Boolean).map((source) => <tr key={source.identifier || source.name}><td className="px-4 py-3 font-semibold">{source.name}</td><td className="px-4 py-3 font-mono text-xs">{source.endpoint || source.identifier || "-"}</td><td className="px-4 py-3"><Badge tone={source.status === "active" ? "green" : "amber"}>{source.status}</Badge></td><td className="px-4 py-3 text-xs">{source.synced_at || "-"}</td></tr>)}
+              {[...sources, hrsa].filter(Boolean).map((source) => <tr key={source.identifier || source.name}><td className="px-4 py-3 font-semibold">{source.name}</td><td className="px-4 py-3">{source.program}</td><td className="px-4 py-3 font-mono text-xs">{source.identifier || "HRSA"}</td><td className="px-4 py-3 text-right">{source.maine_records ?? "—"}</td><td className="px-4 py-3"><Badge tone={source.status === "loaded" ? "green" : "amber"}>{source.status}</Badge></td><td className="px-4 py-3">{source.purpose}</td></tr>)}
             </tbody>
           </table>
         </div>
