@@ -1,0 +1,21 @@
+.replit
+  s_eeb9ae97cb7ece::t_f8cd4a5ed14f29 44
+server.js
+  s_eeb9ae97cb7ece::t_4a4dea6184f997 19,24,30-33,35-36,40-42,101-106,109,112,120-121,703-708,710-729
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "d4973de0cfa0f306827aa25a3545b7eb7dff25b8",
+  "prompts": {},
+  "sessions": {
+    "s_eeb9ae97cb7ece": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e7982-59fb-7182-b45c-cb48508e2d06",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Thordadpool5413 <nick.lynch.coaching@outlook.com>"
+    }
+  }
+}
