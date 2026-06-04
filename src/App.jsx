@@ -187,7 +187,7 @@ function Dashboard() {
         <div className="mx-auto max-w-7xl space-y-4">
           {/* ── Navigation ── */}
           <div className="print:hidden space-y-3">
-            <div className={`overflow-x-auto rounded-2xl border px-1 py-1 ${dark ? "border-slate-700/60 bg-slate-900/85 backdrop-blur-sm" : "border-slate-200 bg-white/90 backdrop-blur-sm"} shadow-lg shadow-slate-900/5`}>
+            <div className={`overflow-x-auto rounded-2xl border px-1 py-1 ${dark ? "border-slate-700/60 bg-slate-900/85 backdrop-blur-sm" : "border-slate-200 bg-white/90 backdrop-blur-sm"} shadow-sm`}>
               <div className="flex items-stretch min-w-max px-2 py-1.5 gap-0" role="tablist" aria-label="Dashboard views">
                 {TAB_GROUPS.map((group, gi) => (
                   <React.Fragment key={group.label}>
@@ -232,24 +232,24 @@ function Dashboard() {
 
             <div className="flex justify-end">
               <details className="relative">
-                <summary className={`flex cursor-pointer list-none items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition ${dark ? "border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
+                <summary className={`flex cursor-pointer list-none items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition ${dark ? "border-slate-700 bg-slate-900 text-slate-400 hover:text-slate-200" : "border-slate-200 bg-white text-slate-700 hover:text-slate-900"}`}>
                   <MoreHorizontal className="h-4 w-4" />
                   Page actions
                 </summary>
                 <div className={`absolute right-0 z-40 mt-2 w-60 rounded-2xl border p-2 shadow-xl ${dark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"}`}>
                   {financialActionPage && (
                     <>
-                      <button onClick={() => { setShowCompare((p) => !p); if (showScenario) setShowScenario(false); }} className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium ${dark ? "text-slate-300 hover:bg-slate-800" : "text-slate-700 hover:bg-slate-50"}`}>
+                      <button onClick={() => { setShowCompare((p) => !p); if (showScenario) setShowScenario(false); }} className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium transition-colors ${dark ? "text-slate-300 hover:bg-slate-800" : "text-slate-700 hover:bg-slate-100"}`}>
                         <ArrowRightLeft className="h-3.5 w-3.5" />
                         {showCompare ? "Hide scenario comparison" : "Compare scenarios"}
                       </button>
-                      <button onClick={() => { setShowScenario((p) => !p); if (showCompare) setShowCompare(false); }} className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium ${dark ? "text-slate-300 hover:bg-slate-800" : "text-slate-700 hover:bg-slate-50"}`}>
+                      <button onClick={() => { setShowScenario((p) => !p); if (showCompare) setShowCompare(false); }} className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium transition-colors ${dark ? "text-slate-300 hover:bg-slate-800" : "text-slate-700 hover:bg-slate-100"}`}>
                         <SlidersHorizontal className="h-3.5 w-3.5" />
                         {showScenario ? "Hide scenario model" : "Scenario model"}
                       </button>
                     </>
                   )}
-                  <button onClick={() => setShowInsights((p) => !p)} className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium ${dark ? "text-slate-300 hover:bg-slate-800" : "text-slate-700 hover:bg-slate-50"}`}>
+                  <button onClick={() => setShowInsights((p) => !p)} className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium ${dark ? "text-slate-300 hover:bg-slate-800" : "text-slate-700 hover:bg-slate-100"}`}>
                     <Sparkles className="h-3.5 w-3.5" />
                     {showInsights ? "Hide insights" : `Insights${insightCount > 0 ? ` (${insightCount})` : ""}`}
                   </button>
@@ -330,7 +330,7 @@ function Dashboard() {
             : dark ? "bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-200" : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
         }`}>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
-            <path fillRule="evenodd" d="M7.84 1.804A1 1 0 018.82 1h2.36a1 1 0 01.98.804l.331 1.652a6.993 6.993 0 011.929 1.115l1.598-.54a1 1 0 011.186.447l1.18 2.044a1 1 0 01-.205 1.251l-1.267 1.113a7.047 7.047 0 010 2.228l1.267 1.113a1 1 0 01.206 1.25l-1.18 2.045a1 1 0 01-1.187.447l-1.598-.54a6.993 6.993 0 01-1.929 1.115l-.33 1.652a1 1 0 01-.98.804H8.82a1 1 0 01-.98-.804l-.331-1.652a6.993 6.993 0 01-1.929-1.115l-1.598.54a1 1 0 01-1.186-.447l-1.18-2.044a1 1 0 01.205-1.251l1.267-1.114a7.05 7.05 0 010-2.227L1.821 7.773a1 1 0 01-.206-1.25l1.18-2.045a1 1 0 011.187-.447l1.598.54A6.993 6.993 0 017.51 3.456l.33-1.652zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+            <path fillRule="evenodd" d="M7.84 1.804A1 1 0 018.82 1h2.36a1 1 0 01.98.804l.331 1.652a6.993 6.993 0 011.929 1.115l1.598-.54a1 1 0 011.186.447l1.18 2.044a1 1 0 01-.205 1.251l-1.267 1.036a7.05 7.05 0 010 2.28l1.267 1.036a1 1 0 01.205 1.251l-1.18 2.044a1 1 0 01-1.186.447l-1.598-.54a6.993 6.993 0 01-1.929 1.115l-.331 1.652a1 1 0 01-.98.804H8.82a1 1 0 01-.98-.804l-.331-1.652a6.993 6.993 0 01-1.929-1.115l-1.598.54a1 1 0 01-1.186-.447l-1.18-2.044a1 1 0 01.205-1.251l1.267-1.036a7.05 7.05 0 010-2.28L.954 6.743a1 1 0 01-.205-1.251l1.18-2.044a1 1 0 011.186-.447l1.598.54a6.993 6.993 0 011.929-1.115l.331-1.652zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
           </svg>
           <span className="text-[10px] font-medium uppercase tracking-widest" style={{ writingMode: "vertical-rl", textOrientation: "mixed", transform: "rotate(180deg)" }}>
             Scenario
