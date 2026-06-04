@@ -21,7 +21,6 @@ import cmsCountyMarket from "../data/cmsCountyMarket.js";
 import { namedProviderRows, marketShareBuildRows, marketShareFormulaRows } from "../data/providers.js";
 import { classifyProvider } from "../data/andwell.js";
 import { getFreshness, getTopProviders, MAINE_COUNTIES } from "../data/dashboardData.js";
-import { getFreshness, MAINE_COUNTIES } from "../data/dashboardData.js";
 import { getProviderSummary, getCompetitiveThreatScore } from "../utils/calculations.js";
 import { currency, number, percent, badgeTone } from "../utils/formatters.js";
 import { exportCompetitiveCSV } from "../utils/csvExport.js";

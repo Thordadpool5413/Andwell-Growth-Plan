@@ -103,8 +103,6 @@ const hospiceQualityByCounty = byCounty(maineHospiceQuality);
 const hospiceCahpsByCounty = byCounty(maineHospiceCahps);
 const hhcahpsByCounty = byCounty(maineHhcaHps);
 const hrsaByCounty = byCounty(assignedHrsaFacilities);
-const hrsaByCounty = byCounty(hrsaMaineHospiceFacilities);
-const hhvbpByCcn = Object.fromEntries(maineHhvbp.filter((row) => row.ccn).map((row) => [row.ccn, row]));
 
 function sourceMarketToFlat(county, sourceMarket) {
   if (!sourceMarket) return null;
@@ -178,7 +176,6 @@ export function hhvbpDisplayScore(row) {
 
 function bestHospiceMeasure(row) {
   const measures = Object.values(row?.measures || {}).filter((measure) => measure.score != null);
-  const measures = Object.values(row.measures || {}).filter((measure) => measure.score != null);
   return measures.find((measure) => (measure.measure_name || "").toLowerCase().includes("rated")) || measures[0] || null;
 }
 
@@ -206,12 +203,6 @@ export function getCountyQualitySummary(county) {
   ].sort((a, b) => b.score - a.score);
   const hhcahpsStarRows = hhcahpsRows.filter((row) => row.summary_star_rating != null);
   const hhcahpsRecommendRows = hhcahpsRows.filter((row) => row.recommend_pct != null);
-  const hospiceScores = hospiceCahps.map((row) => ({ row, measure: bestHospiceMeasure(row) })).filter((item) => item.measure?.score != null);
-  const allScores = [
-    ...starRows.map((row) => ({ provider: row.provider_name, type: "Home health star rating", score: Number(row.star_rating), source: "CMS 6jpm-sxkc" })),
-    ...hhvbpRows.map((row) => ({ provider: row.provider_name, type: "HHVBP composite", score: row.display_score, source: "CMS 56d7-4994" })),
-    ...hospiceScores.map(({ row, measure }) => ({ provider: row.provider_name, type: measure.measure_name || "Hospice CAHPS score", score: Number(measure.score), source: "CMS gxki-hrr8" })),
-  ].sort((a, b) => b.score - a.score);
 
   return {
     county,
@@ -229,15 +220,15 @@ export function getCountyQualitySummary(county) {
     bestScore: allScores[0] || null,
     lowestScore: allScores.length ? allScores[allScores.length - 1] : null,
     outliers: allScores.filter((item) => item.score === allScores[0]?.score || item.score === allScores[allScores.length - 1]?.score).slice(0, 4),
-    missingNotes: [." : null,
+    missingNotes: [
+      !homeHealth.length ? "No CMS home health agency records assigned to this county." : null,
+      !hhcahpsRows.length ? "No HHCAHPS records matched to this county by CCN." : null,
+      !hhvbpRows.length ? "No HHVBP agency records matched to this county by CCN." : null,
+      !hospiceCahps.length ? "No CMS hospice CAHPS records assigned to this county." : null,
     ].filter(Boolean),
   };
 }
 
-      !homeHealth.length ? "No CMS home health agency records assigned to this county." : null,
-      !hhcahpsRows.length ? "No HHCAHPS records matched to this county by CCN." : null,
-      !hhvbpRows.length ? "No HHVBP agency records matched to this county by CCN." : null,
-      !hospiceCahps.length ? "No CMS hospice CAHPS records assigned to this county
 function hospiceCahpsMeasures(row) {
   return Object.entries(row?.measures || {})
     .map(([measure_code, measure]) => ({ measure_code, ...measure }))

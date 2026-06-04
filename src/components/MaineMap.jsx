@@ -189,7 +189,6 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty, provide
                 stroke={isSelected ? (dark ? "#f8fafc" : "#0f172a") : isHovered ? "#38bdf8" : dark ? "#475569" : "#ffffff"}
                 strokeWidth={isSelected ? 4 : isHovered ? 2.5 : 1.2}
                 className="cursor-pointer transition-all duration-150 outline-none drop-shadow-sm"
-                className="cursor-pointer transition-all duration-150 outline-none"
               >
                 <title>{`${county} County · ${activeLayer}: ${Math.round(heatValues[county] || 0).toLocaleString()}`}</title>
               </path>

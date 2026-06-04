@@ -16,7 +16,6 @@ import { currency, number, percent } from "../utils/formatters.js";
 import { themeClasses } from "../utils/themeClasses.js";
 import { MAINE_COUNTIES, getCountyDashboardRecord, getFreshness } from "../data/dashboardData.js";
 
-export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, mapLayer, setMapLayer }) {
 export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, competitorProviderType, setCompetitorProviderType, mapLayer, setMapLayer }) {
   const { dark } = useDarkMode();
   const selectedRecord = getCountyDashboardRecord(selectedCounty, rows);
@@ -113,7 +112,6 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
       <div className="space-y-6">
         {/* Map Card */}
         <Card title="Maine county map" eyebrow="Geographic view">
-          <MaineMap rows={rows} selectedCounty={selectedCounty} onSelectCounty={setSelectedCounty} heatmapMode={mapLayer} onHeatmapModeChange={setMapLayer} />
           <MaineMap rows={rows} selectedCounty={selectedCounty} onSelectCounty={setSelectedCounty} providerTypeFilter={competitorProviderType} onProviderTypeFilterChange={setCompetitorProviderType} heatmapMode={mapLayer} onHeatmapModeChange={setMapLayer} />
         </Card>
 
@@ -253,7 +251,6 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
               <p className={"text-[10px] font-semibold uppercase tracking-[0.16em] " + (dark ? "text-slate-500" : "text-slate-400")}>Quality / HHVBP</p>
               <p className={"mt-2 text-2xl font-bold tabular-nums " + (dark ? "text-slate-100" : "text-slate-900")}>{avgQualityStar != null ? avgQualityStar.toFixed(1) + " stars" : hhvbpDisplay != null ? hhvbpDisplay.toFixed(1) : qualitySummary.avgHospiceCahpsScore != null ? qualitySummary.avgHospiceCahpsScore.toFixed(0) : "Unavailable"}</p>
               <p className={"mt-1 text-xs " + (dark ? "text-slate-300" : "text-slate-600")}>{number(qualityRows.length)} HH quality · {number(qualitySummary.hhcahps?.length || 0)} HHCAHPS · {number(hhvbpRows.length)} HHVBP · {number(hospiceCahpsRows.length)} hospice CAHPS</p>
-              <p className={"mt-1 text-xs " + (dark ? "text-slate-400" : "text-slate-500")}>{number(qualityRows.length)} HH quality · {number(hhvbpRows.length)} HHVBP · {number(hospiceCahpsRows.length)} hospice CAHPS</p>
             </div>
             <div className={"rounded-2xl border p-4 " + (dark ? "border-slate-700 bg-slate-800/70" : "border-slate-200 bg-white")}>
               <p className={"text-[10px] font-semibold uppercase tracking-[0.16em] " + (dark ? "text-slate-500" : "text-slate-400")}>HRSA facilities</p>
@@ -274,7 +271,6 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
                 { label: "Demand and opportunity", value: countyMarket ? `${number((countyMarket.home_health_users || 0) + (countyMarket.hospice_users || 0))} users` : "Unavailable", detail: cmsMarketDetail },
                 { label: "Provider landscape", value: `${number(providerLandscape.counts.all)} records`, detail: `${providerLandscape.counts.homeHealth} home health · ${providerLandscape.counts.hospice} hospice · ${providerLandscape.counts.hrsa} HRSA` },
                 { label: "Quality, HHCAHPS, and HHVBP", value: qualitySummary.bestScore ? `${qualitySummary.bestScore.score.toFixed(qualitySummary.bestScore.score > 10 ? 0 : 1)} best available` : "Unavailable", detail: qualitySummary.bestScore ? `${qualitySummary.bestScore.provider} · ${qualitySummary.bestScore.source}` : qualitySummary.missingNotes[0] || "No matched score" },
-                { label: "Quality and HHVBP", value: qualitySummary.bestScore ? `${qualitySummary.bestScore.score.toFixed(qualitySummary.bestScore.score > 10 ? 0 : 1)} best available` : "Unavailable", detail: qualitySummary.bestScore ? `${qualitySummary.bestScore.provider} · ${qualitySummary.bestScore.source}` : qualitySummary.missingNotes[0] || "No matched score" },
                 { label: "Referral math", value: `${number(selected.referrals[0])} referrals`, detail: `${number(selected.starts[0])} starts at modeled conversion` },
                 { label: "Revenue math", value: currency(selected.revenue[0]), detail: `${selected.basis} · modeled output` },
               ].map((item) => (
