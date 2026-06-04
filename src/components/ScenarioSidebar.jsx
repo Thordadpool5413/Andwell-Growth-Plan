@@ -60,20 +60,25 @@ function RevenueDelta({ current, baseline, dark }) {
   );
 }
 
-function SaveScenarioSection({ scenario, dark }) {
+function SaveScenarioSection({ scenario, onLoadScenario, dark }) {
   const { saveScenario, scenarios, loadScenario, deleteScenario, activeScenarioId } = useScenarioStore();
   const [name, setName] = useState("");
-  const [saving, setSaving] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
 
   const handleSave = () => {
     if (!name.trim()) return;
-    saveScenario(name.trim());
+    saveScenario(name.trim(), scenario);
     setName("");
     setJustSaved(true);
     setShowSaved(true);
     setTimeout(() => setJustSaved(false), 2000);
+  };
+
+  const handleLoad = (savedScenario) => {
+    if (!savedScenario?.data) return;
+    loadScenario(savedScenario.id);
+    onLoadScenario?.(savedScenario.data);
   };
 
   const handleKeyDown = (e) => {
@@ -153,7 +158,7 @@ function SaveScenarioSection({ scenario, dark }) {
                       {s.name}
                     </span>
                     <button
-                      onClick={() => loadScenario(s.id)}
+                      onClick={() => handleLoad(s)}
                       title="Load this scenario"
                       className={`shrink-0 rounded p-1 transition ${dark ? "text-slate-400 hover:text-blue-400 hover:bg-blue-900/40" : "text-slate-400 hover:text-blue-600 hover:bg-blue-50"}`}
                     >
@@ -192,8 +197,6 @@ export default function ScenarioSidebar({
   const { dark } = useDarkMode();
   const pct = (v) => `${(v * 100).toFixed(0)}%`;
   const [showRestoredBanner, setShowRestoredBanner] = useState(false);
-
-  const { loadScenario: storeLoad } = useScenarioStore();
 
   const update = (key, value) =>
     setScenario((prev) => ({ ...prev, [key]: value }));
@@ -238,17 +241,6 @@ export default function ScenarioSidebar({
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [open, onClose]);
-
-  // When a scenario is loaded from the store, sync it to App's scenario state
-  const { scenarios, activeScenarioId } = useScenarioStore();
-  const prevActiveId = useRef(activeScenarioId);
-  useEffect(() => {
-    if (activeScenarioId && activeScenarioId !== prevActiveId.current) {
-      const found = scenarios.find((s) => s.id === activeScenarioId);
-      if (found) setScenario(found.data);
-    }
-    prevActiveId.current = activeScenarioId;
-  }, [activeScenarioId]);
 
   return (
     <>
@@ -399,7 +391,7 @@ export default function ScenarioSidebar({
 
           <div className={`border-t ${dark ? "border-slate-800" : "border-slate-100"}`} />
 
-          <SaveScenarioSection scenario={scenario} dark={dark} />
+          <SaveScenarioSection scenario={scenario} onLoadScenario={setScenario} dark={dark} />
           <div className={`rounded-2xl p-3 text-[10px] leading-relaxed ${dark ? "bg-slate-900 text-slate-400" : "bg-[#f5f1e8] text-slate-500"}`}>
             <p className={`mb-1 font-semibold ${dark ? "text-slate-300" : "text-slate-600"}`}>Benchmarks</p>
             <p>Conversion: 72–78% industry median (NAHC 2023)</p>

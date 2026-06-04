@@ -14,7 +14,7 @@ const ACCENT_COLORS = {
 export default function Card({ title, eyebrow, children, accent, flush }) {
   const { dark } = useDarkMode();
   const accentClass = accent ? ACCENT_COLORS[accent] || "" : "";
-  const paddingClass = flush ? "p-0" : "p-6";
+  const paddingClass = flush ? "p-0" : "p-5";
 
   return (
     <section
@@ -32,7 +32,7 @@ export default function Card({ title, eyebrow, children, accent, flush }) {
             </p>
           )}
           {title && (
-            <h3 className={`text-[15px] font-semibold leading-snug tracking-tight ${dark ? "text-slate-100" : "text-slate-800"}`}>
+            <h3 className={`text-sm font-semibold leading-snug tracking-tight sm:text-[15px] ${dark ? "text-slate-100" : "text-slate-800"}`}>
               {title}
             </h3>
           )}

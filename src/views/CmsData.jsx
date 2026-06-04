@@ -8,7 +8,7 @@ import Badge from "../components/Badge.jsx";
 import FreshnessChip from "../components/FreshnessChip.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
-import dashboardData, { getProviderProfileByCcn, hhvbpDisplayScore } from "../data/dashboardData.js";
+import dashboardData, { getHospiceCahpsSummary, getProviderProfileByCcn, hhvbpDisplayScore } from "../data/dashboardData.js";
 import { ANDWELL_CCN } from "../data/andwell.js";
 import { number, currency } from "../utils/formatters.js";
 import { exportCmsCSV } from "../utils/csvExport.js";
@@ -174,17 +174,76 @@ function HHVBPTab({ dark }) {
   );
 }
 
+function hospicePercent(value) {
+  return value != null ? `${Math.round(value)}%` : "—";
+}
+
+function hospiceStar(value) {
+  return value != null ? `${Number(value).toFixed(1)} / 5` : "—";
+}
+
+function hospicePerformance(summary) {
+  const score = summary?.averagePositiveScore;
+  if (score == null) return { tone: "amber", label: "Partial data" };
+  if (score >= 88) return { tone: "green", label: "Strong experience" };
+  if (score >= 80) return { tone: "blue", label: "Above average" };
+  if (score >= 72) return { tone: "amber", label: "Mixed experience" };
+  return { tone: "red", label: "Needs attention" };
+}
+
+function hospiceNarrative(summary) {
+  if (!summary) return "Bundled CMS Hospice CAHPS data is incomplete for this provider.";
+  const rating = summary.ratingTopBox;
+  const recommend = summary.recommendTopBox;
+  const timelyCare = summary.timelyCareTopBox;
+
+  if (rating != null && recommend != null && rating >= 85 && recommend >= 85) {
+    return "Families are reporting strong overall experience and a high likelihood to recommend this hospice.";
+  }
+  if (rating != null && recommend != null && rating < 75 && recommend < 75) {
+    return "Overall satisfaction and recommendation intent are both trailing, so this provider needs closer quality review.";
+  }
+  if (timelyCare != null && timelyCare < 75) {
+    return "The biggest watchout is response timeliness, which may be contributing to a less consistent caregiver experience.";
+  }
+  return "This provider shows a mixed caregiver experience profile, so the grouped topic scores below are the clearest way to pinpoint strengths and gaps.";
+}
+
+function HospiceSummaryPill({ label, value, dark }) {
+  return (
+    <div className={`rounded-xl border px-3 py-2 ${dark ? "border-slate-700 bg-slate-900/60" : "border-slate-200 bg-slate-50"}`}>
+      <p className={`text-[10px] font-semibold uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-400"}`}>{label}</p>
+      <p className={`mt-1 text-sm font-bold tabular-nums ${dark ? "text-slate-100" : "text-slate-900"}`}>{value}</p>
+    </div>
+  );
+}
+
 function HospiceCahpsTab({ dark }) {
   const data = dashboardData.hospiceCahps;
   if (!data.length) return <EmptyDataState dark={dark} dataset="CMS Hospice CAHPS provider data (gxki-hrr8)" />;
+  const providers = data.map((row) => {
+    const profile = getProviderProfileByCcn(row.ccn);
+    const summary = profile?.hospiceCahpsSummary || getHospiceCahpsSummary(profile?.hospiceCahps || row);
+    return { row, profile, summary };
+  });
+  const summaryStars = providers.map((item) => item.summary?.summaryStarRating).filter((value) => value != null);
+  const overallRatings = providers.map((item) => item.summary?.ratingTopBox).filter((value) => value != null);
+  const recommendations = providers.map((item) => item.summary?.recommendTopBox).filter((value) => value != null);
+  const average = (values) => values.length ? values.reduce((sum, value) => sum + Number(value), 0) / values.length : null;
+
   return (
     <div className="space-y-4">
       <SourceStrip dark={dark} label="Hospice CAHPS" source="CMS gxki-hrr8" count={data.length} />
-      <Card title="Hospice CAHPS provider detail" eyebrow="Expandable provider-level measure detail">
+      <div className="grid gap-4 md:grid-cols-4">
+        <Metric label="Hospice providers" value={data.length} detail="Maine hospices with bundled Hospice CAHPS survey detail." color="blue" sourceType="cms" />
+        <Metric label="Avg survey star" value={summaryStars.length ? `${average(summaryStars).toFixed(1)} / 5` : "-"} detail="Average CMS family caregiver summary star rating." color="emerald" sourceType="cms" />
+        <Metric label="Avg rated 9-10" value={overallRatings.length ? `${average(overallRatings).toFixed(0)}%` : "-"} detail="Families rating the hospice a 9 or 10." color="indigo" sourceType="cms" />
+        <Metric label="Avg definitely recommend" value={recommendations.length ? `${average(recommendations).toFixed(0)}%` : "-"} detail="Families who would definitely recommend the hospice." color="amber" sourceType="cms" />
+      </div>
+      <Card title="Hospice CAHPS provider detail" eyebrow="Readable caregiver experience scorecards">
         <div className="space-y-3">
-          {data.map((row) => {
-            const profile = getProviderProfileByCcn(row.ccn);
-            const measures = profile?.hospiceCahpsMeasures || Object.entries(row.measures || {}).map(([measure_code, measure]) => ({ measure_code, ...measure }));
+          {providers.map(({ row, profile, summary }) => {
+            const status = hospicePerformance(summary);
             return (
               <details key={row.ccn} className={`rounded-xl border p-4 ${dark ? "border-slate-700 bg-slate-800/70" : "border-slate-200 bg-white"}`}>
                 <summary className="cursor-pointer list-none">
@@ -193,28 +252,56 @@ function HospiceCahpsTab({ dark }) {
                       <p className={`font-semibold ${dark ? "text-slate-100" : "text-slate-900"}`}>{row.provider_name}</p>
                       <p className={`mt-1 text-xs ${dark ? "text-slate-300" : "text-slate-600"}`}>CCN {row.ccn} · {row.county || profile?.county || "No county assignment"} · {profile?.address || "-"}</p>
                       <p className={`mt-1 text-xs ${dark ? "text-slate-300" : "text-slate-600"}`}>{profile?.classification || "Unknown classification"} · {profile?.classification_confidence || "unknown"} confidence</p>
+                      <p className={`mt-1 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>Reporting period: {summary?.reportingPeriod || "CMS bundled period unavailable"}</p>
                     </div>
-                    <Badge tone="green">{measures.length} measures</Badge>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge tone={status.tone}>{status.label}</Badge>
+                      <Badge tone="green">{summary?.groups?.length || 0} survey topics</Badge>
+                    </div>
+                  </div>
+                  <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                    <HospiceSummaryPill label="Summary star" value={hospiceStar(summary?.summaryStarRating)} dark={dark} />
+                    <HospiceSummaryPill label="Rated 9-10" value={hospicePercent(summary?.ratingTopBox)} dark={dark} />
+                    <HospiceSummaryPill label="Definitely recommend" value={hospicePercent(summary?.recommendTopBox)} dark={dark} />
+                    <HospiceSummaryPill label="Timely care" value={hospicePercent(summary?.timelyCareTopBox)} dark={dark} />
                   </div>
                 </summary>
+                <p className={`mt-4 text-sm leading-6 ${dark ? "text-slate-300" : "text-slate-600"}`}>
+                  {hospiceNarrative(summary)}
+                </p>
                 <div className={`mt-4 overflow-x-auto rounded-lg border ${dark ? "border-slate-700" : "border-slate-200"}`}>
-                  <table className="w-full min-w-[900px] text-left text-sm">
+                  <table className="w-full min-w-[960px] text-left text-sm">
                     <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-900 text-slate-300" : "bg-slate-100 text-slate-700"}`}>
-                      <tr><th className="px-4 py-3">Measure</th><th className="px-4 py-3">Code</th><th className="px-4 py-3 text-right">Score</th><th className="px-4 py-3">Reporting period</th><th className="px-4 py-3">Source</th></tr>
+                      <tr><th className="px-4 py-3">Survey topic</th><th className="px-4 py-3 text-right">Best response</th><th className="px-4 py-3 text-right">Middle response</th><th className="px-4 py-3 text-right">Negative response</th><th className="px-4 py-3">How to read it</th></tr>
                     </thead>
                     <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-slate-200"}`}>
-                      {measures.map((measure) => (
-                        <tr key={measure.measure_code}>
-                          <td className="px-4 py-3">{measure.measure_name || "Measure name unavailable"}</td>
-                          <td className="px-4 py-3 font-mono text-xs">{measure.measure_code}</td>
-                          <td className="px-4 py-3 text-right font-semibold tabular-nums">{measure.score != null ? measure.score : "-"}</td>
-                          <td className="px-4 py-3">{measure.reporting_period || "-"}</td>
-                          <td className="px-4 py-3 text-xs">{measure.source_dataset_id || "gxki-hrr8"} · high CCN match confidence</td>
+                      {(summary?.groups || []).map((group) => (
+                        <tr key={group.id}>
+                          <td className="px-4 py-3">
+                            <p className={`font-semibold ${dark ? "text-slate-100" : "text-slate-900"}`}>{group.title}</p>
+                            <p className={`mt-1 text-xs ${dark ? "text-slate-500" : "text-slate-500"}`}>{group.reportingPeriod || "Current bundled period"}</p>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <p className={`font-semibold tabular-nums ${dark ? "text-emerald-300" : "text-emerald-700"}`}>{hospicePercent(group.positiveValue)}</p>
+                            <p className={`mt-1 text-[11px] leading-4 ${dark ? "text-slate-500" : "text-slate-500"}`}>{group.positiveLabel}</p>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <p className={`font-semibold tabular-nums ${dark ? "text-slate-200" : "text-slate-700"}`}>{hospicePercent(group.middleValue)}</p>
+                            <p className={`mt-1 text-[11px] leading-4 ${dark ? "text-slate-500" : "text-slate-500"}`}>{group.middleLabel}</p>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <p className={`font-semibold tabular-nums ${dark ? "text-rose-300" : "text-rose-700"}`}>{hospicePercent(group.negativeValue)}</p>
+                            <p className={`mt-1 text-[11px] leading-4 ${dark ? "text-slate-500" : "text-slate-500"}`}>{group.negativeLabel}</p>
+                          </td>
+                          <td className="px-4 py-3 text-xs leading-5">{group.explanation}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
+                <p className={`mt-3 text-xs ${dark ? "text-slate-500" : "text-slate-500"}`}>
+                  Source: CMS Hospice CAHPS provider data `gxki-hrr8`. Blank middle-response rows in the bundled feed are filled as the remainder to 100% when top and negative responses are available.
+                </p>
               </details>
             );
           })}

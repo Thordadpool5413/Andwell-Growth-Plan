@@ -369,6 +369,38 @@ function rowsPayload(rows, message, extra = {}) {
   return { success: true, data: rows, rows, count: Array.isArray(rows) ? rows.length : 0, message, ...extra };
 }
 
+function numericValue(value) {
+  if (value == null || value === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function averageNumbers(values) {
+  const nums = values.map(numericValue).filter((value) => value != null);
+  return nums.length ? nums.reduce((sum, value) => sum + value, 0) / nums.length : null;
+}
+
+function metricRange(values) {
+  const nums = values.map(numericValue).filter((value) => value != null);
+  if (!nums.length) return null;
+  return { min: Math.min(...nums), max: Math.max(...nums) };
+}
+
+function normalizeMetricValue(value, range, inverse = false) {
+  const num = numericValue(value);
+  if (num == null || !range) return null;
+  if (range.max === range.min) return 0.5;
+  const normalized = (num - range.min) / (range.max - range.min);
+  return inverse ? 1 - normalized : normalized;
+}
+
+function weightedAverage(parts) {
+  const usable = parts.filter((part) => part.value != null && part.weight > 0);
+  const totalWeight = usable.reduce((sum, part) => sum + part.weight, 0);
+  if (!totalWeight) return null;
+  return usable.reduce((sum, part) => sum + part.value * part.weight, 0) / totalWeight;
+}
+
 function seededQualitySummary() {
   const quality = readGeneratedJson("maineHomeHealthQuality.json");
   const hhvbp = readGeneratedJson("maineHhvbp.json");
@@ -376,14 +408,120 @@ function seededQualitySummary() {
   const andwell = quality.find((row) => row.ccn === ANDWELL_CCN || row.normalized_name?.includes("androscoggin")) || quality[0] || null;
   const starRows = quality.filter((row) => row.star_rating != null).sort((a, b) => (b.star_rating || 0) - (a.star_rating || 0));
   const rank = andwell ? starRows.findIndex((row) => row.ccn === andwell.ccn) + 1 : null;
+  const hhvbpByCcn = new Map(hhvbp.filter((row) => row?.ccn).map((row) => [String(row.ccn), row]));
+
+  const ranges = {
+    star: metricRange(quality.map((row) => row.star_rating)),
+    timely: metricRange(quality.map((row) => row.timely_care_pct)),
+    walking: metricRange(quality.map((row) => row.walking_improve_pct)),
+    dtc: metricRange(hhvbp.map((row) => row.discharged_to_community_score)),
+    avoidable: metricRange(hhvbp.map((row) => row.avoidable_hospitalizations_score)),
+    ed: metricRange(hhvbp.map((row) => row.ed_use_score)),
+  };
+
+  const stateAvgStar =
+    numericValue(benchmarks.home_health?.avg_quality_star_rating) ??
+    averageNumbers(quality.map((row) => row.star_rating));
+  const stateAvgDtc = averageNumbers(hhvbp.map((row) => row.discharged_to_community_score));
+
+  const modeledSpendComposite = (row) => {
+    const hhvbpRow = hhvbpByCcn.get(String(row?.ccn || ""));
+    return weightedAverage([
+      { value: normalizeMetricValue(row?.star_rating, ranges.star), weight: 0.25 },
+      { value: normalizeMetricValue(row?.timely_care_pct, ranges.timely), weight: 0.15 },
+      { value: normalizeMetricValue(row?.walking_improve_pct, ranges.walking), weight: 0.15 },
+      { value: normalizeMetricValue(hhvbpRow?.discharged_to_community_score, ranges.dtc), weight: 0.15 },
+      { value: normalizeMetricValue(hhvbpRow?.avoidable_hospitalizations_score, ranges.avoidable, true), weight: 0.18 },
+      { value: normalizeMetricValue(hhvbpRow?.ed_use_score, ranges.ed, true), weight: 0.12 },
+    ]);
+  };
+
+  const modeledSpendRows = quality
+    .map((row) => ({ ccn: row.ccn, composite: modeledSpendComposite(row) }))
+    .filter((row) => row.composite != null)
+    .sort((left, right) => right.composite - left.composite)
+    .map((row, index, arr) => {
+      const percentile = arr.length === 1 ? 0.5 : 1 - index / (arr.length - 1);
+      return {
+        ccn: row.ccn,
+        value: Number((1.08 - percentile * 0.16).toFixed(2)),
+      };
+    });
+
+  const modeledSpendByCcn = new Map(modeledSpendRows.map((row) => [String(row.ccn), row.value]));
+
+  const modeledPprValue = (row) => {
+    const hhvbpRow = hhvbpByCcn.get(String(row?.ccn || ""));
+    const base = weightedAverage([
+      { value: numericValue(hhvbpRow?.avoidable_hospitalizations_score), weight: 0.65 },
+      { value: numericValue(hhvbpRow?.ed_use_score), weight: 0.35 },
+    ]);
+    if (base == null) return null;
+
+    let adjusted = base;
+    if (numericValue(row?.star_rating) != null && stateAvgStar != null) {
+      adjusted -= (numericValue(row.star_rating) - stateAvgStar) * 0.35;
+    }
+    if (numericValue(hhvbpRow?.discharged_to_community_score) != null && stateAvgDtc != null) {
+      adjusted -= (numericValue(hhvbpRow.discharged_to_community_score) - stateAvgDtc) * 0.02;
+    }
+    return Number(Math.max(adjusted, 0).toFixed(2));
+  };
+
+  const modeledPprByCcn = new Map(
+    quality
+      .map((row) => ({ ccn: row.ccn, value: modeledPprValue(row) }))
+      .filter((row) => row.value != null)
+      .map((row) => [String(row.ccn), row.value]),
+  );
+
+  const stateAvgSpend =
+    numericValue(benchmarks.home_health?.avg_medicare_spend_ratio) ??
+    averageNumbers(quality.map((row) => row.medicare_spend_ratio)) ??
+    averageNumbers([...modeledSpendByCcn.values()]);
+  const stateAvgPpr =
+    numericValue(benchmarks.home_health?.avg_ppr_rate) ??
+    averageNumbers(quality.map((row) => row.ppr_rate)) ??
+    averageNumbers([...modeledPprByCcn.values()]);
+
+  const andwellSpendActual = numericValue(andwell?.medicare_spend_ratio);
+  const andwellPprActual = numericValue(andwell?.ppr_rate);
+  const andwellSpend = andwellSpendActual ?? modeledSpendByCcn.get(String(andwell?.ccn || "")) ?? null;
+  const andwellPpr = andwellPprActual ?? modeledPprByCcn.get(String(andwell?.ccn || "")) ?? null;
+  const spendSource = andwellSpendActual != null ? "cms" : andwellSpend != null ? "modeled" : "unavailable";
+  const pprSource = andwellPprActual != null ? "cms" : andwellPpr != null ? "modeled" : "unavailable";
+  const andwellHhvbp = hhvbp.find((row) => row.ccn === andwell?.ccn) || hhvbp[0] || null;
+
   return {
     success: true,
     has_data: Boolean(andwell),
-    andwell,
+    andwell: andwell ? {
+      ...andwell,
+      medicare_spend_ratio: andwellSpend,
+      ppr_rate: andwellPpr,
+      metric_flags: {
+        medicare_spend_ratio_modeled: spendSource === "modeled",
+        ppr_rate_modeled: pprSource === "modeled",
+      },
+    } : null,
     state_avg_star: benchmarks.home_health?.avg_quality_star_rating ?? null,
+    state_avg_spend: stateAvgSpend != null ? Number(stateAvgSpend.toFixed(2)) : null,
+    state_avg_ppr: stateAvgPpr != null ? Number(stateAvgPpr.toFixed(2)) : null,
     total_maine_agencies: quality.length,
     andwell_rank: rank > 0 ? rank : null,
-    hhvbp: hhvbp.find((row) => row.ccn === andwell?.ccn) || hhvbp[0] || null,
+    hhvbp: andwellHhvbp,
+    metric_sources: {
+      medicare_spend_ratio: spendSource,
+      ppr_rate: pprSource,
+    },
+    metric_notes: {
+      medicare_spend_ratio: spendSource === "cms"
+        ? "Bundled CMS home health spend ratio."
+        : "Modeled peer efficiency index from star rating, timely care, walking improvement, discharge to community, avoidable hospitalizations, and ED use. Lower is better and 1.00 represents the Maine peer midpoint.",
+      ppr_rate: pprSource === "cms"
+        ? "Bundled CMS potentially preventable readmissions rate."
+        : "Modeled readmissions proxy from HHVBP avoidable hospitalizations, ED use, star rating, and discharge to community. Lower is better.",
+    },
     message: "Loaded from bundled CMS quality seed data.",
   };
 }

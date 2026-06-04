@@ -16,7 +16,7 @@ import { useDarkMode } from "../components/DarkModeContext.jsx";
 import { COLORS } from "../data/constants.js";
 import { namedProviderRows } from "../data/providers.js";
 import { rollupByService, getCompetitiveThreatScore } from "../utils/calculations.js";
-import { getAllCountyMarkets, getFreshness } from "../data/dashboardData.js";
+import { getCountyMarket, getFreshness } from "../data/dashboardData.js";
 import { currency, number, percent } from "../utils/formatters.js";
 
 function AtAGlanceIndicator({ label, status, dark }) {
@@ -64,7 +64,8 @@ export default function ExecutiveView({ rows, totals }) {
   const { dark } = useDarkMode();
   const [qualitySummary, setQualitySummary] = useState(null);
   const freshness = getFreshness();
-  const countyMarkets = getAllCountyMarkets().filter((market) => market.ffs);
+  const activeCounties = [...new Set(rows.map((row) => row.county))];
+  const countyMarkets = activeCounties.map((county) => getCountyMarket(county)).filter((market) => market?.ffs);
 
   useEffect(() => {
     (async () => {
@@ -79,10 +80,12 @@ export default function ExecutiveView({ rows, totals }) {
   const totalMarket = countyMarkets.reduce((s, m) => s + (m.home_health_users || 0) + (m.hospice_users || 0), 0);
   const y1Penetration = totalMarket > 0 ? totals.y1Starts / totalMarket : 0;
 
-  const avgThreat = countyMarkets.map((market) => market.county)
-    .map((c) => getCompetitiveThreatScore(c))
-    .filter(Boolean)
-    .reduce((s, t, _, a) => s + t.score / a.length, 0);
+  const threatScores = activeCounties
+    .map((county) => getCompetitiveThreatScore(county))
+    .filter(Boolean);
+  const avgThreat = threatScores.length
+    ? threatScores.reduce((sum, threat) => sum + threat.score, 0) / threatScores.length
+    : 0;
 
   const totalFFS = countyMarkets.reduce((s, m) => s + (m.ffs || 0), 0);
   const revPerBeneficiary = totalFFS > 0 ? Math.round(totals.y1Revenue / totalFFS) : 0;
@@ -114,13 +117,13 @@ export default function ExecutiveView({ rows, totals }) {
       {/* Primary metrics */}
       <div className={`rounded-xl px-5 py-4 ${dark ? "bg-slate-800/30 border border-slate-700/60" : "border border-slate-100 bg-slate-50/60"}`}>
         <div className="grid gap-4 md:grid-cols-4">
-          <Metric
-            label="Active growth counties"
-            value={rows.length}
-            detail="County and service line combinations in the active model."
-            color="emerald"
-            sourceType="cms"
-          />
+            <Metric
+              label="Active growth counties"
+              value={activeCounties.length}
+              detail="Target counties included in the active modeled plan."
+              color="emerald"
+              sourceType="cms"
+            />
           <Metric
             label="Year 1 referrals"
             value={number(totals.y1Referrals)}
@@ -156,7 +159,7 @@ export default function ExecutiveView({ rows, totals }) {
           <p className={`mt-2 text-3xl font-bold tabular-nums ${dark ? "text-slate-100" : "text-slate-900"}`}>{percent(y1Penetration)}</p>
           <p className={`mt-2 text-xs leading-5 ${dark ? "text-slate-500" : "text-slate-500"}`}>
             <EstBadge reason="Modeled Y1 starts divided by total CMS addressable beneficiary volume — a planning proxy, not observed market share.">Est.</EstBadge>{" "}
-            Y1 starts vs total CMS addressable market ({number(totalMarket)} beneficiary users).
+            Y1 starts vs the total CMS addressable market across {activeCounties.length} target counties ({number(totalMarket)} beneficiary users).
           </p>
         </div>
         <div className={`rounded-xl border-l-4 border-l-amber-500 border p-5 ${dark ? "border-slate-700/60 bg-slate-800/60" : "border-slate-200 bg-white"}`}>
@@ -172,11 +175,11 @@ export default function ExecutiveView({ rows, totals }) {
           <p className={`mt-2 text-xs leading-5 ${dark ? "text-slate-500" : "text-slate-500"}`}>Composite weighted score across all 12 target counties.</p>
         </div>
         <div className={`rounded-xl border-l-4 border-l-blue-500 border p-5 ${dark ? "border-slate-700/60 bg-slate-800/60" : "border-slate-200 bg-white"}`}>
-          <p className={`text-[11px] font-medium uppercase tracking-[0.1em] ${dark ? "text-slate-400" : "text-slate-500"}`}>Modeled Y1 revenue per <Abbr term="FFS">FFS</Abbr> beneficiary</p>
+          <p className={`text-[11px] font-medium uppercase tracking-[0.1em] ${dark ? "text-slate-400" : "text-slate-500"}`}>Modeled Y1 revenue per <Abbr term="FFS">FFS</Abbr> beneficiary (USD)</p>
           <p className={`mt-2 text-3xl font-bold tabular-nums ${dark ? "text-slate-100" : "text-slate-900"}`}>{currency(revPerBeneficiary)}</p>
           <p className={`mt-2 text-xs leading-5 ${dark ? "text-slate-500" : "text-slate-500"}`}>
             <EstBadge reason="Derived: Y1 modeled revenue divided by total CMS Fee-For-Service beneficiary count — not a verified billing figure.">Est.</EstBadge>{" "}
-            {currency(totals.y1Revenue)} modeled Y1 revenue / {number(totalFFS)} <Abbr term="FFS">Fee-For-Service</Abbr> beneficiaries.
+            US dollars per beneficiary across the {activeCounties.length}-county target plan: {currency(totals.y1Revenue)} / {number(totalFFS)} <Abbr term="FFS">Fee-For-Service</Abbr> beneficiaries.
           </p>
         </div>
       </div>
@@ -208,15 +211,27 @@ export default function ExecutiveView({ rows, totals }) {
             />
             <QualityKPI
               label="Medicare Cost Index"
-              value={qualitySummary?.andwell?.medicare_spend_ratio != null ? parseFloat(qualitySummary.andwell.medicare_spend_ratio).toFixed(2) : "—"}
-              sub={qualitySummary?.andwell?.medicare_spend_ratio != null && parseFloat(qualitySummary.andwell.medicare_spend_ratio) < 1.0 ? "Below national avg (favorable)" : "Unavailable: Medicare spend ratio is not included in bundled source registry."}
+              value={qualitySummary?.andwell?.medicare_spend_ratio != null ? `${parseFloat(qualitySummary.andwell.medicare_spend_ratio).toFixed(2)}x` : "—"}
+              sub={
+                qualitySummary?.andwell?.medicare_spend_ratio != null
+                  ? qualitySummary?.metric_sources?.medicare_spend_ratio === "modeled"
+                    ? qualitySummary?.metric_notes?.medicare_spend_ratio || "Modeled peer efficiency index; lower is better."
+                    : `CMS spend ratio. Maine peer average ${qualitySummary?.state_avg_spend != null ? `${parseFloat(qualitySummary.state_avg_spend).toFixed(2)}x` : "unavailable"}; lower is better.`
+                  : "Unavailable: bundled data could not produce a spend index."
+              }
               dark={dark}
               color="amber"
             />
             <QualityKPI
               label="Preventable Readmissions"
               value={qualitySummary?.andwell?.ppr_rate != null ? `${parseFloat(qualitySummary.andwell.ppr_rate).toFixed(2)}%` : "—"}
-              sub={qualitySummary?.andwell?.ppr_rate != null ? "PPR risk-standardized rate" : "Unavailable: PPR risk-standardized rate source is not bundled."}
+              sub={
+                qualitySummary?.andwell?.ppr_rate != null
+                  ? qualitySummary?.metric_sources?.ppr_rate === "modeled"
+                    ? qualitySummary?.metric_notes?.ppr_rate || "Modeled readmissions proxy; lower is better."
+                    : `CMS PPR rate. Maine peer average ${qualitySummary?.state_avg_ppr != null ? `${parseFloat(qualitySummary.state_avg_ppr).toFixed(2)}%` : "unavailable"}; lower is better.`
+                  : "Unavailable: bundled data could not produce a readmissions proxy."
+              }
               dark={dark}
               color="violet"
             />

@@ -47,6 +47,7 @@
 }
 
 html {
+  font-size: 15.5px;
   background-color: var(--color-bg-primary);
   color: var(--color-text-primary);
   overflow-x: hidden;
@@ -484,4 +485,10 @@ input[type="range"]::-moz-range-thumb {
     size: A4;
   }
   @page :first { margin-top: 2cm; }
+}
+
+@media (max-width: 1024px) {
+  html {
+    font-size: 15px;
+  }
 }

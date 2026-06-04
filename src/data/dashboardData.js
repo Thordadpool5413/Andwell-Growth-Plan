@@ -179,6 +179,138 @@ function bestHospiceMeasure(row) {
   return measures.find((measure) => (measure.measure_name || "").toLowerCase().includes("rated")) || measures[0] || null;
 }
 
+function getHospiceMeasure(row, code) {
+  return row?.measures?.[code] || null;
+}
+
+function hospiceScore(value) {
+  return value == null ? null : Number(value);
+}
+
+function hospiceRemainder(top, low, middle) {
+  if (middle != null) return hospiceScore(middle);
+  if (top == null || low == null) return null;
+  return Math.max(0, Number((100 - Number(top) - Number(low)).toFixed(0)));
+}
+
+function hospiceTriplet(row, config) {
+  const top = hospiceScore(getHospiceMeasure(row, config.codes.top)?.score);
+  const low = hospiceScore(getHospiceMeasure(row, config.codes.low)?.score);
+  const middle = hospiceRemainder(top, low, getHospiceMeasure(row, config.codes.middle)?.score);
+  const reportingPeriod =
+    getHospiceMeasure(row, config.codes.top)?.reporting_period ||
+    getHospiceMeasure(row, config.codes.middle)?.reporting_period ||
+    getHospiceMeasure(row, config.codes.low)?.reporting_period ||
+    null;
+
+  if (top == null && middle == null && low == null) return null;
+
+  return {
+    id: config.id,
+    title: config.title,
+    positiveLabel: config.positiveLabel,
+    middleLabel: config.middleLabel,
+    negativeLabel: config.negativeLabel,
+    positiveValue: top,
+    middleValue: middle,
+    negativeValue: low,
+    reportingPeriod,
+    explanation: config.explanation,
+  };
+}
+
+export function getHospiceCahpsSummary(row) {
+  if (!row) return null;
+
+  const groups = [
+    hospiceTriplet(row, {
+      id: "overall_rating",
+      title: "Overall hospice rating",
+      positiveLabel: "Rated 9 or 10",
+      middleLabel: "Rated 7 or 8",
+      negativeLabel: "Rated 6 or lower",
+      explanation: "Higher 9-10 ratings and lower 6-or-below ratings indicate stronger caregiver experience.",
+      codes: { top: "RATING_TBV", middle: "RATING_MBV", low: "RATING_BBV" },
+    }),
+    hospiceTriplet(row, {
+      id: "recommend",
+      title: "Would definitely recommend",
+      positiveLabel: "Definitely recommend",
+      middleLabel: "Probably recommend",
+      negativeLabel: "Would not recommend",
+      explanation: "This reflects how strongly family caregivers would recommend the hospice to others.",
+      codes: { top: "RECOMMEND_TBV", middle: "RECOMMEND_MBV", low: "RECOMMEND_BBV" },
+    }),
+    hospiceTriplet(row, {
+      id: "team_communication",
+      title: "Team communication",
+      positiveLabel: "Team always communicated well",
+      middleLabel: "Usually communicated well",
+      negativeLabel: "Sometimes or never communicated well",
+      explanation: "Communication scores reflect how consistently families felt informed and heard.",
+      codes: { top: "TEAM_COMM_TBV", middle: "TEAM_COMM_MBV", low: "TEAM_COMM_BBV" },
+    }),
+    hospiceTriplet(row, {
+      id: "timely_care",
+      title: "Timely care",
+      positiveLabel: "Always received timely help",
+      middleLabel: "Usually received timely help",
+      negativeLabel: "Sometimes or never received timely help",
+      explanation: "Higher positive scores suggest the hospice responded quickly when the family needed help.",
+      codes: { top: "TIMELY_CARE_TBV", middle: "TIMELY_CARE_MBV", low: "TIMELY_CARE_BBV" },
+    }),
+    hospiceTriplet(row, {
+      id: "symptom_relief",
+      title: "Help with symptoms",
+      positiveLabel: "Always helped with symptoms",
+      middleLabel: "Usually helped with symptoms",
+      negativeLabel: "Sometimes or never helped with symptoms",
+      explanation: "Symptom relief measures reflect caregiver confidence that pain and symptoms were managed well.",
+      codes: { top: "SYMPTOMS_TBV", middle: "SYMPTOMS_MBV", low: "SYMPTOMS_BBV" },
+    }),
+    hospiceTriplet(row, {
+      id: "emotional_support",
+      title: "Emotional and spiritual support",
+      positiveLabel: "Right amount of support",
+      middleLabel: "Mixed response",
+      negativeLabel: "Did not receive enough support",
+      explanation: "This captures whether families felt the hospice offered the right emotional and spiritual support.",
+      codes: { top: "EMO_REL_TBV", middle: "EMO_REL_MBV", low: "EMO_REL_BBV" },
+    }),
+    hospiceTriplet(row, {
+      id: "respect",
+      title: "Respect shown to patient and family",
+      positiveLabel: "Always treated with respect",
+      middleLabel: "Usually treated with respect",
+      negativeLabel: "Sometimes or never treated with respect",
+      explanation: "Respect scores indicate how often the care team treated the patient and family with dignity.",
+      codes: { top: "RESPECT_TBV", middle: "RESPECT_MBV", low: "RESPECT_BBV" },
+    }),
+  ].filter(Boolean);
+
+  const summaryStarMeasure = getHospiceMeasure(row, "SUMMARY_STAR_RATING");
+  const summaryStarRating = hospiceScore(summaryStarMeasure?.star_rating);
+  const ratingTopBox = groups.find((group) => group.id === "overall_rating")?.positiveValue ?? null;
+  const recommendTopBox = groups.find((group) => group.id === "recommend")?.positiveValue ?? null;
+  const timelyCareTopBox = groups.find((group) => group.id === "timely_care")?.positiveValue ?? null;
+  const averagePositiveScore = groups.length
+    ? groups
+      .map((group) => group.positiveValue)
+      .filter((value) => value != null)
+      .reduce((sum, value, _, values) => sum + value / values.length, 0)
+    : null;
+
+  return {
+    summaryStarRating,
+    ratingTopBox,
+    recommendTopBox,
+    timelyCareTopBox,
+    averagePositiveScore,
+    reportingPeriod: summaryStarMeasure?.reporting_period || groups.find((group) => group.reportingPeriod)?.reportingPeriod || null,
+    groups,
+  };
+}
+
 export function getCountyQualitySummary(county) {
   const homeHealth = homeHealthByCounty[county] || [];
   const hhvbp = homeHealth.map((agency) => hhvbpByCcn[agency.ccn]).filter(Boolean);
@@ -314,6 +446,7 @@ export function getProviderProfileByCcn(ccn) {
     hospiceQuality,
     hospiceCahps,
     hospiceCahpsMeasures: hospiceCahpsMeasures(hospiceCahps),
+    hospiceCahpsSummary: getHospiceCahpsSummary(hospiceCahps),
     hrsa,
     high_quality: highQualityEvidence.length > 0,
     high_quality_evidence: highQualityEvidence,

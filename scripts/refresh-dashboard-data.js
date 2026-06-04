@@ -98,6 +98,16 @@ function toNumber(value) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function pickFirstNumber(row, keys) {
+  for (const key of keys) {
+    if (row[key] != null) {
+      const parsed = toNumber(row[key]);
+      if (parsed != null) return parsed;
+    }
+  }
+  return null;
+}
+
 function normalizeName(name) {
   return String(name || "")
     .toLowerCase()
@@ -186,6 +196,18 @@ function normalizeHomeHealth(row) {
     timely_care_pct: toNumber(row.how_often_the_home_health_team_began_their_patients_care_in_d440),
     walking_improve_pct: toNumber(row.how_often_patients_got_better_at_walking_or_moving_around),
     medication_teaching_pct: toNumber(row.how_often_the_home_health_team_taught_patients_or_their_fami_d4ba),
+    medicare_spend_ratio: pickFirstNumber(row, [
+      "how_much_medicare_spends_on_an_episode_of_care_at_this_agen",
+      "medicare_spend_ratio",
+      "medicare_spend",
+      "spend_ratio",
+    ]),
+    ppr_rate: pickFirstNumber(row, ["ppr_riskstandardized_rate", "ppr_rate", "ppr"]),
+    dtc_rate: pickFirstNumber(row, ["dtc_riskstandardized_rate", "dtc_rate", "dtc"]),
+    pph_rate: pickFirstNumber(row, ["pph_riskstandardized_rate", "pph_rate", "pph"]),
+    discharge_function_score: pickFirstNumber(row, ["discharge_function_score", "discharge_function"]),
+    med_adherence_pct: pickFirstNumber(row, ["medication_compliance", "med_adherence", "medication_adherence", "drug_education"]),
+    fall_injury_pct: pickFirstNumber(row, ["fall_injury", "fall_prevention", "falls_with_injury", "fall_risk"]),
     source_dataset_id: CMS_DATASET_REGISTRY.homeHealthAgencies.identifier,
     source_type: "sourced_cms",
     generated_at: GENERATED_AT,
@@ -331,6 +353,8 @@ function buildBenchmarks({ homeHealth, hhcahps, hhvbp, hospiceQuality, hospiceCa
       avg_quality_star_rating: average(homeHealth, "star_rating"),
       avg_timely_care_pct: average(homeHealth, "timely_care_pct"),
       avg_walking_improve_pct: average(homeHealth, "walking_improve_pct"),
+      avg_medicare_spend_ratio: average(homeHealth, "medicare_spend_ratio"),
+      avg_ppr_rate: average(homeHealth, "ppr_rate"),
       hhcahps_provider_count: hhcahps.length,
       avg_hhcahps_summary_star: average(hhcahps, "summary_star_rating"),
       avg_hhcahps_recommend_pct: average(hhcahps, "recommend_pct"),

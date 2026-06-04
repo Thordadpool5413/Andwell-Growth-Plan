@@ -81,7 +81,7 @@ export default function Metric({ label, value, detail, sparkData, sparkColor, co
 
   return (
     <div
-      className={`rounded-[18px] border p-5 backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-br ${tint} ${borderClass} ${
+      className={`rounded-[18px] border p-4 backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-br ${tint} ${borderClass} ${
         dark
           ? `border-slate-700/50 shadow-sm ${glowClass} hover:border-slate-600/60 hover:shadow-md`
           : `border-slate-200/80 shadow-sm ${glowClass} hover:border-slate-300/60 hover:shadow-md`
@@ -93,7 +93,7 @@ export default function Metric({ label, value, detail, sparkData, sparkColor, co
         </p>
       </div>
       <div className="mt-2.5 flex items-baseline gap-2 flex-wrap">
-        <p className={`text-2xl font-bold tabular-nums leading-none ${dark ? "text-slate-100" : "text-slate-900"}`}>
+        <p className={`text-[1.6rem] font-bold tabular-nums leading-none ${dark ? "text-slate-100" : "text-slate-900"}`}>
           {value}
         </p>
         <TrendArrow sparkData={sparkData} />

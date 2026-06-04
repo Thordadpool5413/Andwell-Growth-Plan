@@ -24,6 +24,7 @@ import BoardReport from "./views/BoardReport.jsx";
 import LaunchChecklist from "./views/LaunchChecklist.jsx";
 import AskPanel from "./components/AskPanel.jsx";
 import ScenarioSidebar from "./components/ScenarioSidebar.jsx";
+import { useScenarioStore } from "./store/scenarioStore.js";
 import {
   Activity,
   ArrowRightLeft,
@@ -186,7 +187,7 @@ function NavRail({ dark, activeTab, onSelect, onClose }) {
                     onClose?.();
                   }}
                   aria-current={active ? "page" : undefined}
-                  className={`group flex w-full items-start gap-3 rounded-2xl border px-3 py-3 text-left transition-all duration-200 ${
+                  className={`group flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-all duration-200 ${
                     active
                       ? dark
                         ? "border-emerald-500/35 bg-slate-900 text-white shadow-[0_18px_40px_-28px_rgba(16,185,129,0.8)]"
@@ -197,7 +198,7 @@ function NavRail({ dark, activeTab, onSelect, onClose }) {
                   }`}
                 >
                   <span
-                    className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border transition-colors ${
+                    className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-colors ${
                       active
                         ? dark
                           ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-300"
@@ -250,6 +251,7 @@ function ContextChip({ dark, children, tone = "neutral" }) {
 function Dashboard() {
   const { dark, toggle } = useDarkMode();
   const { addToast } = useToast();
+  const syncScenarioStore = useScenarioStore((state) => state.setCurrentScenario);
   const [activeTab, setActiveTab] = useState("Executive View");
   const [selectedCounty, setSelectedCounty] = useState("York");
   const [scenario, setScenario] = useState(() => {
@@ -290,6 +292,7 @@ function Dashboard() {
       JSON.stringify(scenario.hhCapture) === JSON.stringify(DEFAULT_SCENARIO.hhCapture) &&
       JSON.stringify(scenario.woundCapture) === JSON.stringify(DEFAULT_SCENARIO.woundCapture) &&
       JSON.stringify(scenario.therapyCapture) === JSON.stringify(DEFAULT_SCENARIO.therapyCapture);
+    syncScenarioStore(scenario, { clearActiveIfChanged: true });
     try {
       if (isDefault) {
         localStorage.removeItem("andwell_scenario");
@@ -297,7 +300,7 @@ function Dashboard() {
         localStorage.setItem("andwell_scenario", JSON.stringify(scenario));
       }
     } catch {}
-  }, [scenario]);
+  }, [scenario, syncScenarioStore]);
 
   const rows = useMemo(() => buildRows(scenario), [scenario]);
   const totals = useMemo(
@@ -436,18 +439,18 @@ function Dashboard() {
   };
 
   const actionButtonClass = dark
-    ? "inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/90 px-3.5 py-2 text-sm font-medium text-slate-300 transition hover:border-slate-600 hover:bg-slate-800 hover:text-white"
-    : "inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900";
+    ? "inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/90 px-3 py-1.5 text-[13px] font-medium text-slate-300 transition hover:border-slate-600 hover:bg-slate-800 hover:text-white"
+    : "inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[13px] font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900";
 
   return (
     <div className={`dashboard-shell min-h-screen transition-colors duration-300 ${dark ? "bg-slate-950 text-slate-100" : "bg-[#f7f5ef] text-slate-900"}`}>
-      <div className="mx-auto flex min-h-screen w-full max-w-[1800px]">
+      <div className="mx-auto flex min-h-screen w-full max-w-[1700px]">
         <aside
-          className={`sticky top-0 hidden h-screen w-[18.5rem] shrink-0 overflow-hidden border-r px-5 py-6 lg:flex lg:flex-col ${
+          className={`sticky top-0 hidden h-screen w-[17.25rem] shrink-0 overflow-hidden border-r px-4 py-5 lg:flex lg:flex-col ${
             dark ? "border-slate-800 bg-slate-950/95" : "border-[#e3ddd0] bg-[#f6f1e7]/95"
           }`}
         >
-          <div className="mb-6 shrink-0">
+          <div className="mb-5 shrink-0">
             <div className="flex items-center gap-3">
               <div className={`flex h-12 w-12 items-center justify-center rounded-2xl border ${dark ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300" : "border-emerald-200 bg-white text-emerald-700"}`}>
                 <LayoutDashboard className="h-5 w-5" />
@@ -470,7 +473,7 @@ function Dashboard() {
             <NavRail dark={dark} activeTab={activeTab} onSelect={activateView} />
           </div>
 
-          <div className={`mt-6 shrink-0 rounded-[24px] border p-4 ${dark ? "border-slate-800 bg-slate-900/80" : "border-[#e4ddd1] bg-white/90"}`}>
+          <div className={`mt-5 shrink-0 rounded-[22px] border p-3.5 ${dark ? "border-slate-800 bg-slate-900/80" : "border-[#e4ddd1] bg-white/90"}`}>
             <p className={`text-[10px] font-semibold uppercase tracking-[0.24em] ${dark ? "text-slate-500" : "text-slate-400"}`}>
               Live context
             </p>
@@ -545,7 +548,7 @@ function Dashboard() {
               dark ? "border-slate-800 bg-slate-950/85" : "border-[#e4ddd1] bg-[#f7f5ef]/90"
             }`}
           >
-            <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between gap-4 px-4 py-3.5 sm:px-5 lg:px-7">
               <div className="flex min-w-0 items-center gap-3">
                 <button
                   type="button"
@@ -590,14 +593,14 @@ function Dashboard() {
             </div>
           </header>
 
-          <main className="flex-1 px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
-            <div className="mx-auto max-w-7xl space-y-4">
+          <main className="flex-1 px-4 py-4 sm:px-5 sm:py-5 lg:px-7">
+            <div className="mx-auto max-w-[76rem] space-y-4">
               <div className="print:hidden">
                 <DataSourceBanner />
               </div>
 
               <section
-                className={`rounded-[30px] border px-5 py-5 shadow-[0_28px_70px_-40px_rgba(15,23,42,0.35)] transition-colors sm:px-6 sm:py-6 ${
+                className={`rounded-[28px] border px-4 py-4 shadow-[0_28px_70px_-40px_rgba(15,23,42,0.35)] transition-colors sm:px-5 sm:py-5 ${
                   dark ? "border-slate-800 bg-slate-900/90" : "border-[#e5ded2] bg-white/90"
                 }`}
               >
@@ -612,10 +615,10 @@ function Dashboard() {
                       <p className={`text-[11px] font-semibold uppercase tracking-[0.24em] ${dark ? "text-slate-500" : "text-slate-500"}`}>
                         Andwell Maine Growth Plan
                       </p>
-                      <h1 className={`mt-2 text-3xl font-semibold tracking-tight sm:text-[2.2rem] ${dark ? "text-white" : "text-slate-950"}`}>
+                      <h1 className={`mt-2 text-[1.9rem] font-semibold tracking-tight sm:text-[2rem] ${dark ? "text-white" : "text-slate-950"}`}>
                         {activeView.title}
                       </h1>
-                      <p className={`mt-3 max-w-3xl text-sm leading-6 sm:text-[15px] ${dark ? "text-slate-400" : "text-slate-600"}`}>
+                      <p className={`mt-3 max-w-3xl text-[14px] leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>
                         {activeView.description}
                       </p>
                     </div>

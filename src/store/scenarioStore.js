@@ -3,6 +3,14 @@ import { DEFAULT_SCENARIO } from "../data/constants.js";
 
 const STORAGE_KEY = "andwell_saved_scenarios";
 
+function cloneScenario(scenario) {
+  return JSON.parse(JSON.stringify(scenario || DEFAULT_SCENARIO));
+}
+
+function scenariosMatch(left, right) {
+  return JSON.stringify(left || DEFAULT_SCENARIO) === JSON.stringify(right || DEFAULT_SCENARIO);
+}
+
 function loadSaved() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -19,7 +27,7 @@ function persistSaved(scenarios) {
 }
 
 export const useScenarioStore = create((set, get) => ({
-  currentScenario: DEFAULT_SCENARIO,
+  currentScenario: cloneScenario(DEFAULT_SCENARIO),
   scenarios: loadSaved(),
   activeScenarioId: null,
 
@@ -28,18 +36,35 @@ export const useScenarioStore = create((set, get) => ({
       currentScenario: { ...state.currentScenario, ...updates },
     })),
 
-  saveScenario: (name, description = "") => {
+  setCurrentScenario: (scenario, options = {}) =>
+    set((state) => {
+      const nextScenario = cloneScenario(scenario);
+      const activeScenario = state.scenarios.find((entry) => entry.id === state.activeScenarioId);
+      const keepActive = options.clearActiveIfChanged
+        ? scenariosMatch(activeScenario?.data, nextScenario)
+        : true;
+      return {
+        currentScenario: nextScenario,
+        activeScenarioId: keepActive ? state.activeScenarioId : null,
+      };
+    }),
+
+  saveScenario: (name, descriptionOrData = "", maybeDescription = "") => {
     const state = get();
+    const scenarioData = descriptionOrData && typeof descriptionOrData === "object" && !Array.isArray(descriptionOrData)
+      ? cloneScenario(descriptionOrData)
+      : cloneScenario(state.currentScenario);
+    const description = typeof descriptionOrData === "string" ? descriptionOrData : maybeDescription;
     const newScenario = {
       id: Date.now().toString(),
       name,
       description,
-      data: state.currentScenario,
+      data: scenarioData,
       createdAt: new Date().toISOString(),
     };
     const next = [...state.scenarios, newScenario];
     persistSaved(next);
-    set({ scenarios: next, activeScenarioId: newScenario.id });
+    set({ scenarios: next, currentScenario: cloneScenario(newScenario.data), activeScenarioId: newScenario.id });
     return newScenario.id;
   },
 
@@ -47,7 +72,7 @@ export const useScenarioStore = create((set, get) => ({
     const state = get();
     const scenario = state.scenarios.find((s) => s.id === id);
     if (scenario) {
-      set({ currentScenario: scenario.data, activeScenarioId: id });
+      set({ currentScenario: cloneScenario(scenario.data), activeScenarioId: id });
     }
   },
 
@@ -62,11 +87,13 @@ export const useScenarioStore = create((set, get) => ({
   },
 
   updateScenarioMetadata: (id, name, description) =>
-    set((state) => ({
-      scenarios: state.scenarios.map((s) =>
+    set((state) => {
+      const next = state.scenarios.map((s) =>
         s.id === id ? { ...s, name, description } : s
-      ),
-    })),
+      );
+      persistSaved(next);
+      return { scenarios: next };
+    }),
 
   compareScenarios: (ids) => {
     const state = get();
@@ -78,7 +105,7 @@ export const useScenarioStore = create((set, get) => ({
   },
 
   resetToDefault: () =>
-    set({ currentScenario: DEFAULT_SCENARIO, activeScenarioId: null }),
+    set({ currentScenario: cloneScenario(DEFAULT_SCENARIO), activeScenarioId: null }),
 
   exportScenarios: () => {
     const state = get();
@@ -94,7 +121,7 @@ export const useScenarioStore = create((set, get) => ({
       const data = JSON.parse(jsonString);
       const next = data.scenarios || [];
       persistSaved(next);
-      set({ currentScenario: data.current || DEFAULT_SCENARIO, scenarios: next });
+      set({ currentScenario: cloneScenario(data.current || DEFAULT_SCENARIO), scenarios: next, activeScenarioId: null });
       return true;
     } catch {
       return false;

@@ -91,7 +91,7 @@ export default function OpportunityScore({ rows }) {
             { name: "Market size", weight: "25%", desc: "CMS FFS beneficiary volume." },
             { name: "Low competition", weight: "20%", desc: "Inverse of competitive threat." },
             { name: "Andwell presence", weight: "15%", desc: "Current provider footprint and modeled entry advantage." },
-            { name: "Revenue efficiency", weight: "20%", desc: "Modeled Y1 revenue per FFS beneficiary." },
+            { name: "Revenue efficiency", weight: "20%", desc: "Modeled Y1 revenue dollars per FFS beneficiary within the target-county plan." },
             { name: "Growth potential", weight: "20%", desc: "Y1 to Y3 modeled revenue ramp." },
           ].map((factor) => (
             <div key={factor.name} className={`rounded-xl border p-3 ${dark ? "border-slate-700 bg-slate-800/70" : "border-slate-200 bg-white"}`}>
