@@ -147,8 +147,8 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty, provide
   const countyCount = MAINE_COUNTIES.length;
   const activeCount = new Set(rows.map((row) => row.county)).size;
   const visibleProviders = namedProviderRows.filter((provider) => {
-    if (providerProviderType(providerTypeFilter) === "all") return true;
-    return providerProviderType(providerTypeFilter) === provider.service;
+    if (!providerTypeFilter || providerTypeFilter === "all") return true;
+    return providerTypeFilter === provider.service;
   });
 
   const selectedFeature = features.find((feature) => getFeatureName(feature) === selectedCounty);
