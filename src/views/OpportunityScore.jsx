@@ -10,6 +10,53 @@ import { getOpportunityScore } from "../utils/calculations.js";
 import { getCountyDashboardRecord, getFreshness, getReferralSummary } from "../data/dashboardData.js";
 import { currency, number } from "../utils/formatters.js";
 
+import { getFreshness } from "../data/dashboardData.js";
+import { currency, number } from "../utils/formatters.js";
+
+const TIER_STYLES = {
+  Prime: {
+    bg: "bg-emerald-100 dark:bg-emerald-900/40",
+    text: "text-emerald-700 dark:text-emerald-300",
+    dot: "bg-emerald-500",
+    border: "border-emerald-300 dark:border-emerald-700",
+  },
+  Strong: {
+    bg: "bg-blue-100 dark:bg-blue-900/40",
+    text: "text-blue-700 dark:text-blue-300",
+    dot: "bg-blue-500",
+    border: "border-blue-300 dark:border-blue-700",
+  },
+  Developing: {
+    bg: "bg-amber-100 dark:bg-amber-900/40",
+    text: "text-amber-700 dark:text-amber-300",
+    dot: "bg-amber-500",
+    border: "border-amber-300 dark:border-amber-700",
+  },
+  Other: {
+    bg: "bg-slate-100 dark:bg-slate-800",
+    text: "text-slate-600 dark:text-slate-400",
+    dot: "bg-slate-400",
+    border: "border-slate-200 dark:border-slate-700",
+  },
+};
+
+function TierChip({ tier }) {
+  const s = TIER_STYLES[tier] || TIER_STYLES.Other;
+  const label = tier === "Prime" ? "Highest opportunity" : tier;
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1 text-sm font-medium ${s.bg} ${s.text} ${s.border}`}>
+      <span className={`h-2 w-2 rounded-full flex-shrink-0 ${s.dot}`} />
+      {label}
+    </span>
+  );
+}
+
+const TIER_FILTERS = [
+  { label: "All", value: "All" },
+  { label: "Highest opportunity", value: "Prime" },
+  { label: "Strong", value: "Strong" },
+  { label: "Developing", value: "Developing" },
+];
 const GROUP_FILTERS = ["All", "Priority 1", "Priority 2", "Priority 3"];
 
 function FilterChip({ label, active, onClick, dark }) {
@@ -71,6 +118,45 @@ export default function OpportunityScore({ rows }) {
   const topCounty = scoredRows[0];
   const filteredY1 = visibleRows.reduce((sum, row) => sum + row.y1Revenue, 0);
   const filteredReferrals = visibleRows.reduce((sum, row) => sum + row.referralOpportunity, 0);
+  const [tierFilter, setTierFilter] = useState("All");
+  const [groupFilter, setGroupFilter] = useState("All");
+  const [minScore, setMinScore] = useState(0);
+
+  const counties = [...new Set(rows.map((r) => r.county))];
+  const scores = useMemo(
+    () => counties.map((c) => getOpportunityScore(c, rows)).filter(Boolean).sort((a, b) => b.score - a.score),
+    [rows],
+  );
+
+  const scoredWithGroup = useMemo(
+    () => scores.map((s) => {
+      const countyRow = rows.find((r) => r.county === s.county);
+      return { ...s, launchGroup: countyRow?.launchGroup ?? "—" };
+    }),
+    [scores, rows],
+  );
+
+  const visibleScores = useMemo(() => {
+    return scoredWithGroup.filter((c) => {
+      const tierOk = tierFilter === "All" || c.tier === tierFilter;
+      const groupOk = groupFilter === "All" || c.launchGroup === groupFilter;
+      const scoreOk = c.score >= minScore;
+      return tierOk && groupOk && scoreOk;
+    });
+  }, [scoredWithGroup, tierFilter, groupFilter, minScore]);
+
+  const avgScore = scores.length > 0 ? Math.round(scores.reduce((s, c) => s + c.score, 0) / scores.length) : 0;
+  const topTierCount = scores.filter((s) => s.tier === "Prime").length;
+  const topCounty = scores[0];
+
+  const filterSummary = useMemo(() => {
+    if (visibleScores.length === 0) return null;
+    const totalY1 = visibleScores.reduce((s, c) => s + (c.y1Revenue || 0), 0);
+    const totalY3 = visibleScores.reduce((s, c) => s + (c.y3Revenue || 0), 0);
+    const avgFiltered = Math.round(visibleScores.reduce((s, c) => s + c.score, 0) / visibleScores.length);
+    const topTierFiltered = visibleScores.filter((c) => c.tier === "Prime").length;
+    return { totalY1, totalY3, avgFiltered, topTierFiltered, count: visibleScores.length };
+  }, [visibleScores]);
 
   return (
     <div className="space-y-6">
@@ -110,11 +196,36 @@ export default function OpportunityScore({ rows }) {
         <Metric label="Top county" value={topCounty?.county || "-"} detail={`Composite score ${topCounty?.score || 0}/100.`} color="blue" sourceType="derived" />
         <Metric label="Filtered Y1 revenue" value={currency(filteredY1)} detail="Modeled revenue for visible counties." color="indigo" sourceType="modeled" />
         <Metric label="Filtered Y1 referrals" value={number(filteredReferrals)} detail="Gross referrals for visible counties." color="amber" sourceType="modeled" />
+        <p className={`mt-3 text-[11px] ${dark ? "text-slate-500" : "text-slate-400"}`}>
+          Tiers: Highest opportunity ≥ 80 · Strong 60–79 · Developing 40–59 · Below 40. Scores are relative to this dataset and should not be compared across different county sets.
+        </p>
+      </MethodologyCallout>
+
+      <div className="grid gap-4 md:grid-cols-4">
+        <Metric label="Average opportunity score" value={`${avgScore}/100`} detail="Mean score across all launch counties." color="emerald" sourceType="derived" />
+        <Metric label="Highest opportunity counties" value={topTierCount} detail="Counties scoring 80+ in the current model." color="emerald" sourceType="derived" />
+        <Metric label="Top county" value={topCounty?.county || "—"} detail={`Score: ${topCounty?.score || 0}/100 (${topCounty?.tier || "—"})`} color="blue" sourceType="derived" />
+        <Metric label="Total Y1 opportunity" value={currency(scores.reduce((s, c) => s + c.y1Revenue, 0))} detail="Combined Y1 revenue across all scored counties." color="indigo" sourceType="modeled" />
       </div>
 
       <Card title="County opportunity leaderboard" eyebrow="Ranked by composite score">
         <div className="space-y-4">
           <div className={`rounded-lg border p-4 space-y-3 ${dark ? "border-slate-700/60 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
+          <div className={`rounded-lg border p-4 space-y-3 ${dark ? "border-slate-700/60 bg-slate-800/40" : "border-slate-200 bg-slate-50"}`}>
+            <div className="flex flex-wrap items-center gap-3">
+              <span className={`text-xs font-medium uppercase tracking-wide ${dark ? "text-slate-400" : "text-slate-500"}`}>Tier</span>
+              <div className="flex flex-wrap gap-1.5">
+                {TIER_FILTERS.map((t) => (
+                  <FilterChip
+                    key={t.value}
+                    label={t.label}
+                    active={tierFilter === t.value}
+                    onClick={() => setTierFilter(t.value)}
+                    dark={dark}
+                  />
+                ))}
+              </div>
+            </div>
             <div className="flex flex-wrap items-center gap-3">
               <span className={`text-xs font-semibold uppercase tracking-wide ${dark ? "text-slate-300" : "text-slate-600"}`}>Launch group</span>
               <div className="flex flex-wrap gap-1.5">
@@ -132,6 +243,40 @@ export default function OpportunityScore({ rows }) {
             <p className={`text-xs ${dark ? "text-slate-300" : "text-slate-600"}`}>
               Showing <span className="font-semibold">{visibleRows.length}</span> of <span className="font-semibold">{scoredRows.length}</span> counties.
             </p>
+
+            {filterSummary && (
+              <div className={`mt-1 rounded-xl border p-3 transition-all ${dark ? "border-blue-800/60 bg-blue-950/30" : "border-blue-100 bg-blue-50"}`}>
+                <p className={`mb-2 text-[10px] font-medium uppercase tracking-widest ${dark ? "text-blue-400" : "text-blue-600"}`}>
+                  Selected group opportunity
+                </p>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <div>
+                    <p className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>Total Y1 revenue</p>
+                    <p className={`text-base font-bold tabular-nums ${dark ? "text-blue-300" : "text-blue-700"}`}>{currency(filterSummary.totalY1)}</p>
+                  </div>
+                  <div>
+                    <p className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>Total Y3 revenue</p>
+                    <p className={`text-base font-bold tabular-nums ${dark ? "text-emerald-300" : "text-emerald-700"}`}>{currency(filterSummary.totalY3)}</p>
+                  </div>
+                  <div>
+                    <p className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>Avg opportunity score</p>
+                    <p className={`text-base font-bold tabular-nums ${dark ? "text-slate-100" : "text-slate-900"}`}>{filterSummary.avgFiltered}<span className={`text-xs font-medium ${dark ? "text-slate-500" : "text-slate-400"}`}>/100</span></p>
+                  </div>
+                  <div>
+                    <p className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>Top-tier counties</p>
+                    <p className={`text-base font-bold tabular-nums ${dark ? "text-emerald-400" : "text-emerald-600"}`}>
+                      {filterSummary.topTierFiltered}
+                      <span className={`text-xs font-medium ${dark ? "text-slate-500" : "text-slate-400"}`}> of {filterSummary.count}</span>
+                    </p>
+                  </div>
+                </div>
+                {filterSummary.totalY3 > filterSummary.totalY1 && filterSummary.totalY1 > 0 && (
+                  <p className={`mt-2 text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>
+                    Y1→Y3 growth: <span className="font-semibold tabular-nums text-emerald-500">+{Math.round((filterSummary.totalY3 - filterSummary.totalY1) / filterSummary.totalY1 * 100)}%</span> across this group
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {visibleRows.length === 0 ? (

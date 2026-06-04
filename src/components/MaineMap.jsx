@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useDarkMode } from "./DarkModeContext.jsx";
 import { HEATMAP_MODES } from "../data/constants.js";
+import { namedProviderRows } from "../data/providers.js";
 import { MAINE_COUNTIES, getCountyPriority, getCountyMapMetrics, getMapMetricValue } from "../data/dashboardData.js";
 import MAINE_COUNTY_GEOJSON from "../data/generated/maineCountyBoundaries.json";
 
@@ -145,6 +146,11 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty, provide
   const max = vals.length ? Math.max(...vals) : 1;
   const countyCount = MAINE_COUNTIES.length;
   const activeCount = new Set(rows.map((row) => row.county)).size;
+  const visibleProviders = namedProviderRows.filter((provider) => {
+    if (providerProviderType(providerTypeFilter) === "all") return true;
+    return providerProviderType(providerTypeFilter) === provider.service;
+  });
+
   const selectedFeature = features.find((feature) => getFeatureName(feature) === selectedCounty);
   const selectedPriority = getCountyPriority(selectedCounty, rows);
   const hoverMetrics = hoverCounty ? getCountyMapMetrics(hoverCounty, rows) : null;
@@ -183,6 +189,7 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty, provide
                 stroke={isSelected ? (dark ? "#f8fafc" : "#0f172a") : isHovered ? "#38bdf8" : dark ? "#475569" : "#ffffff"}
                 strokeWidth={isSelected ? 4 : isHovered ? 2.5 : 1.2}
                 className="cursor-pointer transition-all duration-150 outline-none drop-shadow-sm"
+                className="cursor-pointer transition-all duration-150 outline-none"
               >
                 <title>{`${county} County · ${activeLayer}: ${Math.round(heatValues[county] || 0).toLocaleString()}`}</title>
               </path>

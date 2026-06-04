@@ -11,6 +11,11 @@ import { COLORS } from "../data/constants.js";
 import dashboardData, { getProviderProfileByCcn, hhvbpDisplayScore } from "../data/dashboardData.js";
 import { ANDWELL_CCN } from "../data/andwell.js";
 import { number } from "../utils/formatters.js";
+import cmsCountyMarket from "../data/cmsCountyMarket.js";
+import { number, currency } from "../utils/formatters.js";
+import { exportCmsCSV } from "../utils/csvExport.js";
+import dashboardData, { hhvbpDisplayScore } from "../data/dashboardData.js";
+import { ANDWELL_CCN } from "../data/andwell.js";
 
 function generatedDate() {
   return dashboardData.generatedAt || dashboardData.cmsMeta.fetchedAt;
@@ -22,6 +27,7 @@ function SourceStrip({ dark, label, source, count }) {
       <FreshnessChip lastSynced={generatedDate()} label={label} syncType={source} />
       <Badge tone="green">Data loaded</Badge>
       <span>{number(count)} Maine records</span>
+      <span className={dark ? "text-slate-500" : "text-slate-400"}>Loaded from the bundled CMS/HRSA source registry.</span>
     </div>
   );
 }
@@ -262,6 +268,8 @@ export default function CmsData() {
     <div className="space-y-6">
       <SectionHeader eyebrow="CMS data" title="Provider-level CMS, CAHPS, HHVBP, and HRSA evidence">
         Provider, quality, HHCAHPS, HHVBP, Hospice CAHPS, HRSA facility, and benchmark records are bundled into the dashboard experience and load when the page opens.
+      <SectionHeader eyebrow="CMS data" title="County-level Medicare market data and quality benchmarks">
+        CMS, HRSA, provider, quality, HHCAHPS, HHVBP, hospice CAHPS, and benchmark records are bundled into the dashboard experience and load when the page opens.
       </SectionHeader>
       <div className="flex items-center gap-2 flex-wrap"><FreshnessChip lastSynced={generatedDate()} label="CMS/HRSA data" syncType="Generated source registry" /><Badge tone="green">Loaded on page open</Badge></div>
       <div className="flex flex-wrap gap-2">
