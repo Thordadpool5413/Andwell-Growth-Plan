@@ -1,13 +1,28 @@
 import { create } from "zustand";
 import { DEFAULT_SCENARIO } from "../data/constants.js";
 
+const STORAGE_KEY = "andwell_saved_scenarios";
+
+function loadSaved() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistSaved(scenarios) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(scenarios));
+  } catch {}
+}
+
 export const useScenarioStore = create((set, get) => ({
-  // Current scenario state
   currentScenario: DEFAULT_SCENARIO,
-  scenarios: [],
+  scenarios: loadSaved(),
   activeScenarioId: null,
 
-  // Scenario management
   updateScenario: (updates) =>
     set((state) => ({
       currentScenario: { ...state.currentScenario, ...updates },
@@ -22,10 +37,9 @@ export const useScenarioStore = create((set, get) => ({
       data: state.currentScenario,
       createdAt: new Date().toISOString(),
     };
-    set((state) => ({
-      scenarios: [...state.scenarios, newScenario],
-      activeScenarioId: newScenario.id,
-    }));
+    const next = [...state.scenarios, newScenario];
+    persistSaved(next);
+    set({ scenarios: next, activeScenarioId: newScenario.id });
     return newScenario.id;
   },
 
@@ -33,18 +47,19 @@ export const useScenarioStore = create((set, get) => ({
     const state = get();
     const scenario = state.scenarios.find((s) => s.id === id);
     if (scenario) {
-      set({
-        currentScenario: scenario.data,
-        activeScenarioId: id,
-      });
+      set({ currentScenario: scenario.data, activeScenarioId: id });
     }
   },
 
-  deleteScenario: (id) =>
-    set((state) => ({
-      scenarios: state.scenarios.filter((s) => s.id !== id),
+  deleteScenario: (id) => {
+    const state = get();
+    const next = state.scenarios.filter((s) => s.id !== id);
+    persistSaved(next);
+    set({
+      scenarios: next,
       activeScenarioId: state.activeScenarioId === id ? null : state.activeScenarioId,
-    })),
+    });
+  },
 
   updateScenarioMetadata: (id, name, description) =>
     set((state) => ({
@@ -53,7 +68,6 @@ export const useScenarioStore = create((set, get) => ({
       ),
     })),
 
-  // Comparison
   compareScenarios: (ids) => {
     const state = get();
     return ids.map((id) =>
@@ -63,14 +77,9 @@ export const useScenarioStore = create((set, get) => ({
     );
   },
 
-  // Reset
   resetToDefault: () =>
-    set({
-      currentScenario: DEFAULT_SCENARIO,
-      activeScenarioId: null,
-    }),
+    set({ currentScenario: DEFAULT_SCENARIO, activeScenarioId: null }),
 
-  // Import/Export
   exportScenarios: () => {
     const state = get();
     return JSON.stringify({
@@ -83,18 +92,15 @@ export const useScenarioStore = create((set, get) => ({
   importScenarios: (jsonString) => {
     try {
       const data = JSON.parse(jsonString);
-      set({
-        currentScenario: data.current || DEFAULT_SCENARIO,
-        scenarios: data.scenarios || [],
-      });
+      const next = data.scenarios || [];
+      persistSaved(next);
+      set({ currentScenario: data.current || DEFAULT_SCENARIO, scenarios: next });
       return true;
-    } catch (error) {
-      console.error("Failed to import scenarios:", error);
+    } catch {
       return false;
     }
   },
 
-  // Analytics
   getScenarioStats: () => {
     const state = get();
     return {

@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { DEFAULT_SCENARIO } from "../data/constants.js";
 import { useDarkMode } from "./DarkModeContext.jsx";
 import SmartScenarioCard from "./SmartScenarioCard.jsx";
+import { useScenarioStore } from "../store/scenarioStore.js";
+import { BookmarkPlus, ChevronDown, ChevronUp, Trash2, FolderOpen } from "lucide-react";
 
 function CompactSlider({ label, value, min, max, step, format, onChange, dark }) {
   return (
@@ -58,6 +60,123 @@ function RevenueDelta({ current, baseline, dark }) {
   );
 }
 
+function SaveScenarioSection({ scenario, dark }) {
+  const { saveScenario, scenarios, loadScenario, deleteScenario, activeScenarioId } = useScenarioStore();
+  const [name, setName] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [showSaved, setShowSaved] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
+
+  const handleSave = () => {
+    if (!name.trim()) return;
+    saveScenario(name.trim());
+    setName("");
+    setJustSaved(true);
+    setShowSaved(true);
+    setTimeout(() => setJustSaved(false), 2000);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") handleSave();
+  };
+
+  return (
+    <div className={`rounded-xl border ${dark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
+      {/* Save input */}
+      <div className="px-3 pt-3 pb-2">
+        <p className={`mb-2 text-[10px] font-semibold uppercase tracking-widest ${dark ? "text-slate-400" : "text-slate-500"}`}>
+          Save Scenario
+        </p>
+        <div className="flex gap-1.5">
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Scenario name…"
+            maxLength={40}
+            className={`min-w-0 flex-1 rounded-lg border px-2.5 py-1.5 text-xs transition placeholder:opacity-50 ${
+              dark
+                ? "bg-slate-700 border-slate-600 text-white focus:border-blue-500 focus:outline-none"
+                : "bg-white border-slate-200 text-slate-800 focus:border-blue-400 focus:outline-none"
+            }`}
+          />
+          <button
+            onClick={handleSave}
+            disabled={!name.trim()}
+            className={`shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition flex items-center gap-1 ${
+              name.trim()
+                ? dark
+                  ? "bg-blue-600 text-white hover:bg-blue-500"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
+                : dark
+                  ? "bg-slate-700 text-slate-500 cursor-not-allowed"
+                  : "bg-slate-200 text-slate-400 cursor-not-allowed"
+            }`}
+          >
+            <BookmarkPlus className="h-3 w-3" />
+            {justSaved ? "Saved!" : "Save"}
+          </button>
+        </div>
+      </div>
+
+      {/* Saved list toggle */}
+      {scenarios.length > 0 && (
+        <>
+          <button
+            onClick={() => setShowSaved((p) => !p)}
+            className={`flex w-full items-center justify-between px-3 py-2 text-[10px] font-semibold uppercase tracking-widest border-t transition ${
+              dark ? "border-slate-700 text-slate-400 hover:text-slate-300" : "border-slate-200 text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            <span>Saved ({scenarios.length})</span>
+            {showSaved ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          </button>
+
+          {showSaved && (
+            <div className={`border-t divide-y ${dark ? "border-slate-700 divide-slate-700" : "border-slate-200 divide-slate-100"}`}>
+              {scenarios.map((s) => {
+                const isActive = s.id === activeScenarioId;
+                return (
+                  <div
+                    key={s.id}
+                    className={`flex items-center gap-2 px-3 py-2 ${
+                      isActive
+                        ? dark ? "bg-blue-900/30" : "bg-blue-50"
+                        : ""
+                    }`}
+                  >
+                    {isActive && (
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
+                    )}
+                    <span className={`min-w-0 flex-1 truncate text-xs font-medium ${dark ? "text-slate-200" : "text-slate-700"}`}>
+                      {s.name}
+                    </span>
+                    <button
+                      onClick={() => loadScenario(s.id)}
+                      title="Load this scenario"
+                      className={`shrink-0 rounded p-1 transition ${dark ? "text-slate-400 hover:text-blue-400 hover:bg-blue-900/40" : "text-slate-400 hover:text-blue-600 hover:bg-blue-50"}`}
+                    >
+                      <FolderOpen className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => deleteScenario(s.id)}
+                      title="Delete scenario"
+                      className={`shrink-0 rounded p-1 transition ${dark ? "text-slate-600 hover:text-red-400 hover:bg-red-900/30" : "text-slate-300 hover:text-red-500 hover:bg-red-50"}`}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function ScenarioSidebar({
   scenario,
   setScenario,
@@ -73,6 +192,8 @@ export default function ScenarioSidebar({
   const { dark } = useDarkMode();
   const pct = (v) => `${(v * 100).toFixed(0)}%`;
   const [showRestoredBanner, setShowRestoredBanner] = useState(false);
+
+  const { loadScenario: storeLoad } = useScenarioStore();
 
   const update = (key, value) =>
     setScenario((prev) => ({ ...prev, [key]: value }));
@@ -118,6 +239,17 @@ export default function ScenarioSidebar({
     return () => window.removeEventListener("keydown", handleKey);
   }, [open, onClose]);
 
+  // When a scenario is loaded from the store, sync it to App's scenario state
+  const { scenarios, activeScenarioId } = useScenarioStore();
+  const prevActiveId = useRef(activeScenarioId);
+  useEffect(() => {
+    if (activeScenarioId && activeScenarioId !== prevActiveId.current) {
+      const found = scenarios.find((s) => s.id === activeScenarioId);
+      if (found) setScenario(found.data);
+    }
+    prevActiveId.current = activeScenarioId;
+  }, [activeScenarioId]);
+
   return (
     <>
       {open && (
@@ -141,6 +273,7 @@ export default function ScenarioSidebar({
         role="dialog"
         aria-modal="true"
       >
+        {/* Header */}
         <div className={`flex shrink-0 items-center justify-between border-b px-4 py-3 ${dark ? "border-slate-700" : "border-slate-100"}`}>
           <div>
             <p className={`text-[10px] font-medium uppercase tracking-[0.22em] ${dark ? "text-blue-400" : "text-blue-600"}`}>
@@ -184,6 +317,7 @@ export default function ScenarioSidebar({
           </div>
         )}
 
+        {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
           <SmartScenarioCard
             scenario={scenario}
@@ -261,6 +395,9 @@ export default function ScenarioSidebar({
 
           <div className={`border-t ${dark ? "border-slate-800" : "border-slate-100"}`} />
 
+          {/* Save / Saved scenarios */}
+          <SaveScenarioSection scenario={scenario} dark={dark} />
+
           <div className={`rounded-xl p-3 text-[10px] leading-relaxed ${dark ? "bg-slate-800 text-slate-400" : "bg-slate-50 text-slate-500"}`}>
             <p className={`mb-1 font-semibold ${dark ? "text-slate-300" : "text-slate-600"}`}>Benchmarks</p>
             <p>Conversion: 72–78% industry median (NAHC 2023)</p>
@@ -269,6 +406,7 @@ export default function ScenarioSidebar({
           </div>
         </div>
 
+        {/* Revenue impact footer */}
         {totals && defaultTotals && (
           <div className={`shrink-0 border-t px-4 py-3 ${dark ? "border-slate-700 bg-slate-900" : "border-slate-100 bg-white"}`}>
             <p className={`mb-2 text-[10px] font-medium uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>
