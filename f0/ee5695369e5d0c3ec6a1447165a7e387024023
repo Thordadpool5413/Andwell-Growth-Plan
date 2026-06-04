@@ -1,0 +1,19 @@
+.github/workflows/ci.yml
+  s_e3540d5e18be27::t_001ca0c7b280d5 23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "f0ee5695369e5d0c3ec6a1447165a7e387024023",
+  "prompts": {},
+  "sessions": {
+    "s_e3540d5e18be27": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e90a3-a51b-7252-9005-e366e766a2b5",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Thordadpool5413 <nick.lynch.coaching@outlook.com>"
+    }
+  }
+}
