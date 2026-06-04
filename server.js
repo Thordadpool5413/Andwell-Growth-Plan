@@ -18,17 +18,7 @@ const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 const app = express();
 app.use(express.json({ limit: "32kb" }));
 
-const ALLOWED_HOSTS = new Set(
-  [
-    "localhost",
-    "127.0.0.1",
-    "0.0.0.0",
-    ...(process.env.ALLOWED_HOSTS || "").split(",").map((d) => d.trim()),
-    process.env.VERCEL_URL,
-    process.env.SUPABASE_URL ? new URL(process.env.SUPABASE_URL).hostname : null,
-  ].filter(Boolean)
-);
-const ALLOWED_HOST_SUFFIXES = [".vercel.app", ".supabase.co"];
+const ALLOWED_HOST_SUFFIXES = [".replit.dev", ".replit.app", ".repl.co", ".vercel.app"];
 
 function normalizeHost(hostHeader) {
   return (hostHeader || "").split(":")[0].toLowerCase();
@@ -37,8 +27,10 @@ function normalizeHost(hostHeader) {
 function isAllowedHost(hostHeader) {
   const bare = normalizeHost(hostHeader);
   if (!bare) return false;
-  if (process.env.NODE_ENV === "production") return true;
-  return bare === "localhost" || bare === "127.0.0.1" || bare === "0.0.0.0" || ALLOWED_HOST_SUFFIXES.some((suffix) => bare.endsWith(suffix)) || [...ALLOWED_HOSTS].some((h) => bare === normalizeHost(h));
+  if (bare === "localhost" || bare === "127.0.0.1" || bare === "0.0.0.0") return true;
+  if (ALLOWED_HOST_SUFFIXES.some((suffix) => bare.endsWith(suffix))) return true;
+  const extra = (process.env.ALLOWED_HOSTS || "").split(",").map((d) => normalizeHost(d.trim())).filter(Boolean);
+  return extra.includes(bare);
 }
 
 const SESSION_TOKENS = new Map();
@@ -787,7 +779,7 @@ if (isDev) {
   const vite = await createViteServer({
     server: {
       middlewareMode: true,
-      allowedHosts: [...ALLOWED_HOSTS].filter(Boolean),
+      allowedHosts: true,
     },
     appType: "spa",
   });

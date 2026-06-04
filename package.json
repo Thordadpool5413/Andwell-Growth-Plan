@@ -17,10 +17,14 @@
     "@vitejs/plugin-react": "latest",
     "autoprefixer": "latest",
     "dnd-kit": "^0.0.2",
+    "drizzle-zod": "^0.8.3",
     "express": "^5.2.1",
     "framer-motion": "^12.39.0",
     "lucide-react": "^1.17.0",
     "node-cron": "^4.2.1",
+    "openai": "^6.42.0",
+    "p-limit": "^7.3.0",
+    "p-retry": "^7.1.1",
     "papaparse": "^5.5.3",
     "pg": "^8.21.0",
     "postcss": "latest",
@@ -32,6 +36,8 @@
     "recharts": "latest",
     "tailwindcss": "^3.4.17",
     "vite": "latest",
+    "zod": "^4.4.3",
+    "zod-validation-error": "^5.0.0",
     "zustand": "^5.0.13"
   }
 }
