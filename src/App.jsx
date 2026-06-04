@@ -443,11 +443,11 @@ function Dashboard() {
     <div className={`dashboard-shell min-h-screen transition-colors duration-300 ${dark ? "bg-slate-950 text-slate-100" : "bg-[#f7f5ef] text-slate-900"}`}>
       <div className="mx-auto flex min-h-screen w-full max-w-[1800px]">
         <aside
-          className={`sticky top-0 hidden h-screen w-[18.5rem] shrink-0 border-r px-5 py-6 lg:flex lg:flex-col ${
+          className={`sticky top-0 hidden h-screen w-[18.5rem] shrink-0 overflow-hidden border-r px-5 py-6 lg:flex lg:flex-col ${
             dark ? "border-slate-800 bg-slate-950/95" : "border-[#e3ddd0] bg-[#f6f1e7]/95"
           }`}
         >
-          <div className="mb-6">
+          <div className="mb-6 shrink-0">
             <div className="flex items-center gap-3">
               <div className={`flex h-12 w-12 items-center justify-center rounded-2xl border ${dark ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300" : "border-emerald-200 bg-white text-emerald-700"}`}>
                 <LayoutDashboard className="h-5 w-5" />
@@ -466,11 +466,11 @@ function Dashboard() {
             </p>
           </div>
 
-          <div className="flex-1 overflow-y-auto pr-1">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
             <NavRail dark={dark} activeTab={activeTab} onSelect={activateView} />
           </div>
 
-          <div className={`mt-6 rounded-[24px] border p-4 ${dark ? "border-slate-800 bg-slate-900/80" : "border-[#e4ddd1] bg-white/90"}`}>
+          <div className={`mt-6 shrink-0 rounded-[24px] border p-4 ${dark ? "border-slate-800 bg-slate-900/80" : "border-[#e4ddd1] bg-white/90"}`}>
             <p className={`text-[10px] font-semibold uppercase tracking-[0.24em] ${dark ? "text-slate-500" : "text-slate-400"}`}>
               Live context
             </p>
@@ -504,33 +504,37 @@ function Dashboard() {
         )}
 
         <aside
-          className={`fixed inset-y-0 left-0 z-50 w-[20rem] max-w-[86vw] border-r px-5 py-5 transition-transform duration-300 lg:hidden ${
+          className={`fixed inset-y-0 left-0 z-50 flex h-screen w-[20rem] max-w-[86vw] flex-col overflow-hidden border-r px-5 py-5 transition-transform duration-300 lg:hidden ${
             mobileNavOpen ? "translate-x-0" : "-translate-x-full"
           } ${dark ? "border-slate-800 bg-slate-950" : "border-[#e3ddd0] bg-[#f6f1e7]"}`}
           aria-label="Mobile workspace navigation"
         >
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className={`text-[10px] font-semibold uppercase tracking-[0.24em] ${dark ? "text-slate-500" : "text-slate-400"}`}>
-                Andwell
-              </p>
-              <h2 className={`mt-1 text-lg font-semibold ${dark ? "text-white" : "text-slate-950"}`}>
-                Growth Workspace
-              </h2>
+          <div className="shrink-0">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className={`text-[10px] font-semibold uppercase tracking-[0.24em] ${dark ? "text-slate-500" : "text-slate-400"}`}>
+                  Andwell
+                </p>
+                <h2 className={`mt-1 text-lg font-semibold ${dark ? "text-white" : "text-slate-950"}`}>
+                  Growth Workspace
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileNavOpen(false)}
+                className={`rounded-full p-2 ${dark ? "text-slate-400 hover:bg-slate-900 hover:text-white" : "text-slate-500 hover:bg-white hover:text-slate-900"}`}
+                aria-label="Close navigation"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => setMobileNavOpen(false)}
-              className={`rounded-full p-2 ${dark ? "text-slate-400 hover:bg-slate-900 hover:text-white" : "text-slate-500 hover:bg-white hover:text-slate-900"}`}
-              aria-label="Close navigation"
-            >
-              <X className="h-5 w-5" />
-            </button>
+            <div>
+              <p className={`mt-3 text-sm leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>
+                Navigate the full planning workspace with a persistent grouped view structure.
+              </p>
+            </div>
           </div>
-          <p className={`mt-3 text-sm leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>
-            Navigate the full planning workspace with a persistent grouped view structure.
-          </p>
-          <div className="mt-6 overflow-y-auto pb-10">
+          <div className="mt-6 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-10 pr-1">
             <NavRail dark={dark} activeTab={activeTab} onSelect={activateView} onClose={() => setMobileNavOpen(false)} />
           </div>
         </aside>
