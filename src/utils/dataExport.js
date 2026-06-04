@@ -32,9 +32,8 @@ export async function exportToJSON(data, filename = "export.json") {
   document.body.removeChild(element);
 }
 
-export async function exportToPDF(htmlContent, filename = "export.pdf") {
-  // This requires additional setup - placeholder for implementation
-  console.warn("PDF export requires additional setup. Use print-to-PDF for now.");
+export function exportToPDF() {
+  window.print();
 }
 
 export function generateActivityFeed(changes) {

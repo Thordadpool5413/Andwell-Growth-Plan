@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import ReactMarkdown from "react-markdown";
 import { useDarkMode } from "./DarkModeContext.jsx";
 
 const SUGGESTED = [
@@ -110,14 +111,26 @@ export default function CmsAnalyzer() {
       {result && (
         <div className={`rounded-xl border p-5 space-y-3 ${dark ? "border-slate-700 bg-slate-700/30" : "border-slate-200 bg-slate-50"}`}>
           <div className="flex items-center justify-between">
-            <p className={`text-xs font-medium uppercase tracking-widest ${dark ? "text-purple-400" : "text-purple-600"}`}>Analysis</p>
+            <p className={`text-xs font-bold uppercase tracking-widest ${dark ? "text-purple-400" : "text-purple-600"}`}>Analysis</p>
             {result.tool_calls_made > 0 && (
-              <span className={`rounded px-2 py-0.5 text-[10px] font-medium ${dark ? "bg-purple-900/50 text-purple-300" : "bg-purple-100 text-purple-700"}`}>
+              <span className={`rounded-md px-2 py-0.5 text-[10px] font-semibold ${dark ? "bg-purple-900/50 text-purple-300" : "bg-purple-100 text-purple-700"}`}>
                 {result.tool_calls_made} CMS tool call{result.tool_calls_made !== 1 ? "s" : ""} made
               </span>
             )}
           </div>
-          <p className={`text-sm leading-7 whitespace-pre-wrap ${dark ? "text-slate-200" : "text-slate-800"}`}>{result.answer}</p>
+          <div className={
+            dark
+              ? "prose prose-invert prose-sm max-w-none prose-h2:text-[11px] prose-h2:font-bold prose-h2:uppercase prose-h2:tracking-widest prose-h2:text-purple-400 prose-h2:mt-4 prose-h2:mb-1 prose-p:text-slate-200 prose-p:leading-7 prose-p:my-2 prose-strong:text-white prose-li:text-slate-300 prose-ul:mt-1"
+              : "prose prose-sm max-w-none prose-h2:text-[11px] prose-h2:font-bold prose-h2:uppercase prose-h2:tracking-widest prose-h2:text-purple-700 prose-h2:mt-4 prose-h2:mb-1 prose-p:text-slate-700 prose-p:leading-7 prose-p:my-2 prose-strong:text-slate-900 prose-li:text-slate-600 prose-ul:mt-1"
+          }>
+            <ReactMarkdown>{result.answer}</ReactMarkdown>
+          </div>
+          <div className={`flex items-center gap-1.5 border-t pt-3 ${dark ? "border-slate-700/60" : "border-slate-200"}`}>
+            <span className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${dark ? "bg-purple-600" : "bg-purple-400"}`} />
+            <p className={`text-[10px] font-medium ${dark ? "text-slate-500" : "text-slate-400"}`}>
+              Sourced via CMS Provider Data Catalog · AI-interpreted · Not verified clinical or financial advice
+            </p>
+          </div>
         </div>
       )}
     </div>

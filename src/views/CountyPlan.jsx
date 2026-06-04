@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 import Card from "../components/Card.jsx";
 import Metric from "../components/Metric.jsx";
 import Badge from "../components/Badge.jsx";
@@ -334,14 +335,15 @@ export default function CountyPlan({ rows, selectedCounty, setSelectedCounty, co
                   label="County intelligence summary"
                   generating={aiGenerating}
                   onRegenerate={!aiGenerating ? generateSummary : undefined}
+                  prose
                 >
                   {aiText ? (
-                    <p className={`text-sm leading-7 ${dark ? "text-slate-200" : "text-slate-700"}`}>
-                      {aiText}
+                    <>
+                      <ReactMarkdown>{aiText}</ReactMarkdown>
                       {aiGenerating && (
-                        <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-blue-400" />
+                        <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-violet-400" />
                       )}
-                    </p>
+                    </>
                   ) : (
                     <p className={`text-sm ${dark ? "text-slate-500" : "text-slate-400"}`}>Generating…</p>
                   )}

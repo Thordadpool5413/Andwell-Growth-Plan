@@ -1,4 +1,5 @@
 import React, { useMemo, useRef, useState, useCallback } from "react";
+import ReactMarkdown from "react-markdown";
 import { PieChart, Pie, Cell } from "recharts";
 import ChartContainer from "../components/ChartContainer.jsx";
 import Card from "../components/Card.jsx";
@@ -176,17 +177,16 @@ export default function BoardReport({ rows, totals }) {
           label="Board narrative"
           generating={narrativeGenerating}
           onRegenerate={!narrativeGenerating ? generateNarrative : undefined}
+          prose
         >
           {narrativeError ? (
             <p className={`text-sm ${dark ? "text-red-400" : "text-red-600"}`}>{narrativeError}</p>
           ) : narrativeText ? (
-            <div>
-              <p className={`text-sm leading-7 whitespace-pre-wrap ${dark ? "text-slate-200" : "text-slate-700"}`}>
-                {narrativeText}
-                {narrativeGenerating && (
-                  <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-blue-400" />
-                )}
-              </p>
+            <>
+              <ReactMarkdown>{narrativeText}</ReactMarkdown>
+              {narrativeGenerating && (
+                <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-violet-400" />
+              )}
               {!narrativeGenerating && (
                 <button
                   onClick={handleCopy}
@@ -201,7 +201,7 @@ export default function BoardReport({ rows, totals }) {
                   {copied ? "✓ Copied" : "Copy to clipboard"}
                 </button>
               )}
-            </div>
+            </>
           ) : (
             <p className={`text-sm ${dark ? "text-slate-500" : "text-slate-400"}`}>Drafting executive summary…</p>
           )}
