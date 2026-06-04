@@ -163,18 +163,11 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty, provide
         {HEATMAP_MODES.map((mode) => (
           <button key={mode.key} onClick={() => setHeatmapMode(mode.key)} className={`rounded-xl px-3 py-2 text-xs font-semibold transition ${heatmapMode === mode.key ? "bg-blue-600 text-white" : dark ? "bg-slate-800 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"}`}>{mode.label}</button>
         ))}
-        {onProviderTypeFilterChange && (
-          <select value={providerTypeFilter || "all"} onChange={(event) => onProviderTypeFilterChange(event.target.value)} className={`ml-auto rounded-xl border px-3 py-2 text-xs font-semibold ${dark ? "border-slate-700 bg-slate-800 text-slate-200" : "border-slate-200 bg-white text-slate-700"}`}>
-            <option value="all">All providers</option>
-            <option value="homehealth">Home health</option>
-            <option value="hospice">Hospice</option>
-          </select>
-        )}
       </div>
 
-      <div className={`rounded-[24px] border p-3 ${dark ? "border-slate-700 bg-slate-950" : "border-slate-200 bg-slate-50"}`}>
-        <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Interactive Maine county strategy map" className="h-[32rem] w-full max-h-[70vh]">
-          <rect width={width} height={height} rx="24" fill={dark ? "#0f172a" : "#f8fafc"} />
+      <div className={`rounded-[28px] border p-4 shadow-inner ${dark ? "border-slate-700 bg-slate-950" : "border-slate-200 bg-white"}`}>
+        <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Interactive Maine county intelligence map" className="h-[34rem] w-full max-h-[72vh]">
+          <rect width={width} height={height} rx="28" fill={dark ? "#020617" : "#f8fafc"} />
           {features.map((feature) => {
             const county = getFeatureName(feature);
             const isSelected = county === selectedCounty;
@@ -195,6 +188,7 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty, provide
                 fillOpacity={isSelected ? 0.92 : priority === "Not in plan" && heatmapMode === "priority" ? 0.42 : 0.72}
                 stroke={isSelected ? (dark ? "#f8fafc" : "#0f172a") : isHovered ? "#38bdf8" : dark ? "#475569" : "#ffffff"}
                 strokeWidth={isSelected ? 4 : isHovered ? 2.5 : 1.2}
+                className="cursor-pointer transition-all duration-150 outline-none drop-shadow-sm"
                 className="cursor-pointer transition-all duration-150 outline-none"
               >
                 <title>{`${county} County · ${activeLayer}: ${Math.round(heatValues[county] || 0).toLocaleString()}`}</title>
@@ -204,7 +198,7 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty, provide
           {features.map((feature) => {
             const county = getFeatureName(feature);
             const [x, y] = centroid(feature, project);
-            const showLabel = county === selectedCounty || ["York", "Cumberland", "Penobscot", "Kennebec", "Aroostook"].includes(county);
+            const showLabel = county === selectedCounty || ["York", "Cumberland", "Penobscot", "Kennebec", "Aroostook", "Androscoggin", "Hancock", "Washington"].includes(county);
             if (!showLabel) return null;
             return <text key={`label-${county}`} x={x} y={y} textAnchor="middle" fontSize={county === selectedCounty ? 18 : 12} fontWeight="800" fill={dark ? "#f8fafc" : "#0f172a"} paintOrder="stroke" stroke={dark ? "#0f172a" : "#ffffff"} strokeWidth="4">{county}</text>;
           })}
@@ -238,13 +232,7 @@ export default function MaineMap({ rows, selectedCounty, onSelectCounty, provide
         <div><p className={dark ? "text-slate-500" : "text-slate-400"}>Counties in plan</p><p className="font-bold">{activeCount}</p></div>
         <div><p className={dark ? "text-slate-500" : "text-slate-400"}>Selected</p><p className="font-bold">{selectedFeature ? `${selectedCounty} (${selectedPriority})` : "None"}</p></div>
       </div>
-      <p className={`text-xs ${dark ? "text-slate-500" : "text-slate-500"}`}>Provider filter context loaded: {visibleProviders.length} provider-file rows. Provider file share is not county market share.</p>
+      <p className={`text-xs ${dark ? "text-slate-400" : "text-slate-600"}`}>Layer values come from the shared county data model. Provider presence is modeled from CMS provider-file records and local CMS/HRSA provider assignments; it is not county-attributed claims market share.</p>
     </div>
   );
-}
-
-function providerProviderType(filter) {
-  if (filter === "homehealth") return "Home Healthcare";
-  if (filter === "hospice") return "Hospice";
-  return "all";
 }

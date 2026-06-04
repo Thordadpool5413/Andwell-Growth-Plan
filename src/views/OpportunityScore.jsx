@@ -1,14 +1,15 @@
 import React, { useMemo, useState } from "react";
 import Card from "../components/Card.jsx";
 import Metric from "../components/Metric.jsx";
-import Badge from "../components/Badge.jsx";
 import Abbr from "../components/Abbr.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
 import FreshnessChip from "../components/FreshnessChip.jsx";
 import MethodologyCallout from "../components/MethodologyCallout.jsx";
 import { useDarkMode } from "../components/DarkModeContext.jsx";
-import { COLORS } from "../data/constants.js";
 import { getOpportunityScore } from "../utils/calculations.js";
+import { getCountyDashboardRecord, getFreshness, getReferralSummary } from "../data/dashboardData.js";
+import { currency, number } from "../utils/formatters.js";
+
 import { getFreshness } from "../data/dashboardData.js";
 import { currency, number } from "../utils/formatters.js";
 
@@ -62,12 +63,12 @@ function FilterChip({ label, active, onClick, dark }) {
   return (
     <button
       onClick={onClick}
-      className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors duration-100 ${
+      className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors duration-100 ${
         active
           ? "border-blue-500 bg-blue-600 text-white shadow-sm"
           : dark
-          ? "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-500 hover:text-slate-200"
-          : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700"
+            ? "border-slate-600 bg-slate-800 text-slate-200 hover:border-slate-500 hover:bg-slate-700"
+            : "border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50"
       }`}
     >
       {label}
@@ -78,6 +79,45 @@ function FilterChip({ label, active, onClick, dark }) {
 export default function OpportunityScore({ rows }) {
   const { dark } = useDarkMode();
   const freshness = getFreshness();
+  const [groupFilter, setGroupFilter] = useState("All");
+  const [minScore, setMinScore] = useState(0);
+  const referralSummary = getReferralSummary(rows);
+  const referralByCounty = Object.fromEntries(referralSummary.byCounty.map((row) => [row.county, row]));
+
+  const scoredRows = useMemo(() => {
+    const counties = [...new Set(rows.map((row) => row.county))];
+    return counties
+      .map((county) => {
+        const score = getOpportunityScore(county, rows);
+        if (!score) return null;
+        const countyRows = rows.filter((row) => row.county === county);
+        const record = getCountyDashboardRecord(county, rows);
+        const referral = referralByCounty[county] || {};
+        const primaryDriver = [...score.factors].sort((a, b) => b.value - a.value)[0];
+        return {
+          ...score,
+          launchGroup: countyRows[0]?.launchGroup || "Not in plan",
+          primaryDriver: primaryDriver?.name || "Modeled opportunity",
+          priorityStatus: countyRows[0]?.launchGroup || "Not in plan",
+          referralOpportunity: referral.referrals || 0,
+          providerContext: `${record.providerLandscape.counts.homeHealth} HH · ${record.providerLandscape.counts.hospice} hospice`,
+          marketPenetration: record.mapMetrics.marketPenetration || 0,
+          competitionDensity: record.mapMetrics.competitionDensity || 0,
+          sourceLabel: "Calculated from CMS/HRSA source data and modeled planning outputs",
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.score - a.score);
+  }, [rows, referralByCounty]);
+
+  const visibleRows = scoredRows.filter((row) => {
+    const groupOk = groupFilter === "All" || row.launchGroup === groupFilter;
+    return groupOk && row.score >= minScore;
+  });
+  const avgScore = scoredRows.length ? Math.round(scoredRows.reduce((sum, row) => sum + row.score, 0) / scoredRows.length) : 0;
+  const topCounty = scoredRows[0];
+  const filteredY1 = visibleRows.reduce((sum, row) => sum + row.y1Revenue, 0);
+  const filteredReferrals = visibleRows.reduce((sum, row) => sum + row.referralOpportunity, 0);
   const [tierFilter, setTierFilter] = useState("All");
   const [groupFilter, setGroupFilter] = useState("All");
   const [minScore, setMinScore] = useState(0);
@@ -120,8 +160,8 @@ export default function OpportunityScore({ rows }) {
 
   return (
     <div className="space-y-6">
-      <SectionHeader eyebrow="Opportunity scoring" title="County opportunity ranking with factor analysis">
-        Composite score (0–100) combining market size (25%), low competition (20%), Andwell presence (15%), revenue efficiency (20%), and growth potential (20%). Higher is better.
+      <SectionHeader eyebrow="Opportunity scoring" title="County opportunity ranking by launch group">
+        Composite scores connect CMS market size, competition, Andwell presence, revenue efficiency, and growth potential. Use this page to compare counties, not as a CMS-reported quality score.
       </SectionHeader>
 
       <div className="flex items-center gap-2 flex-wrap">
@@ -129,26 +169,33 @@ export default function OpportunityScore({ rows }) {
       </div>
 
       <MethodologyCallout title="How is this calculated?">
-        <p className={`mb-3 ${dark ? "text-slate-300" : "text-slate-700"}`}>
-          Each county receives a composite Opportunity Score (0–100) built from five equally-weighted factor groups:
+        <p className={`mb-3 ${dark ? "text-slate-200" : "text-slate-700"}`}>
+          Each county receives a composite score from five factor groups. Higher scores indicate stronger modeled opportunity relative to the current county set.
         </p>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {[
-            { name: "Market size", weight: "25%", desc: "CMS FFS beneficiary volume in the county — larger addressable markets score higher." },
-            { name: "Low competition", weight: "20%", desc: "Inverse of the competitive threat score — counties with fewer or weaker competitors score higher." },
-            { name: "Andwell presence", weight: "15%", desc: "Whether Andwell already has an active CMS record in the county — existing presence lowers entry cost." },
-            { name: "Revenue efficiency", weight: "20%", desc: "Modeled Y1 revenue per FFS beneficiary — higher revenue density relative to market size scores higher." },
-            { name: "Growth potential", weight: "20%", desc: "Y1→Y3 revenue ramp rate — counties with steeper projected growth curves score higher." },
-          ].map((f) => (
-            <div key={f.name} className={`rounded-xl border p-3 ${dark ? "border-slate-700 bg-slate-800/60" : "border-slate-200 bg-white"}`}>
+            { name: "Market size", weight: "25%", desc: "CMS FFS beneficiary volume." },
+            { name: "Low competition", weight: "20%", desc: "Inverse of competitive threat." },
+            { name: "Andwell presence", weight: "15%", desc: "Current provider footprint and modeled entry advantage." },
+            { name: "Revenue efficiency", weight: "20%", desc: "Modeled Y1 revenue per FFS beneficiary." },
+            { name: "Growth potential", weight: "20%", desc: "Y1 to Y3 modeled revenue ramp." },
+          ].map((factor) => (
+            <div key={factor.name} className={`rounded-xl border p-3 ${dark ? "border-slate-700 bg-slate-800/70" : "border-slate-200 bg-white"}`}>
               <div className="flex items-center justify-between gap-2">
-                <p className={`text-xs font-semibold ${dark ? "text-slate-100" : "text-slate-800"}`}>{f.name}</p>
-                <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${dark ? "bg-blue-900/50 text-blue-300" : "bg-blue-100 text-blue-700"}`}>{f.weight}</span>
+                <p className={`text-xs font-semibold ${dark ? "text-slate-100" : "text-slate-900"}`}>{factor.name}</p>
+                <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${dark ? "bg-blue-900/60 text-blue-200" : "bg-blue-100 text-blue-700"}`}>{factor.weight}</span>
               </div>
-              <p className={`mt-1 text-[11px] leading-4 ${dark ? "text-slate-400" : "text-slate-500"}`}>{f.desc}</p>
+              <p className={`mt-1 text-[11px] leading-4 ${dark ? "text-slate-300" : "text-slate-600"}`}>{factor.desc}</p>
             </div>
           ))}
         </div>
+      </MethodologyCallout>
+
+      <div className="grid gap-4 md:grid-cols-4">
+        <Metric label="Average opportunity score" value={`${avgScore}/100`} detail="Mean score across launch counties." color="emerald" sourceType="derived" />
+        <Metric label="Top county" value={topCounty?.county || "-"} detail={`Composite score ${topCounty?.score || 0}/100.`} color="blue" sourceType="derived" />
+        <Metric label="Filtered Y1 revenue" value={currency(filteredY1)} detail="Modeled revenue for visible counties." color="indigo" sourceType="modeled" />
+        <Metric label="Filtered Y1 referrals" value={number(filteredReferrals)} detail="Gross referrals for visible counties." color="amber" sourceType="modeled" />
         <p className={`mt-3 text-[11px] ${dark ? "text-slate-500" : "text-slate-400"}`}>
           Tiers: Highest opportunity ≥ 80 · Strong 60–79 · Developing 40–59 · Below 40. Scores are relative to this dataset and should not be compared across different county sets.
         </p>
@@ -163,6 +210,7 @@ export default function OpportunityScore({ rows }) {
 
       <Card title="County opportunity leaderboard" eyebrow="Ranked by composite score">
         <div className="space-y-4">
+          <div className={`rounded-lg border p-4 space-y-3 ${dark ? "border-slate-700/60 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
           <div className={`rounded-lg border p-4 space-y-3 ${dark ? "border-slate-700/60 bg-slate-800/40" : "border-slate-200 bg-slate-50"}`}>
             <div className="flex flex-wrap items-center gap-3">
               <span className={`text-xs font-medium uppercase tracking-wide ${dark ? "text-slate-400" : "text-slate-500"}`}>Tier</span>
@@ -179,64 +227,21 @@ export default function OpportunityScore({ rows }) {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <span className={`text-xs font-medium uppercase tracking-wide ${dark ? "text-slate-400" : "text-slate-500"}`}>Launch group</span>
+              <span className={`text-xs font-semibold uppercase tracking-wide ${dark ? "text-slate-300" : "text-slate-600"}`}>Launch group</span>
               <div className="flex flex-wrap gap-1.5">
-                {GROUP_FILTERS.map((g) => (
-                  <FilterChip
-                    key={g}
-                    label={g}
-                    active={groupFilter === g}
-                    onClick={() => setGroupFilter(g)}
-                    dark={dark}
-                  />
+                {GROUP_FILTERS.map((group) => (
+                  <FilterChip key={group} label={group} active={groupFilter === group} onClick={() => setGroupFilter(group)} dark={dark} />
                 ))}
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <span className={`text-xs font-medium uppercase tracking-wide flex-shrink-0 ${dark ? "text-slate-400" : "text-slate-500"}`}>Min score</span>
-              <div className="flex flex-1 items-center gap-3 min-w-[200px]">
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={minScore}
-                  onChange={(e) => setMinScore(Number(e.target.value))}
-                  className="flex-1 h-1.5 cursor-pointer accent-blue-500"
-                  aria-label="Minimum opportunity score threshold"
-                />
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <input
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={minScore}
-                    onChange={(e) => {
-                      const v = Math.min(100, Math.max(0, Number(e.target.value)));
-                      setMinScore(isNaN(v) ? 0 : v);
-                    }}
-                    className={`w-14 rounded-lg border px-2 py-1 text-center text-xs font-medium tabular-nums transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      dark
-                        ? "border-slate-600 bg-slate-700 text-white"
-                        : "border-slate-200 bg-white text-slate-900"
-                    }`}
-                    aria-label="Minimum score value"
-                  />
-                  <span className={`text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>/ 100</span>
-                </div>
-                {minScore > 0 && (
-                  <button
-                    onClick={() => setMinScore(0)}
-                    className="flex-shrink-0 text-xs text-blue-500 hover:underline font-medium"
-                    aria-label="Clear minimum score filter"
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
+              <span className={`text-xs font-semibold uppercase tracking-wide flex-shrink-0 ${dark ? "text-slate-300" : "text-slate-600"}`}>Minimum score</span>
+              <input type="range" min={0} max={100} value={minScore} onChange={(event) => setMinScore(Number(event.target.value))} className="h-1.5 min-w-[220px] flex-1 cursor-pointer accent-blue-500" />
+              <span className={`text-xs font-semibold tabular-nums ${dark ? "text-slate-200" : "text-slate-700"}`}>{minScore}/100</span>
+              {minScore > 0 && <button onClick={() => setMinScore(0)} className="text-xs font-semibold text-blue-600 hover:underline">Clear</button>}
             </div>
-            <p className={`text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>
-              Showing <span className={`font-semibold ${dark ? "text-slate-300" : "text-slate-700"}`}>{visibleScores.length}</span> of <span className="font-semibold">{scoredWithGroup.length}</span> counties
+            <p className={`text-xs ${dark ? "text-slate-300" : "text-slate-600"}`}>
+              Showing <span className="font-semibold">{visibleRows.length}</span> of <span className="font-semibold">{scoredRows.length}</span> counties.
             </p>
 
             {filterSummary && (
@@ -274,98 +279,52 @@ export default function OpportunityScore({ rows }) {
             )}
           </div>
 
-          {visibleScores.length === 0 ? (
-            <div className={`rounded-xl border p-10 text-center ${dark ? "border-slate-700/60 bg-slate-800/40" : "border-slate-200 bg-slate-50"}`}>
-              <p className={`text-sm font-medium ${dark ? "text-slate-400" : "text-slate-500"}`}>No counties match the selected filters.</p>
-              <button
-                onClick={() => { setTierFilter("All"); setGroupFilter("All"); setMinScore(0); }}
-                className="mt-3 text-xs text-blue-500 hover:underline font-medium"
-              >
-                Clear filters
-              </button>
+          {visibleRows.length === 0 ? (
+            <div className={`rounded-xl border p-10 text-center ${dark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-white"}`}>
+              <p className={`text-sm font-semibold ${dark ? "text-slate-300" : "text-slate-700"}`}>No counties match the selected filters.</p>
+              <button onClick={() => { setGroupFilter("All"); setMinScore(0); }} className="mt-3 text-xs font-semibold text-blue-600 hover:underline">Clear filters</button>
             </div>
           ) : (
-            <div className="space-y-3">
-              {scoredWithGroup.map((county, index) => {
-                const tierOk = tierFilter === "All" || county.tier === tierFilter;
-                const groupOk = groupFilter === "All" || county.launchGroup === groupFilter;
-                const scoreOk = county.score >= minScore;
-                const visible = tierOk && groupOk && scoreOk;
-                return (
-                  <div
-                    key={county.county}
-                    className={`overflow-hidden rounded-xl border transition-all duration-300 ${
-                      visible ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0 border-transparent py-0"
-                    } ${dark ? "border-slate-700 bg-slate-800 hover:border-slate-600" : "border-slate-200 bg-white hover:border-slate-300"}`}
-                  >
-                    <div className="p-5">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                          <div className={`flex h-10 w-10 items-center justify-center rounded-lg font-semibold text-base flex-shrink-0 ${
-                            index === 0 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
-                            : index === 1 ? "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                            : index === 2 ? "bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300"
-                            : dark ? "bg-slate-700 text-slate-300" : "bg-slate-100 text-slate-500"
-                          }`}>
-                            {index + 1}
-                          </div>
-                          <div>
-                            <p className={`text-base font-semibold ${dark ? "text-slate-100" : "text-slate-800"}`}>{county.county}</p>
-                            <div className="mt-1 flex items-center gap-2 flex-wrap">
-                              <TierChip tier={county.tier} />
-                              <span className={`text-xs rounded-full border px-2 py-0.5 font-semibold ${dark ? "border-slate-600 text-slate-400" : "border-slate-200 text-slate-500"}`}>
-                                {county.launchGroup}
-                              </span>
-                              <span className={`text-sm ${dark ? "text-slate-400" : "text-slate-500"}`}>
-                                {number(county.marketUsers)} users · Threat {county.threatScore}/100
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right flex-shrink-0">
-                          <p className={`text-3xl font-bold tabular-nums ${county.score >= 60 ? dark ? "text-emerald-400" : "text-emerald-600" : dark ? "text-amber-400" : "text-amber-600"}`}>
-                            {county.score}
-                          </p>
-                          <p className={`text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>/100</p>
-                        </div>
-                      </div>
-
-                      <div className="mt-4">
-                        <div className="flex items-center justify-between mb-1 text-xs">
-                          <span className={dark ? "text-slate-500" : "text-slate-400"}>Score</span>
-                          <span className={`font-semibold ${dark ? "text-slate-400" : "text-slate-500"}`}>{county.score}/100</span>
-                        </div>
-                        <div className={`h-2.5 w-full overflow-hidden rounded-full ${dark ? "bg-slate-700" : "bg-slate-100"}`}>
-                          <div
-                            className={`h-full rounded-full transition-all ${county.score >= 80 ? "bg-emerald-500" : county.score >= 60 ? "bg-blue-500" : county.score >= 40 ? "bg-amber-500" : "bg-slate-400"}`}
-                            style={{ width: `${county.score}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="mt-4 grid grid-cols-5 gap-2">
-                        {county.factors.map((factor) => (
-                          <div key={factor.name} className={`rounded-xl p-2.5 text-center ${dark ? "bg-slate-700/50" : "bg-slate-50"}`}>
-                            <p className={`text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>{factor.name}</p>
-                            <p className={`mt-1 text-sm font-semibold ${factor.direction === "up" ? "text-emerald-600" : dark ? "text-amber-400" : "text-amber-600"}`}>
-                              {factor.value}
-                            </p>
-                            <p className={`text-[10px] ${dark ? "text-slate-500" : "text-slate-400"}`}>{Math.round(factor.weight * 100)}% wt</p>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="mt-3 flex gap-6 text-sm">
-                        <div><span className={dark ? "text-slate-400" : "text-slate-500"}>Y1 rev: </span><span className={`font-semibold tabular-nums ${dark ? "text-blue-400" : "text-blue-700"}`}>{currency(county.y1Revenue)}</span></div>
-                        <div><span className={dark ? "text-slate-400" : "text-slate-500"}>Y3 rev: </span><span className={`font-semibold tabular-nums ${dark ? "text-emerald-400" : "text-emerald-600"}`}>{currency(county.y3Revenue)}</span></div>
-                        <div><span className={dark ? "text-slate-400" : "text-slate-500"}>Growth: </span><span className="font-semibold tabular-nums text-emerald-600">+{county.y1Revenue > 0 ? Math.round((county.y3Revenue - county.y1Revenue) / county.y1Revenue * 100) : 0}%</span></div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className={`overflow-x-auto rounded-xl border ${dark ? "border-slate-700" : "border-slate-200"}`}>
+              <table className="w-full min-w-[1150px] text-left text-sm">
+                <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700"}`}>
+                  <tr>
+                    <th className="px-4 py-3">Rank</th>
+                    <th className="px-4 py-3">County</th>
+                    <th className="px-4 py-3">Launch group</th>
+                    <th className="px-4 py-3">Primary driver</th>
+                    <th className="px-4 py-3 text-right">Score</th>
+                    <th className="px-4 py-3 text-right">Revenue</th>
+                    <th className="px-4 py-3 text-right">Referrals</th>
+                    <th className="px-4 py-3">Provider context</th>
+                    <th className="px-4 py-3 text-right">Penetration</th>
+                    <th className="px-4 py-3 text-right">Density</th>
+                    <th className="px-4 py-3">Source</th>
+                  </tr>
+                </thead>
+                <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-slate-200"}`}>
+                  {visibleRows.map((county, index) => (
+                    <tr key={county.county} className={dark ? "hover:bg-slate-800/70" : "hover:bg-slate-50"}>
+                      <td className="px-4 py-3 font-bold tabular-nums">{index + 1}</td>
+                      <td className={`px-4 py-3 font-semibold ${dark ? "text-slate-100" : "text-slate-900"}`}>{county.county}</td>
+                      <td className="px-4 py-3">{county.launchGroup}</td>
+                      <td className="px-4 py-3">{county.primaryDriver}</td>
+                      <td className="px-4 py-3 text-right font-bold tabular-nums">{county.score}/100</td>
+                      <td className="px-4 py-3 text-right font-semibold tabular-nums">{currency(county.y1Revenue)}</td>
+                      <td className="px-4 py-3 text-right tabular-nums">{number(county.referralOpportunity)}</td>
+                      <td className="px-4 py-3">{county.providerContext}</td>
+                      <td className="px-4 py-3 text-right tabular-nums">{county.marketPenetration.toFixed(1)}%</td>
+                      <td className="px-4 py-3 text-right tabular-nums">{county.competitionDensity.toFixed(1)}/10K</td>
+                      <td className={`px-4 py-3 text-xs ${dark ? "text-slate-300" : "text-slate-600"}`}>{county.sourceLabel}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
+          <p className={`text-xs ${dark ? "text-slate-300" : "text-slate-600"}`}>
+            <Abbr term="FFS">FFS</Abbr> beneficiary volume and provider counts are sourced inputs; revenue, referrals, penetration, and composite scores are calculated planning outputs.
+          </p>
         </div>
       </Card>
     </div>

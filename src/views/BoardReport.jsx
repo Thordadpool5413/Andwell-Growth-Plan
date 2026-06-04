@@ -100,7 +100,6 @@ export default function BoardReport({ rows, totals }) {
         penetration: pen?.y1Penetration || 0,
         penStatus,
         oppScore: opp?.score || 0,
-        oppTier: opp?.tier || "—",
       };
     }).sort((a, b) => b.oppScore - a.oppScore);
   }, [rows]);
@@ -295,7 +294,7 @@ export default function BoardReport({ rows, totals }) {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <Badge tone={c.oppTier === "Prime" ? "green" : c.oppTier === "Strong" ? "blue" : c.oppTier === "Developing" ? "amber" : "slate"}>
+                        <Badge tone={c.oppScore >= 70 ? "green" : c.oppScore >= 50 ? "blue" : c.oppScore >= 35 ? "amber" : "slate"}>
                           {c.oppScore}
                         </Badge>
                       </td>

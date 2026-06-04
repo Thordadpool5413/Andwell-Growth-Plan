@@ -42,10 +42,67 @@ const byCounty = (rows) => rows.reduce((acc, row) => {
   return acc;
 }, {});
 
+function normalizeProviderName(name) {
+  return String(name || "")
+    .toLowerCase()
+    .replace(/\b(llc|inc|corp|corporation|company|co|the|dba)\b\.?/g, "")
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+const hospiceProviderByCcn = Object.fromEntries(maineHospiceProviders.filter((row) => row.ccn).map((row) => [row.ccn, row]));
+const homeHealthByCcn = Object.fromEntries(maineHomeHealthAgencies.filter((row) => row.ccn).map((row) => [row.ccn, row]));
+const hhcahpsByCcn = Object.fromEntries(maineHhcaHps.filter((row) => row.ccn).map((row) => [row.ccn, row]));
+const hospiceCahpsByCcn = Object.fromEntries(maineHospiceCahps.filter((row) => row.ccn).map((row) => [row.ccn, row]));
+const hospiceQualityByCcn = maineHospiceQuality.reduce((acc, row) => {
+  if (!row.ccn) return acc;
+  acc[row.ccn] ||= [];
+  acc[row.ccn].push(row);
+  return acc;
+}, {});
+const hhvbpByCcn = Object.fromEntries(maineHhvbp.filter((row) => row.ccn).map((row) => [row.ccn, row]));
+
+function assignHrsaCounty(row) {
+  const matchedProvider = hospiceProviderByCcn[row.cms_provider_number];
+  if (matchedProvider?.county) return { county: matchedProvider.county, method: "cms_ccn_match" };
+  const city = String(row.city || "").trim().toUpperCase();
+  const cityMap = {
+    AUBURN: "Androscoggin",
+    BANGOR: "Penobscot",
+    BRUNSWICK: "Cumberland",
+    LEWISTON: "Androscoggin",
+    ROCKPORT: "Knox",
+    SACO: "York",
+    "SOUTH PORTLAND": "Cumberland",
+    WATERVILLE: "Kennebec",
+  };
+  if (cityMap[city]) return { county: cityMap[city], method: "city_lookup" };
+  const zip = String(row.zip_code || "").slice(0, 5);
+  if (zip.startsWith("043") || ["04901", "04903", "04917", "04937"].includes(zip)) return { county: "Kennebec", method: "zip_lookup" };
+  if (zip.startsWith("041") || zip.startsWith("04011")) return { county: "Cumberland", method: "zip_lookup" };
+  if (zip.startsWith("044")) return { county: "Penobscot", method: "zip_lookup" };
+  if (zip.startsWith("048")) return { county: "Knox", method: "zip_lookup" };
+  if (zip.startsWith("0407")) return { county: "York", method: "zip_lookup" };
+  return { county: null, method: "unassigned" };
+}
+
+const assignedHrsaFacilities = hrsaMaineHospiceFacilities.map((row) => {
+  const assigned = row.county ? { county: row.county, method: row.county_assignment_method || "source_county" } : assignHrsaCounty(row);
+  return {
+    ...row,
+    county: assigned.county,
+    county_assignment_method: assigned.method,
+  };
+});
+
 const homeHealthByCounty = byCounty(maineHomeHealthAgencies);
 const hospiceByCounty = byCounty(maineHospiceProviders);
 const hospiceQualityByCounty = byCounty(maineHospiceQuality);
 const hospiceCahpsByCounty = byCounty(maineHospiceCahps);
+const hhcahpsByCounty = byCounty(maineHhcaHps);
+const hrsaByCounty = byCounty(assignedHrsaFacilities);
 const hrsaByCounty = byCounty(hrsaMaineHospiceFacilities);
 const hhvbpByCcn = Object.fromEntries(maineHhvbp.filter((row) => row.ccn).map((row) => [row.ccn, row]));
 
@@ -120,6 +177,7 @@ export function hhvbpDisplayScore(row) {
 }
 
 function bestHospiceMeasure(row) {
+  const measures = Object.values(row?.measures || {}).filter((measure) => measure.score != null);
   const measures = Object.values(row.measures || {}).filter((measure) => measure.score != null);
   return measures.find((measure) => (measure.measure_name || "").toLowerCase().includes("rated")) || measures[0] || null;
 }
@@ -127,11 +185,27 @@ function bestHospiceMeasure(row) {
 export function getCountyQualitySummary(county) {
   const homeHealth = homeHealthByCounty[county] || [];
   const hhvbp = homeHealth.map((agency) => hhvbpByCcn[agency.ccn]).filter(Boolean);
+  const hhcahps = [
+    ...homeHealth.map((agency) => hhcahpsByCcn[agency.ccn]).filter(Boolean),
+    ...(hhcahpsByCounty[county] || []),
+  ].filter((row, index, arr) => row?.ccn && arr.findIndex((candidate) => candidate.ccn === row.ccn) === index);
   const hospiceProviders = hospiceByCounty[county] || [];
   const hospiceQuality = hospiceQualityByCounty[county] || [];
   const hospiceCahps = hospiceCahpsByCounty[county] || [];
   const starRows = homeHealth.filter((row) => row.star_rating != null);
   const hhvbpRows = hhvbp.map((row) => ({ ...row, display_score: hhvbpDisplayScore(row) })).filter((row) => row.display_score != null);
+  const hhcahpsRows = hhcahps.filter((row) => row.summary_star_rating != null || row.recommend_pct != null);
+  const hospiceScores = hospiceCahps.map((row) => ({ row, measure: bestHospiceMeasure(row) })).filter((item) => item.measure?.score != null);
+  const allScores = [
+    ...starRows.map((row) => ({ provider: row.provider_name, type: "Home health star rating", score: Number(row.star_rating), source: "CMS 6jpm-sxkc" })),
+    ...hhcahpsRows
+      .map((row) => ({ provider: row.provider_name, type: "HHCAHPS summary star", score: Number(row.summary_star_rating), source: "CMS ccn4-8vby" }))
+      .filter((row) => Number.isFinite(row.score)),
+    ...hhvbpRows.map((row) => ({ provider: row.provider_name, type: "HHVBP composite", score: row.display_score, source: "CMS 56d7-4994" })),
+    ...hospiceScores.map(({ row, measure }) => ({ provider: row.provider_name, type: measure.measure_name || "Hospice CAHPS score", score: Number(measure.score), source: "CMS gxki-hrr8" })),
+  ].sort((a, b) => b.score - a.score);
+  const hhcahpsStarRows = hhcahpsRows.filter((row) => row.summary_star_rating != null);
+  const hhcahpsRecommendRows = hhcahpsRows.filter((row) => row.recommend_pct != null);
   const hospiceScores = hospiceCahps.map((row) => ({ row, measure: bestHospiceMeasure(row) })).filter((item) => item.measure?.score != null);
   const allScores = [
     ...starRows.map((row) => ({ provider: row.provider_name, type: "Home health star rating", score: Number(row.star_rating), source: "CMS 6jpm-sxkc" })),
@@ -142,22 +216,200 @@ export function getCountyQualitySummary(county) {
   return {
     county,
     homeHealth,
+    hhcahps: hhcahpsRows,
     hhvbp: hhvbpRows,
     hospiceProviders,
     hospiceQuality,
     hospiceCahps,
     avgHomeHealthStar: starRows.length ? starRows.reduce((sum, row) => sum + Number(row.star_rating), 0) / starRows.length : null,
+    avgHhcahpsStar: hhcahpsStarRows.length ? hhcahpsStarRows.reduce((sum, row) => sum + Number(row.summary_star_rating), 0) / hhcahpsStarRows.length : null,
+    avgHhcahpsRecommend: hhcahpsRecommendRows.length ? hhcahpsRecommendRows.reduce((sum, row) => sum + Number(row.recommend_pct), 0) / hhcahpsRecommendRows.length : null,
     avgHhvbpScore: hhvbpRows.length ? hhvbpRows.reduce((sum, row) => sum + row.display_score, 0) / hhvbpRows.length : null,
     avgHospiceCahpsScore: hospiceScores.length ? hospiceScores.reduce((sum, item) => sum + Number(item.measure.score), 0) / hospiceScores.length : null,
     bestScore: allScores[0] || null,
     lowestScore: allScores.length ? allScores[allScores.length - 1] : null,
     outliers: allScores.filter((item) => item.score === allScores[0]?.score || item.score === allScores[allScores.length - 1]?.score).slice(0, 4),
-    missingNotes: [
-      !homeHealth.length ? "No CMS home health agency records assigned to this county." : null,
-      !hhvbpRows.length ? "No HHVBP agency records matched to this county by CCN." : null,
-      !hospiceCahps.length ? "No CMS hospice CAHPS records assigned to this county." : null,
+    missingNotes: [." : null,
     ].filter(Boolean),
   };
+}
+
+      !homeHealth.length ? "No CMS home health agency records assigned to this county." : null,
+      !hhcahpsRows.length ? "No HHCAHPS records matched to this county by CCN." : null,
+      !hhvbpRows.length ? "No HHVBP agency records matched to this county by CCN." : null,
+      !hospiceCahps.length ? "No CMS hospice CAHPS records assigned to this county
+function hospiceCahpsMeasures(row) {
+  return Object.entries(row?.measures || {})
+    .map(([measure_code, measure]) => ({ measure_code, ...measure }))
+    .filter((measure) => measure.measure_name || measure.score != null);
+}
+
+function hhcahpsEvidence(row) {
+  if (!row) return null;
+  return {
+    measure_name: "HHCAHPS survey summary star rating",
+    measure_value: row.summary_star_rating,
+    recommend_pct: row.recommend_pct,
+    reporting_period: row.generated_at,
+    state_benchmark: dashboardData.benchmarks.home_health?.avg_hhcahps_summary_star ?? null,
+    national_benchmark: null,
+    source_dataset_id: row.source_dataset_id || "ccn4-8vby",
+    confidence: "high",
+  };
+}
+
+function hhvbpEvidence(row) {
+  if (!row) return null;
+  return {
+    measure_name: row.total_performance_score != null ? "HHVBP total performance score" : "HHVBP composite from available domain measures",
+    measure_value: hhvbpDisplayScore(row),
+    reporting_period: row.reporting_period,
+    state_benchmark: dashboardData.benchmarks.hhvbp?.avg_total_performance_score ?? null,
+    national_benchmark: null,
+    source_dataset_id: row.source_dataset_id || "56d7-4994",
+    confidence: row.total_performance_score != null ? "high" : "medium",
+  };
+}
+
+export function getProviderProfileByCcn(ccn) {
+  if (!ccn) return null;
+  const homeHealth = homeHealthByCcn[ccn] || null;
+  const hospice = hospiceProviderByCcn[ccn] || null;
+  const hhcahps = hhcahpsByCcn[ccn] || null;
+  const hhvbp = hhvbpByCcn[ccn] || null;
+  const hospiceCahps = hospiceCahpsByCcn[ccn] || null;
+  const hospiceQuality = hospiceQualityByCcn[ccn] || [];
+  const hrsa = assignedHrsaFacilities.find((row) => row.cms_provider_number === ccn) || null;
+  const base = homeHealth || hospice || hrsa;
+  if (!base) return null;
+  const providerName = base.provider_name || base.facility_name;
+  const providerType = homeHealth && hospice ? "Home health and hospice" : homeHealth ? "Home health" : hospice ? "Hospice" : "Hospice facility";
+  const classification = classifyProvider(base);
+  const highQualityEvidence = [
+    homeHealth?.star_rating != null && Number(homeHealth.star_rating) >= 4 ? `CMS home health quality star ${homeHealth.star_rating}` : null,
+    hhcahps?.summary_star_rating != null && Number(hhcahps.summary_star_rating) >= 4 ? `HHCAHPS summary star ${hhcahps.summary_star_rating}` : null,
+    hhcahps?.recommend_pct != null && Number(hhcahps.recommend_pct) >= (dashboardData.benchmarks.home_health?.avg_hhcahps_recommend_pct ?? 87) ? `HHCAHPS recommend ${hhcahps.recommend_pct}%` : null,
+    hhvbpDisplayScore(hhvbp) != null && hhvbpDisplayScore(hhvbp) >= 85 ? `HHVBP available score ${hhvbpDisplayScore(hhvbp).toFixed(1)}` : null,
+    bestHospiceMeasure(hospiceCahps)?.score != null && Number(bestHospiceMeasure(hospiceCahps).score) >= 85 ? `Hospice CAHPS ${bestHospiceMeasure(hospiceCahps).score}` : null,
+  ].filter(Boolean);
+
+  return {
+    ccn,
+    provider_name: providerName,
+    provider_type: providerType,
+    county: base.county || homeHealth?.county || hospice?.county || hhcahps?.county || hrsa?.county || null,
+    address: base.address || hrsa?.address || null,
+    city: base.city || hrsa?.city || null,
+    state: base.state || "ME",
+    zip_code: base.zip_code || hrsa?.zip_code || null,
+    certification_date: homeHealth?.certification_date || hospice?.certification_date || null,
+    source_labels: [
+      homeHealth ? "CMS home health 6jpm-sxkc" : null,
+      hhcahps ? "CMS HHCAHPS ccn4-8vby" : null,
+      hhvbp ? "CMS HHVBP 56d7-4994" : null,
+      hospice ? "CMS hospice yc9t-dgbk" : null,
+      hospiceCahps ? "CMS Hospice CAHPS gxki-hrr8" : null,
+      hrsa ? "HRSA CMS-approved hospice facility" : null,
+    ].filter(Boolean),
+    classification: classification.classification,
+    classification_confidence: classification.confidence,
+    classification_evidence: classification.evidence,
+    homeHealth,
+    hhcahps,
+    hhcahpsEvidence: hhcahpsEvidence(hhcahps),
+    hhvbp,
+    hhvbpEvidence: hhvbpEvidence(hhvbp),
+    hospice,
+    hospiceQuality,
+    hospiceCahps,
+    hospiceCahpsMeasures: hospiceCahpsMeasures(hospiceCahps),
+    hrsa,
+    high_quality: highQualityEvidence.length > 0,
+    high_quality_evidence: highQualityEvidence,
+    missing_reasons: [
+      providerType.includes("Home health") && !hhcahps ? "No HHCAHPS record matched by CCN." : null,
+      providerType.includes("Home health") && !hhvbp ? "No HHVBP record matched by CCN." : null,
+      providerType.includes("Hospice") && !hospiceCahps ? "No Hospice CAHPS record matched by CCN." : null,
+      providerType.includes("Hospice") && !hrsa ? "No HRSA facility record matched by CCN." : null,
+    ].filter(Boolean),
+  };
+}
+
+export function getProviderProfileByName(name) {
+  const normalized = normalizeProviderName(name);
+  if (!normalized) return null;
+  const candidates = [
+    ...maineHomeHealthAgencies,
+    ...maineHospiceProviders,
+    ...assignedHrsaFacilities.map((row) => ({ ...row, provider_name: row.facility_name })),
+  ];
+  const exact = candidates.find((row) => normalizeProviderName(row.provider_name || row.facility_name) === normalized);
+  const fuzzy = exact || candidates.find((row) => {
+    const candidate = normalizeProviderName(row.provider_name || row.facility_name);
+    return candidate.includes(normalized) || normalized.includes(candidate);
+  });
+  return fuzzy?.ccn || fuzzy?.cms_provider_number ? getProviderProfileByCcn(fuzzy.ccn || fuzzy.cms_provider_number) : null;
+}
+
+export function getProviderIntelligenceRows({ county = null, service = "all", includeAndwell = true } = {}) {
+  const rows = namedProviderRows
+    .filter((row) => includeAndwell || !row.isAndwellCmsRecord)
+    .filter((row) => !county || row.locationCounty === county)
+    .filter((row) => {
+      if (service === "all") return true;
+      if (service === "homehealth") return row.service === "Home Healthcare";
+      if (service === "hospice") return row.service === "Hospice";
+      return row.service === service;
+    })
+    .map((row) => {
+      const profile = getProviderProfileByName(row.providerName);
+      const classification = classifyProvider(row);
+      const sourceLabels = profile?.source_labels?.length ? profile.source_labels : ["CMS provider file PUF seed"];
+      return {
+        id: `${row.service}-${row.providerName}-${row.locationCounty}`,
+        provider_name: row.providerName,
+        provider_type: row.service === "Home Healthcare" ? "Home health" : row.service,
+        county: row.locationCounty,
+        ccn: profile?.ccn || null,
+        address: profile?.address || null,
+        city: profile?.city || null,
+        zip_code: profile?.zip_code || null,
+        certification_date: profile?.certification_date || null,
+        beneficiaries: row.beneficiaries,
+        episodes: row.episodes,
+        payment: row.payment,
+        provider_file_share: row.providerVolumeShare,
+        presence_score: Math.round((row.providerVolumeShare || 0) * 1000) / 10,
+        share_label: "Modeled provider presence from statewide CMS provider-file volume; not county market share.",
+        confidence: profile ? "high" : "medium",
+        source_labels: sourceLabels,
+        is_andwell: row.isAndwellCmsRecord,
+        classification: profile?.classification || classification.classification,
+        classification_confidence: profile?.classification_confidence || classification.confidence,
+        hhcahps: profile?.hhcahps || null,
+        hhcahpsEvidence: profile?.hhcahpsEvidence || null,
+        hhvbp: profile?.hhvbp || null,
+        hhvbpEvidence: profile?.hhvbpEvidence || null,
+        hospiceCahps: profile?.hospiceCahps || null,
+        hospiceCahpsMeasures: profile?.hospiceCahpsMeasures || [],
+        hrsa: profile?.hrsa || null,
+        quality_star_rating: profile?.homeHealth?.star_rating ?? null,
+        high_quality: profile?.high_quality || false,
+        high_quality_evidence: profile?.high_quality_evidence || [],
+        missing_reasons: profile?.missing_reasons || ["No CMS provider profile matched by CCN or normalized name."],
+        profile,
+      };
+    });
+
+  return rows.sort((a, b) => (b.beneficiaries || 0) - (a.beneficiaries || 0));
+}
+
+export function getTopProviders({ county = null, service = "all", limit = 8 } = {}) {
+  return getProviderIntelligenceRows({ county, service }).slice(0, limit);
+}
+
+export function getHighQualityProviders({ service = "all" } = {}) {
+  return getProviderIntelligenceRows({ service }).filter((row) => row.high_quality);
 }
 
 export function getCountyProviderLandscape(county) {
@@ -344,7 +596,7 @@ export const dashboardData = {
   hospiceQuality: maineHospiceQuality,
   hospiceCahps: maineHospiceCahps,
   hospiceZipData: maineHospiceZipData,
-  hrsaHospiceFacilities: hrsaMaineHospiceFacilities,
+  hrsaHospiceFacilities: assignedHrsaFacilities,
 };
 
 export function getCountyPriority(county, rows = []) {

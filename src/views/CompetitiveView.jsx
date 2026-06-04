@@ -20,6 +20,7 @@ import { COLORS } from "../data/constants.js";
 import cmsCountyMarket from "../data/cmsCountyMarket.js";
 import { namedProviderRows, marketShareBuildRows, marketShareFormulaRows } from "../data/providers.js";
 import { classifyProvider } from "../data/andwell.js";
+import { getFreshness, getTopProviders, MAINE_COUNTIES } from "../data/dashboardData.js";
 import { getFreshness, MAINE_COUNTIES } from "../data/dashboardData.js";
 import { getProviderSummary, getCompetitiveThreatScore } from "../utils/calculations.js";
 import { currency, number, percent, badgeTone } from "../utils/formatters.js";
@@ -75,6 +76,9 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
   const summary = getProviderSummary(service);
   const providers = namedProviderRows.filter((row) => row.service === service).sort((a, b) => b.beneficiaries - a.beneficiaries);
   const countyProviders = providers.filter((row) => row.locationCounty === selectedCounty);
+  const statewideTopHomeHealth = getTopProviders({ service: "homehealth", limit: 5 });
+  const statewideTopHospice = getTopProviders({ service: "hospice", limit: 5 });
+  const countyTopProviders = getTopProviders({ county: selectedCounty, service: service === "Hospice" ? "hospice" : "homehealth", limit: 5 });
   const chartRows = providers.slice(0, 10).map((provider) => ({
     ...provider,
     sharePct: Number((provider.providerVolumeShare * 100).toFixed(1)),
@@ -213,6 +217,39 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
           </div>
         </div>
       )}
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        {[
+          { title: "Top Home Healthcare providers", rows: statewideTopHomeHealth },
+          { title: "Top Hospice providers", rows: statewideTopHospice },
+          { title: `${selectedCounty} provider presence`, rows: countyTopProviders },
+        ].map((group) => (
+          <Card key={group.title} title={group.title} eyebrow="Shared provider intelligence">
+            <div className="space-y-3">
+              {group.rows.length ? group.rows.map((provider) => (
+                <div key={provider.id} className={`rounded-xl border p-3 ${dark ? "border-slate-700 bg-slate-800/70" : "border-slate-200 bg-slate-50"}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className={`text-sm font-semibold ${dark ? "text-slate-100" : "text-slate-900"}`}>{provider.provider_name}</p>
+                      <p className={`mt-1 text-xs ${dark ? "text-slate-300" : "text-slate-600"}`}>{provider.provider_type} · {provider.county}</p>
+                    </div>
+                    <Badge tone={provider.confidence === "high" ? "green" : "blue"}>{provider.confidence} confidence</Badge>
+                  </div>
+                  <div className={`mt-2 grid grid-cols-2 gap-2 text-xs ${dark ? "text-slate-300" : "text-slate-700"}`}>
+                    <div><span className={dark ? "text-slate-400" : "text-slate-500"}>CCN</span><p className="font-semibold">{provider.ccn || "Unavailable"}</p></div>
+                    <div><span className={dark ? "text-slate-400" : "text-slate-500"}>Presence</span><p className="font-semibold">{provider.presence_score}%</p></div>
+                    <div className="col-span-2"><span className={dark ? "text-slate-400" : "text-slate-500"}>Classification</span><p className="font-semibold">{provider.classification}</p></div>
+                    <div className="col-span-2"><span className={dark ? "text-slate-400" : "text-slate-500"}>Quality</span><p className="font-semibold">{provider.high_quality_evidence[0] || provider.missing_reasons[0] || "No matched quality record"}</p></div>
+                  </div>
+                  <p className={`mt-2 text-[11px] leading-4 ${dark ? "text-slate-400" : "text-slate-600"}`}>{provider.share_label}</p>
+                </div>
+              )) : (
+                <p className={`text-sm ${dark ? "text-slate-300" : "text-slate-600"}`}>No matched provider records for this scope.</p>
+              )}
+            </div>
+          </Card>
+        ))}
+      </div>
 
       <div className={`rounded-xl border ${dark ? "border-slate-700 bg-slate-800/40" : "border-slate-200 bg-white"}`}>
         <div className={`flex border-b ${dark ? "border-slate-700" : "border-slate-200"}`}>
