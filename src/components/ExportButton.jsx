@@ -13,7 +13,13 @@ function FileText({ className }) {
   );
 }
 
-export default function ExportButton({ targetId, filename }) {
+export default function ExportButton({
+  targetId,
+  filename,
+  variant = "secondary",
+  size = "md",
+  className = "",
+}) {
   const handleExport = useCallback(async () => {
     const element = document.getElementById(targetId);
     if (!element) return;
@@ -52,10 +58,11 @@ export default function ExportButton({ targetId, filename }) {
 
   return (
     <Button
-      variant="secondary"
-      size="md"
+      variant={variant}
+      size={size}
       onClick={handleExport}
       icon={<FileText className="h-4 w-4" />}
+      className={className}
     >
       Export PDF
     </Button>

@@ -25,10 +25,10 @@ export default function SmartScenarioCard({ scenario, onApplyScenario, onNavigat
   const topCounty = recommendation.recommended.topCounty?.county;
 
   return (
-    <div className={`rounded-xl border p-4 transition-colors duration-200 ${dark ? "border-violet-900/70 bg-violet-950/20" : "border-violet-200 bg-violet-50/80"}`}>
+    <div className={`rounded-2xl border p-4 transition-colors duration-200 ${dark ? "border-emerald-900/70 bg-emerald-950/15" : "border-emerald-200 bg-emerald-50/80"}`}>
       <div className={`flex ${compact ? "flex-col gap-2" : "items-start justify-between gap-4"}`}>
         <div>
-          <p className={`text-[10px] font-semibold uppercase tracking-[0.2em] ${dark ? "text-violet-400" : "text-violet-700"}`}>
+          <p className={`text-[10px] font-semibold uppercase tracking-[0.2em] ${dark ? "text-emerald-300" : "text-emerald-700"}`}>
             Smart planner
           </p>
           <h3 className={`mt-1 text-sm font-semibold ${dark ? "text-white" : "text-slate-900"}`}>
@@ -38,7 +38,7 @@ export default function SmartScenarioCard({ scenario, onApplyScenario, onNavigat
             Optimized across revenue, contribution, opportunity score, staffing load, and county concentration.
           </p>
         </div>
-        <div className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${dark ? "bg-violet-900/70 text-violet-200" : "bg-violet-100 text-violet-700"}`}>
+        <div className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${dark ? "bg-emerald-900/70 text-emerald-200" : "bg-emerald-100 text-emerald-700"}`}>
           {recommendation.strategyLabel}
         </div>
       </div>
@@ -89,7 +89,7 @@ export default function SmartScenarioCard({ scenario, onApplyScenario, onNavigat
       <ul className="mt-4 space-y-2">
         {recommendation.rationale.map((item) => (
           <li key={item} className={`flex gap-2 text-xs leading-5 ${dark ? "text-slate-300" : "text-slate-600"}`}>
-            <span className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${dark ? "bg-violet-400" : "bg-violet-600"}`} />
+            <span className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${dark ? "bg-emerald-400" : "bg-emerald-600"}`} />
             <span>{item}</span>
           </li>
         ))}
@@ -104,7 +104,7 @@ export default function SmartScenarioCard({ scenario, onApplyScenario, onNavigat
               ? dark
                 ? "cursor-default bg-slate-800 text-slate-500"
                 : "cursor-default bg-slate-100 text-slate-400"
-              : "bg-violet-600 text-white hover:bg-violet-500"
+              : "bg-emerald-700 text-white hover:bg-emerald-600"
           }`}
         >
           {isApplied ? "Smart plan applied" : "Apply smart plan"}

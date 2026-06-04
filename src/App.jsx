@@ -6,7 +6,6 @@ import { DarkModeProvider, useDarkMode } from "./components/DarkModeContext.jsx"
 import { ToastProvider, useToast } from "./components/ToastContainer.jsx";
 import ScenarioPanel from "./components/ScenarioPanel.jsx";
 import ScenarioCompare from "./components/ScenarioCompare.jsx";
-import ScenarioManager from "./components/ScenarioManager.jsx";
 import ExportButton from "./components/ExportButton.jsx";
 import InsightsPanel from "./components/InsightsPanel.jsx";
 import { InsightsEngine } from "./utils/insights.js";
@@ -25,14 +24,228 @@ import BoardReport from "./views/BoardReport.jsx";
 import LaunchChecklist from "./views/LaunchChecklist.jsx";
 import AskPanel from "./components/AskPanel.jsx";
 import ScenarioSidebar from "./components/ScenarioSidebar.jsx";
-import { ArrowRightLeft, Download, MoreHorizontal, MoonStar, SlidersHorizontal, Sparkles, SunMedium } from "lucide-react";
+import {
+  Activity,
+  ArrowRightLeft,
+  BarChart3,
+  Building2,
+  Calendar,
+  CheckSquare,
+  Database,
+  FileText,
+  LayoutDashboard,
+  LineChart,
+  Map,
+  Menu,
+  MoonStar,
+  SlidersHorizontal,
+  Sparkles,
+  SunMedium,
+  Target,
+  Users,
+  X,
+} from "lucide-react";
 
-const TAB_GROUPS = [
-  { label: "Planning", tabs: ["Executive View", "County Plan", "Referral Plan", "Opportunity Score"] },
-  { label: "Competitive", tabs: ["Competitive View", "Market Dynamics", "CMS Data"] },
-  { label: "Financial", tabs: ["Financial Model", "Sensitivity"] },
-  { label: "Operations", tabs: ["Staffing Model", "Launch Timeline", "Board Report", "Launch Checklist"] },
+const NAV_SECTIONS = [
+  {
+    label: "Planning",
+    items: [
+      {
+        id: "Executive View",
+        title: "Executive View",
+        description: "Leadership summary across revenue, referrals, margin, and priority markets.",
+        icon: LayoutDashboard,
+      },
+      {
+        id: "County Plan",
+        title: "County Plan",
+        description: "County-by-county launch prioritization, map context, and local opportunity fit.",
+        icon: Map,
+      },
+      {
+        id: "Referral Plan",
+        title: "Referral Plan",
+        description: "Referral source planning, volume assumptions, and start targets.",
+        icon: Users,
+      },
+      {
+        id: "Opportunity Score",
+        title: "Opportunity Score",
+        description: "Composite scoring across market size, competition, and strategic fit.",
+        icon: Target,
+      },
+    ],
+  },
+  {
+    label: "Competitive",
+    items: [
+      {
+        id: "Competitive View",
+        title: "Competitive View",
+        description: "Competitor presence, beneficiary share, and local threat by county.",
+        icon: Building2,
+      },
+      {
+        id: "Market Dynamics",
+        title: "Market Dynamics",
+        description: "Narrative market movement, share shifts, and positioning signals.",
+        icon: Activity,
+      },
+      {
+        id: "CMS Data",
+        title: "CMS Data",
+        description: "Raw provider and beneficiary context from CMS-certified market data.",
+        icon: Database,
+      },
+    ],
+  },
+  {
+    label: "Financial",
+    items: [
+      {
+        id: "Financial Model",
+        title: "Financial Model",
+        description: "Modeled financial outcomes, scaling assumptions, and contribution view.",
+        icon: BarChart3,
+      },
+      {
+        id: "Sensitivity",
+        title: "Sensitivity",
+        description: "Assumption stress-testing across timing, capture, referrals, and revenue.",
+        icon: LineChart,
+      },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      {
+        id: "Staffing Model",
+        title: "Staffing Model",
+        description: "FTE planning, staffing ramp, and operational capacity requirements.",
+        icon: Users,
+      },
+      {
+        id: "Launch Timeline",
+        title: "Launch Timeline",
+        description: "Launch sequencing, milestones, and market activation timing.",
+        icon: Calendar,
+      },
+      {
+        id: "Board Report",
+        title: "Board Report",
+        description: "Board-ready narrative, growth case, risk framing, and decision summary.",
+        icon: FileText,
+      },
+      {
+        id: "Launch Checklist",
+        title: "Launch Checklist",
+        description: "Execution checklist covering compliance, operating readiness, and go-live tasks.",
+        icon: CheckSquare,
+      },
+    ],
+  },
 ];
+
+const VIEW_INDEX = NAV_SECTIONS.flatMap((section) =>
+  section.items.map((item) => ({ ...item, section: section.label })),
+);
+
+const VIEW_META = Object.fromEntries(VIEW_INDEX.map((item) => [item.id, item]));
+const COUNTY_CONTEXT_VIEWS = new Set(["County Plan", "Competitive View", "Market Dynamics"]);
+const EXPORTABLE_VIEWS = new Set([
+  "Executive View",
+  "County Plan",
+  "Referral Plan",
+  "Competitive View",
+  "CMS Data",
+  "Financial Model",
+  "Sensitivity",
+  "Board Report",
+]);
+
+function NavRail({ dark, activeTab, onSelect, onClose }) {
+  return (
+    <nav className="space-y-6" aria-label="Workspace navigation">
+      {NAV_SECTIONS.map((section) => (
+        <div key={section.label}>
+          <p className={`px-3 text-[10px] font-semibold uppercase tracking-[0.24em] ${dark ? "text-slate-500" : "text-slate-400"}`}>
+            {section.label}
+          </p>
+          <div className="mt-2 space-y-1.5">
+            {section.items.map((item) => {
+              const Icon = item.icon;
+              const active = activeTab === item.id;
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    onSelect(item.id);
+                    onClose?.();
+                  }}
+                  aria-current={active ? "page" : undefined}
+                  className={`group flex w-full items-start gap-3 rounded-2xl border px-3 py-3 text-left transition-all duration-200 ${
+                    active
+                      ? dark
+                        ? "border-emerald-500/35 bg-slate-900 text-white shadow-[0_18px_40px_-28px_rgba(16,185,129,0.8)]"
+                        : "border-emerald-200 bg-white text-slate-950 shadow-[0_20px_50px_-32px_rgba(15,118,110,0.45)]"
+                      : dark
+                        ? "border-transparent text-slate-400 hover:border-slate-800 hover:bg-slate-900/70 hover:text-slate-200"
+                        : "border-transparent text-slate-600 hover:border-slate-200 hover:bg-white/90 hover:text-slate-900"
+                  }`}
+                >
+                  <span
+                    className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border transition-colors ${
+                      active
+                        ? dark
+                          ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-300"
+                          : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                        : dark
+                          ? "border-slate-800 bg-slate-950 text-slate-500 group-hover:text-slate-300"
+                          : "border-slate-200 bg-slate-50 text-slate-500 group-hover:text-slate-700"
+                    }`}
+                  >
+                    <Icon className="h-4.5 w-4.5" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className={`block text-sm font-semibold ${active ? (dark ? "text-white" : "text-slate-950") : ""}`}>
+                      {item.title}
+                    </span>
+                    <span className={`mt-1 block text-xs leading-5 ${dark ? (active ? "text-slate-300" : "text-slate-500") : active ? "text-slate-600" : "text-slate-500"}`}>
+                      {item.description}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </nav>
+  );
+}
+
+function ContextChip({ dark, children, tone = "neutral" }) {
+  const tones = {
+    neutral: dark
+      ? "border-slate-800 bg-slate-900/80 text-slate-300"
+      : "border-slate-200 bg-white text-slate-600",
+    accent: dark
+      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+      : "border-emerald-200 bg-emerald-50 text-emerald-700",
+    warning: dark
+      ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+      : "border-amber-200 bg-amber-50 text-amber-700",
+  };
+
+  return (
+    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold ${tones[tone]}`}>
+      {children}
+    </span>
+  );
+}
 
 function Dashboard() {
   const { dark, toggle } = useDarkMode();
@@ -69,6 +282,7 @@ function Dashboard() {
   const [showInsights, setShowInsights] = useState(false);
   const [competitorProviderType, setCompetitorProviderType] = useState("all");
   const [mapLayer, setMapLayer] = useState("priority");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     const isDefault =
@@ -111,232 +325,381 @@ function Dashboard() {
     [defaultRows],
   );
 
+  const activeView = VIEW_META[activeTab] ?? VIEW_META["Executive View"];
+  const scenarioIsDefault = useMemo(
+    () =>
+      scenario.conversionRate === DEFAULT_SCENARIO.conversionRate &&
+      JSON.stringify(scenario.hhCapture) === JSON.stringify(DEFAULT_SCENARIO.hhCapture) &&
+      JSON.stringify(scenario.woundCapture) === JSON.stringify(DEFAULT_SCENARIO.woundCapture) &&
+      JSON.stringify(scenario.therapyCapture) === JSON.stringify(DEFAULT_SCENARIO.therapyCapture),
+    [scenario],
+  );
+
   const insightsEngine = useMemo(() => new InsightsEngine(rows, totals), [rows, totals]);
   const insights = useMemo(() => insightsEngine.getAllInsights(), [insightsEngine]);
   const insightCount = useMemo(
     () => (insights.recommendations?.length || 0) + (insights.anomalies?.length || 0) + (insights.risks?.length || 0),
     [insights],
   );
+
+  const activateView = useCallback((nextTab) => {
+    setActiveTab(nextTab);
+    setShowScenario(false);
+    setShowCompare(false);
+    setShowInsights(false);
+    setMobileNavOpen(false);
+    window.requestAnimationFrame(() => {
+      document.getElementById("tab-content")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, []);
+
   const handleNavigate = useCallback(({ tab, county }) => {
     if (county) setSelectedCounty(county);
     if (tab) {
       setActiveTab(tab);
-      window.setTimeout(() => setActiveTab(tab), 0);
     }
     setShowScenario(false);
     setShowCompare(false);
     setShowInsights(false);
     setShowScenarioSidebar(false);
+    setMobileNavOpen(false);
     window.requestAnimationFrame(() => {
       document.getElementById("tab-content")?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }, []);
-  const handleApplyScenario = useCallback((nextScenario) => {
-    setScenario(nextScenario);
-    addToast("Smart plan applied", "success");
-  }, [addToast]);
+
+  const handleApplyScenario = useCallback(
+    (nextScenario) => {
+      setScenario(nextScenario);
+      addToast("Smart plan applied", "success");
+    },
+    [addToast],
+  );
+
   const financialActionPage = activeTab === "Financial Model" || activeTab === "Sensitivity";
-  const exportActionPage = ["Executive View", "County Plan", "Referral Plan", "Competitive View", "CMS Data", "Financial Model", "Sensitivity", "Board Report"].includes(activeTab);
+  const exportActionPage = EXPORTABLE_VIEWS.has(activeTab);
+
+  const renderActiveView = () => {
+    switch (activeTab) {
+      case "Executive View":
+        return <ExecutiveView rows={rows} totals={totals} />;
+      case "County Plan":
+        return (
+          <CountyPlan
+            rows={rows}
+            selectedCounty={selectedCounty}
+            setSelectedCounty={setSelectedCounty}
+            competitorProviderType={competitorProviderType}
+            setCompetitorProviderType={setCompetitorProviderType}
+            mapLayer={mapLayer}
+            setMapLayer={setMapLayer}
+          />
+        );
+      case "Referral Plan":
+        return <ReferralPlan rows={rows} />;
+      case "Competitive View":
+        return (
+          <CompetitiveView
+            selectedCounty={selectedCounty}
+            setSelectedCounty={setSelectedCounty}
+            competitorProviderType={competitorProviderType}
+            setCompetitorProviderType={setCompetitorProviderType}
+          />
+        );
+      case "Market Dynamics":
+        return (
+          <MarketDynamicsView
+            setActiveTab={activateView}
+            selectedCounty={selectedCounty}
+            setSelectedCounty={setSelectedCounty}
+          />
+        );
+      case "CMS Data":
+        return <CmsData />;
+      case "Financial Model":
+        return <FinancialModel rows={rows} />;
+      case "Staffing Model":
+        return <StaffingModel rows={rows} />;
+      case "Sensitivity":
+        return <SensitivityAnalysis rows={rows} />;
+      case "Opportunity Score":
+        return <OpportunityScore rows={rows} />;
+      case "Launch Timeline":
+        return <LaunchTimeline rows={rows} />;
+      case "Board Report":
+        return <BoardReport rows={rows} totals={totals} />;
+      case "Launch Checklist":
+        return <LaunchChecklist />;
+      default:
+        return <ExecutiveView rows={rows} totals={totals} />;
+    }
+  };
+
+  const actionButtonClass = dark
+    ? "inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/90 px-3.5 py-2 text-sm font-medium text-slate-300 transition hover:border-slate-600 hover:bg-slate-800 hover:text-white"
+    : "inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900";
 
   return (
-    <div className={`dashboard-shell min-h-screen transition-colors duration-300 ${dark ? "bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-900"}`}>
-      <div className={`px-4 py-6 sm:px-6 lg:px-10 transition-all duration-300 ${showScenarioSidebar ? "2xl:pr-[22rem]" : ""}`}>
-
-        {/* ── Header ── */}
-        <header className={`relative mx-auto mb-6 max-w-7xl overflow-hidden rounded-[28px] border shadow-[0_24px_80px_-28px_rgba(15,23,42,0.55)] transition-colors duration-300 print:hidden ${
-          dark ? "border-slate-800/80 bg-slate-900/90" : "border-slate-200 bg-white/90"
-        }`}>
-          <div className="pointer-events-none absolute inset-0">
-            <div className={`absolute inset-x-0 top-0 h-32 ${dark ? "bg-gradient-to-r from-blue-500/12 via-violet-500/10 to-cyan-400/10" : "bg-gradient-to-r from-blue-100 via-violet-100 to-cyan-100"}`} />
-            <div className={`absolute -right-16 -top-16 h-48 w-48 rounded-full blur-3xl ${dark ? "bg-blue-500/10" : "bg-blue-200/70"}`} />
-            <div className={`absolute -bottom-16 left-1/3 h-40 w-40 rounded-full blur-3xl ${dark ? "bg-violet-500/10" : "bg-violet-200/70"}`} />
-          </div>
-          <div className="relative px-6 py-6 lg:px-8">
-            <div className="flex flex-col gap-4 pr-16">
-              <div className="min-w-0">
-                <p className={`text-[11px] font-semibold uppercase tracking-[0.24em] ${dark ? "text-slate-500" : "text-slate-400"}`}>
-                  Andwell Maine — Innovation and Growth Plan
+    <div className={`dashboard-shell min-h-screen transition-colors duration-300 ${dark ? "bg-slate-950 text-slate-100" : "bg-[#f7f5ef] text-slate-900"}`}>
+      <div className="mx-auto flex min-h-screen w-full max-w-[1800px]">
+        <aside
+          className={`sticky top-0 hidden h-screen w-[18.5rem] shrink-0 border-r px-5 py-6 lg:flex lg:flex-col ${
+            dark ? "border-slate-800 bg-slate-950/95" : "border-[#e3ddd0] bg-[#f6f1e7]/95"
+          }`}
+        >
+          <div className="mb-6">
+            <div className="flex items-center gap-3">
+              <div className={`flex h-12 w-12 items-center justify-center rounded-2xl border ${dark ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300" : "border-emerald-200 bg-white text-emerald-700"}`}>
+                <LayoutDashboard className="h-5 w-5" />
+              </div>
+              <div>
+                <p className={`text-[11px] font-semibold uppercase tracking-[0.24em] ${dark ? "text-slate-500" : "text-slate-500"}`}>
+                  Andwell
                 </p>
-                <h1 className={`mt-2 max-w-3xl text-2xl font-semibold leading-tight tracking-tight md:text-[2rem] ${dark ? "text-white" : "text-slate-950"}`}>
-                  Home Health and Hospice Market Intelligence Dashboard
-                </h1>
-                <p className={`mt-3 max-w-3xl text-sm leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>
-                  County opportunity, referral planning, competitor intelligence, and modeled financial upside in one executive workspace.
-                </p>
+                <h2 className={`mt-1 text-lg font-semibold tracking-tight ${dark ? "text-white" : "text-slate-950"}`}>
+                  Growth Workspace
+                </h2>
               </div>
             </div>
+            <p className={`mt-4 text-sm leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>
+              Market intelligence, growth planning, and board-ready operating decisions in one executive workspace.
+            </p>
+          </div>
 
+          <div className="flex-1 overflow-y-auto pr-1">
+            <NavRail dark={dark} activeTab={activeTab} onSelect={activateView} />
+          </div>
+
+          <div className={`mt-6 rounded-[24px] border p-4 ${dark ? "border-slate-800 bg-slate-900/80" : "border-[#e4ddd1] bg-white/90"}`}>
+            <p className={`text-[10px] font-semibold uppercase tracking-[0.24em] ${dark ? "text-slate-500" : "text-slate-400"}`}>
+              Live context
+            </p>
+            <div className="mt-3 space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <span className={`text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>Selected county</span>
+                <span className={`text-sm font-semibold ${dark ? "text-white" : "text-slate-900"}`}>{selectedCounty}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className={`text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>Scenario mode</span>
+                <span className={`text-sm font-semibold ${scenarioIsDefault ? (dark ? "text-slate-300" : "text-slate-700") : dark ? "text-amber-300" : "text-amber-700"}`}>
+                  {scenarioIsDefault ? "Baseline" : "Custom"}
+                </span>
+              </div>
+            </div>
             <button
-              onClick={toggle}
-              className={`absolute right-6 top-6 inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition-colors duration-200 ${
-                dark
-                  ? "border-slate-700 bg-slate-800/90 text-slate-300 hover:border-slate-600 hover:bg-slate-700"
-                  : "border-slate-200 bg-white/90 text-slate-600 hover:bg-slate-50"
+              type="button"
+              onClick={() => setShowScenarioSidebar(true)}
+              className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-2.5 text-sm font-semibold transition ${
+                dark ? "bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15" : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
               }`}
-              aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-              title={dark ? "Switch to light mode" : "Switch to dark mode"}
             >
-              {dark ? <SunMedium className="h-4 w-4" /> : <MoonStar className="h-4 w-4" />}
-              <span className="hidden sm:inline">{dark ? "Light mode" : "Dark mode"}</span>
+              <SlidersHorizontal className="h-4 w-4" />
+              Scenario controls
             </button>
           </div>
-        </header>
+        </aside>
 
-        <div className="print:hidden"><DataSourceBanner /></div>
+        {mobileNavOpen && (
+          <div className="fixed inset-0 z-40 bg-slate-950/45 backdrop-blur-sm lg:hidden" onClick={() => setMobileNavOpen(false)} aria-hidden="true" />
+        )}
 
-        <div className="mx-auto max-w-7xl space-y-4">
-          {/* ── Navigation ── */}
-          <div className="print:hidden space-y-3">
-            <div className={`overflow-x-auto rounded-2xl border px-1 py-1 ${dark ? "border-slate-700/60 bg-slate-900/85 backdrop-blur-sm" : "border-slate-200 bg-white/90 backdrop-blur-sm"} shadow-sm`}>
-              <div className="flex items-stretch min-w-max px-2 py-1.5 gap-0" role="tablist" aria-label="Dashboard views">
-                {TAB_GROUPS.map((group, gi) => (
-                  <React.Fragment key={group.label}>
-                    {gi > 0 && (
-                      <div className={`mx-2 my-2 w-px self-stretch ${dark ? "bg-slate-700/60" : "bg-slate-200"}`} />
-                    )}
-                    <div className="flex flex-col">
-                      <span className={`px-3 pt-1.5 pb-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${dark ? "text-slate-400" : "text-slate-500"}`}>
-                        {group.label}
-                      </span>
-                      <div className="flex items-center gap-0.5">
-                        {group.tabs.map((tab) => (
-                          <button
-                            key={tab}
-                            role="tab"
-                            aria-selected={activeTab === tab}
-                            aria-controls={`panel-${tab.replace(/\s+/g, "-").toLowerCase()}`}
-                            id={`tab-${tab.replace(/\s+/g, "-").toLowerCase()}`}
-                            onClick={() => setActiveTab(tab)}
-                            className={`relative rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-100 whitespace-nowrap ${
-                              activeTab === tab
-                                ? dark
-                                  ? "bg-slate-800 text-slate-100 shadow-inner shadow-white/5"
-                                  : "bg-slate-100 text-slate-800 shadow-sm shadow-slate-200/70"
-                                : dark
-                                  ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
-                                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
-                            }`}
-                          >
-                            {tab}
-                            {activeTab === tab && (
-                              <span className={`absolute bottom-0 left-2.5 right-2.5 h-0.5 rounded-full ${dark ? "bg-cyan-400" : "bg-blue-600"}`} />
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </React.Fragment>
-                ))}
+        <aside
+          className={`fixed inset-y-0 left-0 z-50 w-[20rem] max-w-[86vw] border-r px-5 py-5 transition-transform duration-300 lg:hidden ${
+            mobileNavOpen ? "translate-x-0" : "-translate-x-full"
+          } ${dark ? "border-slate-800 bg-slate-950" : "border-[#e3ddd0] bg-[#f6f1e7]"}`}
+          aria-label="Mobile workspace navigation"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className={`text-[10px] font-semibold uppercase tracking-[0.24em] ${dark ? "text-slate-500" : "text-slate-400"}`}>
+                Andwell
+              </p>
+              <h2 className={`mt-1 text-lg font-semibold ${dark ? "text-white" : "text-slate-950"}`}>
+                Growth Workspace
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen(false)}
+              className={`rounded-full p-2 ${dark ? "text-slate-400 hover:bg-slate-900 hover:text-white" : "text-slate-500 hover:bg-white hover:text-slate-900"}`}
+              aria-label="Close navigation"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <p className={`mt-3 text-sm leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>
+            Navigate the full planning workspace with a persistent grouped view structure.
+          </p>
+          <div className="mt-6 overflow-y-auto pb-10">
+            <NavRail dark={dark} activeTab={activeTab} onSelect={activateView} onClose={() => setMobileNavOpen(false)} />
+          </div>
+        </aside>
+
+        <div className={`flex min-h-screen min-w-0 flex-1 flex-col transition-all duration-300 ${showScenarioSidebar ? "xl:pr-[22rem]" : ""}`}>
+          <header
+            className={`sticky top-0 z-30 border-b backdrop-blur-xl ${
+              dark ? "border-slate-800 bg-slate-950/85" : "border-[#e4ddd1] bg-[#f7f5ef]/90"
+            }`}
+          >
+            <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+              <div className="flex min-w-0 items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setMobileNavOpen(true)}
+                  className={`inline-flex h-10 w-10 items-center justify-center rounded-2xl border lg:hidden ${
+                    dark ? "border-slate-800 bg-slate-900 text-slate-300" : "border-slate-200 bg-white text-slate-700"
+                  }`}
+                  aria-label="Open navigation"
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
+                <div className="min-w-0">
+                  <p className={`text-[11px] font-semibold uppercase tracking-[0.24em] ${dark ? "text-slate-500" : "text-slate-500"}`}>
+                    {activeView.section}
+                  </p>
+                  <p className={`truncate text-sm font-semibold ${dark ? "text-white" : "text-slate-950"}`}>
+                    {activeView.title}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowScenarioSidebar(true)}
+                  className={actionButtonClass}
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                  <span className="hidden sm:inline">Scenario controls</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={toggle}
+                  className={actionButtonClass}
+                  aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+                  title={dark ? "Switch to light mode" : "Switch to dark mode"}
+                >
+                  {dark ? <SunMedium className="h-4 w-4" /> : <MoonStar className="h-4 w-4" />}
+                  <span className="hidden sm:inline">{dark ? "Light" : "Dark"}</span>
+                </button>
               </div>
             </div>
+          </header>
 
-            <div className="flex justify-end">
-              <details className="relative">
-                <summary className={`flex cursor-pointer list-none items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition ${dark ? "border-slate-700 bg-slate-900 text-slate-400 hover:text-slate-200" : "border-slate-200 bg-white text-slate-700 hover:text-slate-900"}`}>
-                  <MoreHorizontal className="h-4 w-4" />
-                  Page actions
-                </summary>
-                <div className={`absolute right-0 z-40 mt-2 w-60 rounded-2xl border p-2 shadow-xl ${dark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"}`}>
-                  {financialActionPage && (
-                    <>
-                      <button onClick={() => { setShowCompare((p) => !p); if (showScenario) setShowScenario(false); }} className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium transition-colors ${dark ? "text-slate-300 hover:bg-slate-800" : "text-slate-700 hover:bg-slate-100"}`}>
-                        <ArrowRightLeft className="h-3.5 w-3.5" />
-                        {showCompare ? "Hide scenario comparison" : "Compare scenarios"}
-                      </button>
-                      <button onClick={() => { setShowScenario((p) => !p); if (showCompare) setShowCompare(false); }} className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium transition-colors ${dark ? "text-slate-300 hover:bg-slate-800" : "text-slate-700 hover:bg-slate-100"}`}>
-                        <SlidersHorizontal className="h-3.5 w-3.5" />
-                        {showScenario ? "Hide scenario model" : "Scenario model"}
-                      </button>
-                    </>
-                  )}
-                  <button onClick={() => setShowInsights((p) => !p)} className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-medium ${dark ? "text-slate-300 hover:bg-slate-800" : "text-slate-700 hover:bg-slate-100"}`}>
-                    <Sparkles className="h-3.5 w-3.5" />
-                    {showInsights ? "Hide insights" : `Insights${insightCount > 0 ? ` (${insightCount})` : ""}`}
-                  </button>
-                  {exportActionPage && (
-                    <div className={`mt-1 border-t pt-2 ${dark ? "border-slate-800" : "border-slate-100"}`}>
-                      <div className="flex items-center gap-2 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                        <Download className="h-3.5 w-3.5" />
-                        Export
-                      </div>
-                      <div className="px-2 py-1">
-                        <ExportButton targetId="tab-content" filename={`Andwell - ${activeTab}`} />
-                      </div>
+          <main className="flex-1 px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+            <div className="mx-auto max-w-7xl space-y-4">
+              <div className="print:hidden">
+                <DataSourceBanner />
+              </div>
+
+              <section
+                className={`rounded-[30px] border px-5 py-5 shadow-[0_28px_70px_-40px_rgba(15,23,42,0.35)] transition-colors sm:px-6 sm:py-6 ${
+                  dark ? "border-slate-800 bg-slate-900/90" : "border-[#e5ded2] bg-white/90"
+                }`}
+              >
+                <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <ContextChip dark={dark} tone="accent">{activeView.section}</ContextChip>
+                      {COUNTY_CONTEXT_VIEWS.has(activeTab) && <ContextChip dark={dark}>{selectedCounty} County</ContextChip>}
+                      {!scenarioIsDefault && <ContextChip dark={dark} tone="warning">Custom scenario active</ContextChip>}
                     </div>
-                  )}
-                  {!financialActionPage && !exportActionPage && (
-                    <p className={`px-3 py-2 text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>No page actions for this view.</p>
-                  )}
+                    <div className="mt-4">
+                      <p className={`text-[11px] font-semibold uppercase tracking-[0.24em] ${dark ? "text-slate-500" : "text-slate-500"}`}>
+                        Andwell Maine Growth Plan
+                      </p>
+                      <h1 className={`mt-2 text-3xl font-semibold tracking-tight sm:text-[2.2rem] ${dark ? "text-white" : "text-slate-950"}`}>
+                        {activeView.title}
+                      </h1>
+                      <p className={`mt-3 max-w-3xl text-sm leading-6 sm:text-[15px] ${dark ? "text-slate-400" : "text-slate-600"}`}>
+                        {activeView.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 xl:max-w-[30rem] xl:justify-end">
+                    {financialActionPage && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowCompare((prev) => !prev);
+                          if (showScenario) setShowScenario(false);
+                        }}
+                        className={actionButtonClass}
+                      >
+                        <ArrowRightLeft className="h-4 w-4" />
+                        {showCompare ? "Hide comparison" : "Compare scenarios"}
+                      </button>
+                    )}
+                    {financialActionPage && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowScenario((prev) => !prev);
+                          if (showCompare) setShowCompare(false);
+                        }}
+                        className={actionButtonClass}
+                      >
+                        <SlidersHorizontal className="h-4 w-4" />
+                        {showScenario ? "Hide model" : "Scenario model"}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowInsights((prev) => !prev)}
+                      className={actionButtonClass}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      {showInsights ? "Hide insights" : `Insights${insightCount > 0 ? ` (${insightCount})` : ""}`}
+                    </button>
+                    {exportActionPage && (
+                      <ExportButton
+                        targetId="tab-content"
+                        filename={`Andwell - ${activeTab}`}
+                        variant="outline"
+                        className={dark ? "rounded-full border-slate-700 bg-slate-900/90 text-slate-300 hover:bg-slate-800 hover:text-white" : "rounded-full border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900"}
+                      />
+                    )}
+                  </div>
                 </div>
-              </details>
-            </div>
-          </div>
+              </section>
 
-          {showScenario && (
-            <div className="print:hidden">
-              <ScenarioPanel
-                scenario={scenario}
-                setScenario={setScenario}
-                onApplyScenario={handleApplyScenario}
-                onNavigate={handleNavigate}
-              />
-            </div>
-          )}
-          {showCompare && <div className="print:hidden"><ScenarioCompare currentScenario={scenario} /></div>}
-          {showInsights && (
-            <div className="print:hidden">
-              <InsightsPanel insights={insights} onActionClick={handleNavigate} />
-            </div>
-          )}
+              {showScenario && (
+                <div className="print:hidden">
+                  <ScenarioPanel
+                    scenario={scenario}
+                    setScenario={setScenario}
+                    onApplyScenario={handleApplyScenario}
+                    onNavigate={handleNavigate}
+                  />
+                </div>
+              )}
+              {showCompare && <div className="print:hidden"><ScenarioCompare currentScenario={scenario} /></div>}
+              {showInsights && (
+                <div className="print:hidden">
+                  <InsightsPanel insights={insights} onActionClick={handleNavigate} />
+                </div>
+              )}
 
-          <div id="tab-content">
-            <div
-              key={activeTab}
-              className="tab-fade-in"
-              role="tabpanel"
-              id={`panel-${activeTab.replace(/\s+/g, "-").toLowerCase()}`}
-              aria-labelledby={`tab-${activeTab.replace(/\s+/g, "-").toLowerCase()}`}
-            >
-              {activeTab === "Executive View" && <ExecutiveView rows={rows} totals={totals} />}
-              {activeTab === "County Plan" && <CountyPlan rows={rows} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} competitorProviderType={competitorProviderType} setCompetitorProviderType={setCompetitorProviderType} mapLayer={mapLayer} setMapLayer={setMapLayer} />}
-              {activeTab === "Referral Plan" && <ReferralPlan rows={rows} />}
-              {activeTab === "Competitive View" && <CompetitiveView selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} competitorProviderType={competitorProviderType} setCompetitorProviderType={setCompetitorProviderType} />}
-              {activeTab === "Market Dynamics" && <MarketDynamicsView setActiveTab={setActiveTab} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} />}
-              {activeTab === "CMS Data" && <CmsData />}
-              {activeTab === "Financial Model" && <FinancialModel rows={rows} />}
-              {activeTab === "Staffing Model" && <StaffingModel rows={rows} />}
-              {activeTab === "Sensitivity" && <SensitivityAnalysis rows={rows} />}
-              {activeTab === "Opportunity Score" && <OpportunityScore rows={rows} />}
-              {activeTab === "Launch Timeline"   && <LaunchTimeline rows={rows} />}
-              {activeTab === "Board Report"      && <BoardReport rows={rows} totals={totals} />}
-              {activeTab === "Launch Checklist"  && <LaunchChecklist />}
+              <div id="tab-content">
+                <div key={activeTab} className="tab-fade-in">
+                  {renderActiveView()}
+                </div>
+              </div>
             </div>
-          </div>
+          </main>
         </div>
       </div>
 
-      <AskPanel rows={rows} totals={totals} activeTab={activeTab} selectedCounty={selectedCounty} mapLayer={mapLayer} competitorProviderType={competitorProviderType} />
-
-      {/* ── Scenario sidebar toggle ── */}
-      <button
-        onClick={() => setShowScenarioSidebar((p) => !p)}
-        className={`fixed right-0 top-1/2 z-50 -translate-y-1/2 print:hidden transition-all duration-300 ${showScenarioSidebar ? "translate-x-80" : "translate-x-0"}`}
-        aria-label="Open scenario controls"
-        title="Scenario controls"
-      >
-        <div className={`flex flex-col items-center justify-center gap-1.5 rounded-l-xl px-2 py-4 shadow-lg border-y border-l transition-colors duration-200 ${
-          showScenarioSidebar
-            ? dark ? "bg-blue-900 border-blue-700 text-blue-200" : "bg-blue-700 border-blue-600 text-white"
-            : dark ? "bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-200" : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
-        }`}>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
-            <path fillRule="evenodd" d="M7.84 1.804A1 1 0 018.82 1h2.36a1 1 0 01.98.804l.331 1.652a6.993 6.993 0 011.929 1.115l1.598-.54a1 1 0 011.186.447l1.18 2.044a1 1 0 01-.205 1.251l-1.267 1.036a7.05 7.05 0 010 2.28l1.267 1.036a1 1 0 01.205 1.251l-1.18 2.044a1 1 0 01-1.186.447l-1.598-.54a6.993 6.993 0 01-1.929 1.115l-.331 1.652a1 1 0 01-.98.804H8.82a1 1 0 01-.98-.804l-.331-1.652a6.993 6.993 0 01-1.929-1.115l-1.598.54a1 1 0 01-1.186-.447l-1.18-2.044a1 1 0 01.205-1.251l1.267-1.036a7.05 7.05 0 010-2.28L.954 6.743a1 1 0 01-.205-1.251l1.18-2.044a1 1 0 011.186-.447l1.598.54a6.993 6.993 0 011.929-1.115l.331-1.652zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-          </svg>
-          <span className="text-[10px] font-medium uppercase tracking-widest" style={{ writingMode: "vertical-rl", textOrientation: "mixed", transform: "rotate(180deg)" }}>
-            Scenario
-          </span>
-        </div>
-      </button>
+      <AskPanel
+        rows={rows}
+        totals={totals}
+        activeTab={activeTab}
+        selectedCounty={selectedCounty}
+        mapLayer={mapLayer}
+        competitorProviderType={competitorProviderType}
+        scenarioOpen={showScenarioSidebar}
+      />
 
       <ScenarioSidebar
         scenario={scenario}

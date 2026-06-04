@@ -81,17 +81,23 @@ const SUGGESTED_QUESTIONS = {
 
 const SOURCE_FOOTNOTE = "Based on CMS 2022 PUF · Andwell planning assumptions · May 2026 model";
 
-export default function AskPanel({ rows, totals, activeTab, selectedCounty, mapLayer, competitorProviderType }) {
+export default function AskPanel({
+  rows,
+  totals,
+  activeTab,
+  selectedCounty,
+  mapLayer,
+  competitorProviderType,
+  scenarioOpen = false,
+}) {
   const { dark } = useDarkMode();
   const [open, setOpen] = useState(false);
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState([]);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
-  const [pulseKey, setPulseKey] = useState(0);
   const abortRef = useRef(null);
   const threadRef = useRef(null);
-  const prevTabRef = useRef(activeTab);
 
   const intelMap = useMemo(() => {
     const counties = [...new Set(rows.map((r) => r.county))];
@@ -99,62 +105,61 @@ export default function AskPanel({ rows, totals, activeTab, selectedCounty, mapL
   }, [rows]);
 
   useEffect(() => {
-    if (activeTab !== prevTabRef.current) {
-      prevTabRef.current = activeTab;
-      setPulseKey((k) => k + 1);
-    }
-  }, [activeTab]);
-
-  useEffect(() => {
     if (threadRef.current) {
       threadRef.current.scrollTop = threadRef.current.scrollHeight;
     }
   }, [messages, generating]);
 
-  const runQuery = useCallback((q) => {
-    if (!q.trim() || generating) return;
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
+  const runQuery = useCallback(
+    (q) => {
+      if (!q.trim() || generating) return;
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
 
-    const userMsg = { role: "user", content: q };
-    setMessages((prev) => [...prev, userMsg, { role: "assistant", content: "", streaming: true }]);
-    setError(null);
-    setGenerating(true);
-    setQuestion("");
+      const userMsg = { role: "user", content: q };
+      setMessages((prev) => [...prev, userMsg, { role: "assistant", content: "", streaming: true }]);
+      setError(null);
+      setGenerating(true);
+      setQuestion("");
 
-    streamChat({
-      messages: buildAskPrompt(q, rows, totals, intelMap, selectedCounty, { activeTab, mapLayer, competitorProviderType }),
-      signal: controller.signal,
-      onChunk: (_, full) => {
-        setMessages((prev) => {
-          const updated = [...prev];
-          updated[updated.length - 1] = { role: "assistant", content: full, streaming: true };
-          return updated;
-        });
-      },
-      onDone: () => {
-        setMessages((prev) => {
-          const updated = [...prev];
-          updated[updated.length - 1] = { ...updated[updated.length - 1], streaming: false };
-          return updated;
-        });
-        setGenerating(false);
-      },
-      onError: (err) => {
-        setError(err.message);
-        setMessages((prev) => prev.slice(0, -1));
-        setGenerating(false);
-      },
-    });
-  }, [rows, totals, intelMap, selectedCounty, activeTab, mapLayer, competitorProviderType, generating]);
+      streamChat({
+        messages: buildAskPrompt(q, rows, totals, intelMap, selectedCounty, { activeTab, mapLayer, competitorProviderType }),
+        signal: controller.signal,
+        onChunk: (_, full) => {
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1] = { role: "assistant", content: full, streaming: true };
+            return updated;
+          });
+        },
+        onDone: () => {
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1] = { ...updated[updated.length - 1], streaming: false };
+            return updated;
+          });
+          setGenerating(false);
+        },
+        onError: (err) => {
+          setError(err.message);
+          setMessages((prev) => prev.slice(0, -1));
+          setGenerating(false);
+        },
+      });
+    },
+    [rows, totals, intelMap, selectedCounty, activeTab, mapLayer, competitorProviderType, generating],
+  );
 
   const handleAsk = useCallback(() => runQuery(question), [question, runQuery]);
 
-  const handleChip = useCallback((q) => {
-    setQuestion(q);
-    runQuery(q);
-  }, [runQuery]);
+  const handleChip = useCallback(
+    (q) => {
+      setQuestion(q);
+      runQuery(q);
+    },
+    [runQuery],
+  );
 
   const handleNewConversation = useCallback(() => {
     abortRef.current?.abort();
@@ -176,63 +181,61 @@ export default function AskPanel({ rows, totals, activeTab, selectedCounty, mapL
     : "prose prose-sm max-w-none prose-p:text-slate-700 prose-strong:text-slate-900 prose-li:text-slate-700 prose-headings:text-slate-900";
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 print:hidden">
+    <div
+      className={`fixed bottom-5 z-50 print:hidden transition-all duration-300 ${
+        scenarioOpen ? "right-5 xl:right-[24rem]" : "right-5"
+      }`}
+    >
       {open ? (
         <div
-          className={`flex w-[27rem] flex-col overflow-hidden rounded-[24px] border shadow-2xl backdrop-blur-sm ${
-            dark ? "border-slate-700/80 bg-slate-900/95" : "border-slate-200 bg-white/95 shadow-slate-200/70"
+          className={`flex w-[23rem] flex-col overflow-hidden rounded-[26px] border shadow-[0_32px_80px_-36px_rgba(15,23,42,0.55)] backdrop-blur-xl sm:w-[24rem] ${
+            dark ? "border-slate-700/80 bg-slate-900/96" : "border-[#ddd6c7] bg-white/96"
           }`}
         >
           <div
             className={`flex items-center justify-between border-b px-4 py-3 ${
-              dark ? "border-slate-700 bg-gradient-to-r from-violet-500/10 to-transparent" : "border-slate-100 bg-gradient-to-r from-violet-50 to-white"
+              dark
+                ? "border-slate-700 bg-gradient-to-r from-emerald-500/10 via-transparent to-transparent"
+                : "border-[#efe8db] bg-gradient-to-r from-emerald-50 via-white to-white"
             }`}
           >
-            <div className="flex items-center gap-2 min-w-0">
-              <span
-                className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${
-                  dark ? "bg-violet-700 text-violet-100" : "bg-violet-600 text-white"
-                }`}
-              >
-                AI
-              </span>
-              <span className={`text-sm font-semibold truncate ${dark ? "text-white" : "text-slate-900"}`}>
-                Ask the data
-                <span className={`ml-1.5 font-semibold ${dark ? "text-violet-400" : "text-violet-600"}`}>
-                  — {tabLabel}
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] ${
+                    dark ? "bg-emerald-500/15 text-emerald-300" : "bg-emerald-100 text-emerald-700"
+                  }`}
+                >
+                  AI
                 </span>
-              </span>
-              {generating && (
-                <span className="inline-flex items-center gap-0.5 shrink-0">
-                  {[0, 1, 2].map((i) => (
-                    <span
-                      key={i}
-                      className="inline-block h-1.5 w-1.5 rounded-full bg-violet-400 animate-bounce"
-                      style={{ animationDelay: `${i * 0.15}s` }}
-                    />
-                  ))}
+                <span className={`truncate text-sm font-semibold ${dark ? "text-white" : "text-slate-950"}`}>
+                  Ask the data
                 </span>
-              )}
+              </div>
+              <p className={`mt-1 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>
+                {tabLabel}
+              </p>
             </div>
-            <div className="flex items-center gap-1 shrink-0">
+
+            <div className="ml-3 flex items-center gap-1">
               {hasConversation && (
                 <button
                   onClick={handleNewConversation}
-                  className={`rounded-lg px-2 py-1 text-xs font-semibold transition ${
-                    dark ? "text-slate-400 hover:text-violet-300 hover:bg-slate-800" : "text-slate-500 hover:text-violet-600 hover:bg-violet-50"
+                  className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
+                    dark ? "text-slate-400 hover:bg-slate-800 hover:text-emerald-300" : "text-slate-500 hover:bg-slate-100 hover:text-emerald-700"
                   }`}
                 >
-                  New conversation
+                  Reset
                 </button>
               )}
               <button
                 onClick={() => setOpen(false)}
-                className={`rounded-lg p-1 text-sm transition ${
-                  dark ? "text-slate-400 hover:text-white" : "text-slate-400 hover:text-slate-900"
+                className={`rounded-full p-1.5 transition ${
+                  dark ? "text-slate-400 hover:bg-slate-800 hover:text-white" : "text-slate-400 hover:bg-slate-100 hover:text-slate-900"
                 }`}
                 aria-label="Close Ask the data panel"
               >
-                ✕
+                <CloseIcon />
               </button>
             </div>
           </div>
@@ -245,10 +248,10 @@ export default function AskPanel({ rows, totals, activeTab, selectedCounty, mapL
                     key={q}
                     onClick={() => handleChip(q)}
                     disabled={generating}
-                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition text-left ${
+                    className={`rounded-full border px-3 py-1.5 text-left text-xs font-medium transition ${
                       dark
-                        ? "border-violet-800/60 bg-violet-950/30 text-violet-300 hover:bg-violet-900/40 hover:border-violet-700 disabled:opacity-40"
-                        : "border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100 hover:border-violet-300 disabled:opacity-40"
+                        ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/15 disabled:opacity-40"
+                        : "border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 disabled:opacity-40"
                     }`}
                   >
                     {q}
@@ -258,24 +261,21 @@ export default function AskPanel({ rows, totals, activeTab, selectedCounty, mapL
             )}
 
             {hasConversation && (
-              <div
-                ref={threadRef}
-                className="flex flex-col gap-3 max-h-72 overflow-y-auto pr-1"
-              >
+              <div ref={threadRef} className="flex max-h-72 flex-col gap-3 overflow-y-auto pr-1">
                 {visibleMessages.map((msg, i) => (
                   <div key={i} className={msg.role === "user" ? "flex justify-end" : ""}>
                     {msg.role === "user" ? (
                       <div
-                        className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${
-                          dark ? "bg-violet-700 text-white" : "bg-violet-600 text-white"
+                        className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
+                          dark ? "bg-emerald-600 text-white" : "bg-emerald-700 text-white"
                         }`}
                       >
                         {msg.content}
                       </div>
                     ) : (
                       <div
-                        className={`rounded-xl border px-3 py-2.5 ${
-                          dark ? "border-violet-800/50 bg-violet-950/30" : "border-violet-200 bg-violet-50"
+                        className={`rounded-2xl border px-3 py-2.5 ${
+                          dark ? "border-slate-700 bg-slate-950/70" : "border-[#ece4d6] bg-[#fbf8f2]"
                         }`}
                       >
                         <div className={`text-sm leading-6 ${proseClass}`}>
@@ -283,7 +283,7 @@ export default function AskPanel({ rows, totals, activeTab, selectedCounty, mapL
                             <>
                               <ReactMarkdown>{msg.content}</ReactMarkdown>
                               {msg.streaming && (
-                                <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-violet-400" />
+                                <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-emerald-500" />
                               )}
                             </>
                           ) : (
@@ -291,9 +291,11 @@ export default function AskPanel({ rows, totals, activeTab, selectedCounty, mapL
                           )}
                         </div>
                         {!msg.streaming && msg.content && (
-                          <p className={`mt-2 border-t pt-1.5 text-[10px] italic ${
-                            dark ? "border-violet-800/40 text-violet-600" : "border-violet-200 text-violet-400"
-                          }`}>
+                          <p
+                            className={`mt-2 border-t pt-1.5 text-[10px] italic ${
+                              dark ? "border-slate-700 text-slate-500" : "border-[#ece4d6] text-slate-400"
+                            }`}
+                          >
                             {SOURCE_FOOTNOTE}
                           </p>
                         )}
@@ -305,14 +307,14 @@ export default function AskPanel({ rows, totals, activeTab, selectedCounty, mapL
             )}
 
             {error && (
-              <p className={`rounded-lg px-3 py-2 text-xs ${dark ? "bg-red-950/30 text-red-400" : "bg-red-50 text-red-600"}`}>
+              <p className={`rounded-xl px-3 py-2 text-xs ${dark ? "bg-red-950/30 text-red-400" : "bg-red-50 text-red-600"}`}>
                 {error}
               </p>
             )}
 
             <div
-              className={`flex items-center gap-1 rounded-xl border ${
-                dark ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-slate-50"
+              className={`flex items-center gap-1 rounded-2xl border ${
+                dark ? "border-slate-700 bg-slate-800" : "border-[#e6dfd1] bg-[#f8f5ee]"
               }`}
             >
               <input
@@ -320,7 +322,7 @@ export default function AskPanel({ rows, totals, activeTab, selectedCounty, mapL
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAsk()}
-                placeholder={hasConversation ? "Follow up…" : "Ask anything about the data…"}
+                placeholder={hasConversation ? "Follow up..." : "Ask anything about the data..."}
                 className={`flex-1 bg-transparent px-3 py-2.5 text-sm outline-none ${
                   dark ? "text-white placeholder-slate-500" : "text-slate-900 placeholder-slate-400"
                 }`}
@@ -329,34 +331,37 @@ export default function AskPanel({ rows, totals, activeTab, selectedCounty, mapL
               <button
                 onClick={handleAsk}
                 disabled={!question.trim() || generating}
-                className="mr-1 rounded-lg bg-violet-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-violet-500 disabled:opacity-40"
+                className="mr-1 rounded-xl bg-emerald-700 px-3 py-2 text-sm font-medium text-white transition hover:bg-emerald-600 disabled:opacity-40"
               >
-                →
+                Ask
               </button>
             </div>
 
             <p className={`text-[10px] ${dark ? "text-slate-600" : "text-slate-400"}`}>
-              AI · Not verified advice
+              AI summary support only. Not verified advice.
             </p>
           </div>
         </div>
       ) : (
         <button
-          key={pulseKey}
           onClick={() => setOpen(true)}
-          className={`ask-panel-pulse flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium shadow-xl transition hover:-translate-y-0.5 ${
+          className={`flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-medium shadow-[0_24px_60px_-36px_rgba(15,23,42,0.5)] transition hover:-translate-y-0.5 ${
             dark
-              ? "border-violet-500/25 bg-slate-950/95 text-white shadow-violet-900/30 hover:border-violet-400/35"
-              : "border-violet-200 bg-white/95 text-slate-900 shadow-violet-200/60 hover:border-violet-300"
+              ? "border-slate-700 bg-slate-950/95 text-white hover:border-emerald-500/25"
+              : "border-[#ddd6c7] bg-white/95 text-slate-900 hover:border-emerald-200"
           }`}
         >
-          <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${
-            dark ? "bg-violet-500/20 text-violet-300" : "bg-violet-100 text-violet-700"
-          }`}>
+          <span
+            className={`flex h-9 w-9 items-center justify-center rounded-xl ${
+              dark ? "bg-emerald-500/15 text-emerald-300" : "bg-emerald-100 text-emerald-700"
+            }`}
+          >
             <SparklesIcon />
           </span>
           <span className="flex flex-col items-start leading-tight">
-            <span className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${dark ? "text-violet-300" : "text-violet-600"}`}>AI Assistant</span>
+            <span className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${dark ? "text-slate-400" : "text-slate-500"}`}>
+              AI Workspace
+            </span>
             <span>Ask the data</span>
           </span>
         </button>
@@ -369,6 +374,14 @@ function SparklesIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4.5 w-4.5">
       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l.767 2.36a1 1 0 00.95.69h2.48c.969 0 1.371 1.24.588 1.81l-2.006 1.458a1 1 0 00-.364 1.118l.766 2.36c.3.922-.755 1.688-1.538 1.118l-2.006-1.458a1 1 0 00-1.176 0l-2.006 1.458c-.783.57-1.838-.196-1.539-1.118l.767-2.36a1 1 0 00-.363-1.118L4.264 7.787c-.783-.57-.38-1.81.588-1.81h2.48a1 1 0 00.95-.69l.767-2.36z" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+      <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
     </svg>
   );
 }
