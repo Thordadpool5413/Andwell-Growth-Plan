@@ -65,7 +65,7 @@ function HomeHealthQualityTab({ dark }) {
         <div className={`overflow-x-auto rounded-xl border ${dark ? "border-slate-700" : "border-slate-200"}`}>
           <table className="w-full min-w-[1050px] text-left text-sm">
             <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700"}`}>
-              <tr><th className="px-4 py-3">Provider</th><th className="px-4 py-3">CCN</th><th className="px-4 py-3">County</th><th className="px-4 py-3">Address</th><th className="px-4 py-3 text-right">Star</th><th className="px-4 py-3 text-right">Timely care</th><th className="px-4 py-3 text-right">Walking improved</th><th className="px-4 py-3">Source</th></tr>
+              <tr><th className="px-4 py-3">Provider</th><th className="px-4 py-3">CCN</th><th className="px-4 py-3">County</th><th className="px-4 py-3">Address</th><th className="px-4 py-3 text-right">Star rating</th><th className="px-4 py-3 text-right">Timely care</th><th className="px-4 py-3 text-right">Walking improvement</th><th className="px-4 py-3">Benchmark</th></tr>
             </thead>
             <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-slate-200"}`}>
               {[...data].sort((a, b) => (b.star_rating || 0) - (a.star_rating || 0)).map((row) => (
@@ -105,7 +105,7 @@ function HhcahpsTab({ dark }) {
         <div className={`overflow-x-auto rounded-xl border ${dark ? "border-slate-700" : "border-slate-200"}`}>
           <table className="w-full min-w-[1000px] text-left text-sm">
             <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700"}`}>
-              <tr><th className="px-4 py-3">Provider</th><th className="px-4 py-3">CCN</th><th className="px-4 py-3">County</th><th className="px-4 py-3 text-right">Summary star</th><th className="px-4 py-3 text-right">Professional care</th><th className="px-4 py-3 text-right">Communication</th><th className="px-4 py-3 text-right">Overall care</th><th className="px-4 py-3 text-right">Recommend</th><th className="px-4 py-3">Source</th></tr>
+              <tr><th className="px-4 py-3">Provider</th><th className="px-4 py-3">CCN</th><th className="px-4 py-3">County</th><th className="px-4 py-3 text-right">Summary star</th><th className="px-4 py-3 text-right">Professional care</th><th className="px-4 py-3 text-right">Communication</th><th className="px-4 py-3 text-right">Overall care</th><th className="px-4 py-3 text-right">Recommend %</th><th className="px-4 py-3">Note</th></tr>
             </thead>
             <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-slate-200"}`}>
               {[...data].sort((a, b) => (b.summary_star_rating || 0) - (a.summary_star_rating || 0)).map((row) => (
@@ -153,7 +153,7 @@ function HHVBPTab({ dark }) {
         <div className={`overflow-x-auto rounded-xl border ${dark ? "border-slate-700" : "border-slate-200"}`}>
           <table className="w-full min-w-[1100px] text-left text-sm">
             <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700"}`}>
-              <tr><th className="px-4 py-3">Agency</th><th className="px-4 py-3">CCN</th><th className="px-4 py-3">County</th><th className="px-4 py-3 text-right">Score</th><th className="px-4 py-3">Measure basis</th><th className="px-4 py-3">Reporting period</th><th className="px-4 py-3">Source</th></tr>
+              <tr><th className="px-4 py-3">Agency</th><th className="px-4 py-3">CCN</th><th className="px-4 py-3">County</th><th className="px-4 py-3 text-right">Score</th><th className="px-4 py-3">Measure type</th><th className="px-4 py-3">Period</th><th className="px-4 py-3">Source</th></tr>
             </thead>
             <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-slate-200"}`}>
               {data.map((row) => {
@@ -195,8 +195,8 @@ function HospiceCahpsTab({ dark }) {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className={`font-semibold ${dark ? "text-slate-100" : "text-slate-900"}`}>{row.provider_name}</p>
-                      <p className={`mt-1 text-xs ${dark ? "text-slate-300" : "text-slate-600"}`}>CCN {row.ccn} · {row.county || profile?.county || "No county assignment"} · {profile?.address || "Address unavailable"}</p>
-                      <p className={`mt-1 text-xs ${dark ? "text-slate-300" : "text-slate-600"}`}>{profile?.classification || "Unknown classification"} · {profile?.classification_confidence || "low"} confidence</p>
+                      <p className={`mt-1 text-xs ${dark ? "text-slate-300" : "text-slate-600"}`}>CCN {row.ccn} · {row.county || profile?.county || "No county assignment"} · {profile?.address || "-"}</p>
+                      <p className={`mt-1 text-xs ${dark ? "text-slate-300" : "text-slate-600"}`}>{profile?.classification || "Unknown classification"} · {profile?.classification_confidence || "unknown"} confidence</p>
                     </div>
                     <Badge tone="green">{measures.length} measures</Badge>
                   </div>
@@ -242,9 +242,9 @@ function CatalogTab({ dark }) {
       <Card title="Data source status" eyebrow="CMS and HRSA registry">
         <div className={`overflow-x-auto rounded-xl border ${dark ? "border-slate-700" : "border-slate-200"}`}>
           <table className="w-full min-w-[900px] text-left text-sm">
-            <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700"}`}><tr><th className="px-4 py-3">Dataset</th><th className="px-4 py-3">Program</th><th className="px-4 py-3">Identifier</th><th className="px-4 py-3 text-right">Maine records</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Purpose</th></tr></thead>
+            <thead className={`text-xs uppercase tracking-wide ${dark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700"}`}><tr><th className="px-4 py-3">Dataset</th><th className="px-4 py-3">Endpoint</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Last synced</th></tr></thead>
             <tbody className={`divide-y ${dark ? "divide-slate-700" : "divide-slate-200"}`}>
-              {[...sources, hrsa].filter(Boolean).map((source) => <tr key={source.identifier || source.name}><td className="px-4 py-3 font-semibold">{source.name}</td><td className="px-4 py-3">{source.program}</td><td className="px-4 py-3 font-mono text-xs">{source.identifier || "HRSA ArcGIS"}</td><td className="px-4 py-3 text-right tabular-nums">{source.maine_records ?? "Configured"}</td><td className="px-4 py-3"><Badge tone={source.status === "loaded" ? "green" : "amber"}>{source.status}</Badge></td><td className="px-4 py-3">{source.purpose}</td></tr>)}
+              {[...sources, hrsa].filter(Boolean).map((source) => <tr key={source.identifier || source.name}><td className="px-4 py-3 font-semibold">{source.name}</td><td className="px-4 py-3 font-mono text-xs">{source.endpoint || source.identifier || "-"}</td><td className="px-4 py-3"><Badge tone={source.status === "active" ? "green" : "amber"}>{source.status}</Badge></td><td className="px-4 py-3 text-xs">{source.synced_at || "-"}</td></tr>)}
             </tbody>
           </table>
         </div>
@@ -268,12 +268,10 @@ export default function CmsData() {
     <div className="space-y-6">
       <SectionHeader eyebrow="CMS data" title="Provider-level CMS, CAHPS, HHVBP, and HRSA evidence">
         Provider, quality, HHCAHPS, HHVBP, Hospice CAHPS, HRSA facility, and benchmark records are bundled into the dashboard experience and load when the page opens.
-      <SectionHeader eyebrow="CMS data" title="County-level Medicare market data and quality benchmarks">
-        CMS, HRSA, provider, quality, HHCAHPS, HHVBP, hospice CAHPS, and benchmark records are bundled into the dashboard experience and load when the page opens.
       </SectionHeader>
       <div className="flex items-center gap-2 flex-wrap"><FreshnessChip lastSynced={generatedDate()} label="CMS/HRSA data" syncType="Generated source registry" /><Badge tone="green">Loaded on page open</Badge></div>
       <div className="flex flex-wrap gap-2">
-        {tabs.map((tab) => <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`rounded-xl px-5 py-2 text-sm font-semibold transition ${activeTab === tab.id ? "bg-blue-600 text-white" : dark ? "bg-slate-800 text-slate-200 ring-1 ring-slate-600 hover:bg-slate-700" : "bg-white text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50"}`}>{tab.label}</button>)}
+        {tabs.map((tab) => <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`rounded-xl px-5 py-2 text-sm font-semibold transition ${activeTab === tab.id ? "bg-blue-600 text-white" : dark ? "bg-slate-800 text-slate-300 hover:bg-slate-700" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>{tab.label}</button>)}
       </div>
       {activeTab === "quality" && <HomeHealthQualityTab dark={dark} />}
       {activeTab === "hhcahps" && <HhcahpsTab dark={dark} />}
