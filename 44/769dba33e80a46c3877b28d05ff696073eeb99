@@ -1,0 +1,32 @@
+src/components/ExportButton.jsx
+  s_e3540d5e18be27::t_0b7e58c60278b2 16-22,61-62,65
+src/components/SmartScenarioCard.jsx
+  s_e3540d5e18be27::t_fbb48cc01c0c1d 28,31,41,92,107
+src/App.jsx
+  s_e3540d5e18be27::t_a6b5d578311bcc 412
+  s_e3540d5e18be27::t_a4e5dd378d5aca 27-47,49-147,150-249,285,328-337,344-355,365,370-378,380-411,413-440,443-457,459-461,464-471,473-488,490-493,496-497,500-584,587-618,620-631,633-644,646-663,665,667-688,690,694-702
+src/components/AiBadge.jsx
+  s_e3540d5e18be27::t_d8a149812439a7 8,11,14,20,30,39
+src/components/ScenarioSidebar.jsx
+  s_e3540d5e18be27::t_0fe900e5993391 125,134,136-137,144-150,152,156,185,193,270,279,305-306
+src/index.css
+  s_e3540d5e18be27::t_2690a2833224bb 1-2,9,11,17-18,20-21,33,35,39-40,57,64-65,70,85-87
+src/components/AskPanel.jsx
+  s_e3540d5e18be27::t_06d17c97d358b1 84-92,113-118,120-124,126-152,156-162,184-188,191-192,197-199,202-209,211-212,214-217,219-220,224-225,228,233-234,238,251,253-254,264,269-270,277-278,286,294-298,310,316-317,325,334,336,341,348,350-351,354-358,362-364,380-387
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "44769dba33e80a46c3877b28d05ff696073eeb99",
+  "prompts": {},
+  "sessions": {
+    "s_e3540d5e18be27": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e90a3-a51b-7252-9005-e366e766a2b5",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Thordadpool5413 <nick.lynch.coaching@outlook.com>"
+    }
+  }
+}
