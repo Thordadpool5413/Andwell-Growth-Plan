@@ -365,7 +365,9 @@ export function getMarketPenetration(county, rows) {
   const countyRows = rows.filter((r) => r.county === county);
   const y1Starts = countyRows.reduce((s, r) => s + r.starts[0], 0);
   const y3Starts = countyRows.reduce((s, r) => s + r.starts[2], 0);
-  const totalMarket = market.hh.users + market.hos.users;
+  const hasHomeHealth = countyRows.some((r) => r.service === "Home Healthcare");
+  const hasHospice = countyRows.some((r) => r.service === "Hospice");
+  const totalMarket = (hasHomeHealth ? market.hh.users : 0) + (hasHospice ? market.hos.users : 0);
 
   return {
     county,
@@ -474,7 +476,8 @@ export function getSensitivityAnalysis(rows) {
             if (row._reimbOverride) {
               const starts = result.starts;
               const revenue = starts.map((st) => st * overrideValue);
-              return { ...result, revenue, totalRevenue: revenue.reduce((a, b) => a + b, 0) };
+              const contributions = revenue.map((rev) => Math.round(rev * result.meta.margin));
+              return { ...result, revenue, totalRevenue: revenue.reduce((a, b) => a + b, 0), contributions, totalContribution: contributions.reduce((a, b) => a + b, 0) };
             }
             return result;
           });
@@ -490,7 +493,8 @@ export function getSensitivityAnalysis(rows) {
             if (row._reimbOverride) {
               const starts = result.starts;
               const revenue = starts.map((st) => st * overrideValue);
-              return { ...result, revenue, totalRevenue: revenue.reduce((a, b) => a + b, 0) };
+              const contributions = revenue.map((rev) => Math.round(rev * result.meta.margin));
+              return { ...result, revenue, totalRevenue: revenue.reduce((a, b) => a + b, 0), contributions, totalContribution: contributions.reduce((a, b) => a + b, 0) };
             }
             return result;
           });

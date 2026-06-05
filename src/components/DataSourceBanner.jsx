@@ -43,6 +43,9 @@ export default function DataSourceBanner() {
                   <span className="font-semibold">Market data:</span> CMS {cmsMeta.datasetYear} Home Health &amp; Hospice Public Use File (PUF) · Medicare Provider of Service File · County-level Fee-For-Service (FFS) beneficiary counts
                 </p>
                 <p>
+                  <span className="font-semibold">Coverage:</span> {cmsMeta.coverage.counties.length} of 16 Maine counties in CMS dataset. Missing: {cmsMeta.coverage.missingCounties.join(", ")}.
+                </p>
+                <p>
                   <span className="font-semibold">Methodology:</span> Referral math uses a 75% conversion baseline (NAHC 2023 industry median: 72–78%). Capture rates are internal Andwell planning assumptions (HH Y1: 10%, industry median range: 8–15%). Competitive scores are composite weighted averages across provider density, market share, and national chain presence. "Est." badges indicate figures derived from proxies, not direct CMS county data.
                 </p>
                 <p>

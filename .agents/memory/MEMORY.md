@@ -4,3 +4,4 @@
 - [MaineMap ReferenceError](mainemap-bug.md) — `providerProviderType` was called as a function but never defined; caused CountyPlan to crash on load.
 - [Dead code removal](audit-cleanup.md) — deleted ComparisonView, ServiceLines, SensitivityAnalysisEnhanced; fixed ExportButton, server console logs, added React.lazy code splitting.
 - [Expert audit](expert-audit.md) — ErrorBoundary, performance (transition-all), accessibility (skip links, focus mgmt), security (dead Google Maps key), touch targets.
+- [Data audit](data-audit.md) — CMS data is 2022 (not 2024), 4 counties missing, sensitivity analysis contribution bug fixed, Hospice $0 bug fixed, penetration denominator fixed.
