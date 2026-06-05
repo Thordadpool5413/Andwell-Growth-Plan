@@ -19,18 +19,51 @@ const app = express();
 app.use(express.json({ limit: "32kb" }));
 
 const ALLOWED_HOST_SUFFIXES = [".replit.dev", ".replit.app", ".repl.co", ".vercel.app"];
+const EXPLICIT_HOST_ENV_KEYS = ["ALLOWED_HOSTS", "PUBLIC_SITE_URL", "APP_URL", "HOSTINGER_DOMAIN", "HOSTINGER_DOMAINS", "VERCEL_URL"];
 
 function normalizeHost(hostHeader) {
   return (hostHeader || "").split(":")[0].toLowerCase();
 }
 
-function isAllowedHost(hostHeader) {
+function isLoopbackHost(host) {
+  return host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0";
+}
+
+function explicitAllowedHosts() {
+  return EXPLICIT_HOST_ENV_KEYS.flatMap((key) =>
+    String(process.env[key] || "")
+      .split(",")
+      .map((value) => {
+        const trimmed = value.trim();
+        if (!trimmed) return "";
+        try {
+          return normalizeHost(new URL(trimmed).host || trimmed);
+        } catch {
+          return normalizeHost(trimmed);
+        }
+      })
+      .filter(Boolean),
+  );
+}
+
+function isKnownPlatformHost(host) {
+  return ALLOWED_HOST_SUFFIXES.some((suffix) => host.endsWith(suffix));
+}
+
+function isPublicWebsiteHost(host) {
+  if (!host || isLoopbackHost(host)) return false;
+  if (host.startsWith(".") || host.endsWith(".") || host.includes("..")) return false;
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return false;
+  return host.includes(".");
+}
+
+function isAllowedRequestHost(hostHeader) {
   const bare = normalizeHost(hostHeader);
   if (!bare) return false;
-  if (bare === "localhost" || bare === "127.0.0.1" || bare === "0.0.0.0") return true;
-  if (ALLOWED_HOST_SUFFIXES.some((suffix) => bare.endsWith(suffix))) return true;
-  const extra = (process.env.ALLOWED_HOSTS || "").split(",").map((d) => normalizeHost(d.trim())).filter(Boolean);
-  return extra.includes(bare);
+  if (isLoopbackHost(bare)) return true;
+  if (isKnownPlatformHost(bare)) return true;
+  if (explicitAllowedHosts().includes(bare)) return true;
+  return isPublicWebsiteHost(bare);
 }
 
 const SESSION_TOKENS = new Map();
@@ -59,7 +92,7 @@ function verifyToken(token) {
 }
 
 app.get("/api/ai/token", (req, res) => {
-  if (!isAllowedHost(req.headers.host)) {
+  if (!isAllowedRequestHost(req.headers.host)) {
     res.status(403).json({ error: "Forbidden" });
     return;
   }
@@ -89,7 +122,8 @@ function rateLimit(req, res, next) {
 
 function strictOriginCheck(req, res, next) {
   const requestHost = req.headers.host;
-  if (!isAllowedHost(requestHost)) {
+  const normalizedRequestHost = normalizeHost(requestHost);
+  if (!isAllowedRequestHost(requestHost)) {
     res.status(403).json({ error: "Forbidden: host not allowed" });
     return;
   }
@@ -108,7 +142,11 @@ function strictOriginCheck(req, res, next) {
     return;
   }
 
-  const allowed = normalizeHost(originHost) === normalizeHost(requestHost) || isAllowedHost(originHost);
+  const normalizedOriginHost = normalizeHost(originHost);
+  const allowed =
+    normalizedOriginHost === normalizedRequestHost ||
+    (isLoopbackHost(normalizedOriginHost) && isLoopbackHost(normalizedRequestHost)) ||
+    explicitAllowedHosts().includes(normalizedOriginHost);
   if (!allowed) {
     res.status(403).json({ error: "Forbidden: cross-origin request denied" });
     return;

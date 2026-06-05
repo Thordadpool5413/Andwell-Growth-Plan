@@ -5,7 +5,7 @@ import cmsCountyMarket from "../data/cmsCountyMarket.js";
 import { getProviderSummary, getOpportunityScore, buildRows } from "../utils/calculations.js";
 import { percent, number } from "../utils/formatters.js";
 import { DEFAULT_SCENARIO } from "../data/constants.js";
-import { streamChat, buildMarketSummaryPrompt, AI_AVAILABLE } from "../utils/ai.js";
+import { streamChat, buildMarketSummaryPrompt, AI_AVAILABLE, getNodeApiToken } from "../utils/ai.js";
 import { MAINE_COUNTIES } from "../data/dashboardData.js";
 import { classifyProvider } from "../data/andwell.js";
 
@@ -51,10 +51,7 @@ function isNational(name) {
 
 async function getCmsToken() {
   try {
-    const r = await fetch("/api/ai/token");
-    if (!r.ok) return "";
-    const { token } = await r.json();
-    return token;
+    return await getNodeApiToken();
   } catch { return ""; }
 }
 

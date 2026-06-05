@@ -29,7 +29,7 @@ export default async function handler(req, res) {
 
   const { apiKey, baseUrl, model } = getOpenAiConfig();
   if (!apiKey) {
-    sendJson(res, 503, { success: false, error: "AI is not configured. Set OPENAI_API_KEY in Vercel environment variables." });
+    sendJson(res, 503, { success: false, error: "AI is not configured. Set OPENAI_API_KEY in the deployment environment." });
     return;
   }
 

@@ -2,20 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useDarkMode } from "./DarkModeContext.jsx";
 import VerificationBadge from "./VerificationBadge.jsx";
 import CmsAnalyzer from "./CmsAnalyzer.jsx";
-
-let _cachedCmsToken = null;
-let _cmsTokenFetchedAt = 0;
-const CMS_TOKEN_TTL = 3.5 * 60 * 60 * 1000;
+import { getNodeApiToken } from "../utils/ai.js";
 
 async function getCmsToken() {
-  const now = Date.now();
-  if (_cachedCmsToken && now - _cmsTokenFetchedAt < CMS_TOKEN_TTL) return _cachedCmsToken;
-  const res = await fetch("/api/ai/token");
-  if (!res.ok) throw new Error("Could not obtain session token.");
-  const { token } = await res.json();
-  _cachedCmsToken = token;
-  _cmsTokenFetchedAt = now;
-  return token;
+  return getNodeApiToken();
 }
 
 function StatBox({ label, value, sub, dark }) {

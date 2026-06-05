@@ -2,78 +2,165 @@ import { buildDashboardAiContext } from "../data/dashboardData.js";
 
 export const AI_AVAILABLE = true;
 
-let _cachedToken = null;
-let _tokenFetchedAt = 0;
 const TOKEN_TTL_MS = 3.5 * 60 * 60 * 1000;
+const AI_BACKENDS = {
+  native: {
+    id: "native",
+    token: "/api/ai/token",
+    chat: "/api/ai/chat",
+    cmsAnalyze: "/api/ai/cms-analyze",
+  },
+  php: {
+    id: "php",
+    token: "/api/ai/token.php",
+    chat: "/api/ai/chat.php",
+    cmsAnalyze: "/api/ai/cms-analyze.php",
+  },
+};
+const TOKEN_CACHE = {
+  native: { token: null, fetchedAt: 0 },
+  php: { token: null, fetchedAt: 0 },
+};
+
+let _preferredAiBackend = "native";
 
 async function readJsonSafe(res) {
   const contentType = res.headers.get("content-type") || "";
   if (contentType.includes("application/json")) return res.json();
   const text = await res.text().catch(() => "");
-  return { error: text ? text.slice(0, 180) : `HTTP ${res.status}` };
+  if (!text) return { error: `HTTP ${res.status}` };
+  try {
+    return JSON.parse(text);
+  } catch (_) {
+    if (/^\s*<!doctype html/i.test(text) || /^\s*<html/i.test(text)) {
+      return { error: `Received an HTML ${res.status} response from the AI route instead of JSON.` };
+    }
+    return { error: text.slice(0, 180) };
+  }
 }
 
-async function getToken() {
+function aiBackendOrder(allowPhpFallback = true) {
+  const first = AI_BACKENDS[_preferredAiBackend] || AI_BACKENDS.native;
+  if (!allowPhpFallback) return [AI_BACKENDS.native];
+  const second = first.id === "native" ? AI_BACKENDS.php : AI_BACKENDS.native;
+  return [first, second];
+}
+
+function clearTokenCache(backendId) {
+  TOKEN_CACHE[backendId] = { token: null, fetchedAt: 0 };
+}
+
+function setTokenCache(backendId, token) {
+  TOKEN_CACHE[backendId] = { token, fetchedAt: Date.now() };
+}
+
+function buildAiRouteError(res, payload) {
+  const error = new Error(payload?.error || `AI error ${res.status}`);
+  error.fallbackWorthy =
+    Boolean(payload?.error?.includes("HTML")) ||
+    [404, 405, 502, 503, 504].includes(res.status);
+  return error;
+}
+
+async function getTokenForBackend(backend) {
   const now = Date.now();
-  if (_cachedToken && now - _tokenFetchedAt < TOKEN_TTL_MS) return _cachedToken;
-  const res = await fetch("/api/ai/token");
+  const cached = TOKEN_CACHE[backend.id];
+  if (cached.token && now - cached.fetchedAt < TOKEN_TTL_MS) return cached.token;
+
+  const res = await fetch(backend.token);
   const payload = await readJsonSafe(res);
-  if (!res.ok || !payload.token) throw new Error(payload.error || "Could not obtain AI session token.");
+  if (!res.ok || !payload.token) throw buildAiRouteError(res, payload);
   const { token } = payload;
-  _cachedToken = token;
-  _tokenFetchedAt = now;
+  setTokenCache(backend.id, token);
+  _preferredAiBackend = backend.id;
   return token;
+}
+
+export async function getAiToken({ allowPhpFallback = true } = {}) {
+  let lastError = null;
+  for (const backend of aiBackendOrder(allowPhpFallback)) {
+    try {
+      return await getTokenForBackend(backend);
+    } catch (err) {
+      lastError = err;
+      clearTokenCache(backend.id);
+      if (!allowPhpFallback || !err?.fallbackWorthy || backend.id === "php") throw err;
+    }
+  }
+  throw lastError || new Error("Could not obtain AI session token.");
+}
+
+export function getNodeApiToken() {
+  return getAiToken({ allowPhpFallback: false });
 }
 
 export async function streamChat({ messages, onChunk, onDone, onError, signal }) {
   try {
-    const token = await getToken();
-    const res = await fetch("/api/ai/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-ai-token": token,
-      },
-      body: JSON.stringify({ messages, max_tokens: 700 }),
-      signal,
-    });
+    let lastError = null;
 
-    if (!res.ok) {
-      const errJson = await readJsonSafe(res);
-      throw new Error(errJson.error || `AI error ${res.status}`);
-    }
+    for (const backend of aiBackendOrder(true)) {
+      try {
+        const token = await getTokenForBackend(backend);
+        const res = await fetch(backend.chat, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-ai-token": token,
+          },
+          body: JSON.stringify({ messages, max_tokens: 700 }),
+          signal,
+        });
 
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-    let fullText = "";
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() ?? "";
-
-      for (const line of lines) {
-        if (!line.startsWith("data: ")) continue;
-        const data = line.slice(6).trim();
-        if (data === "[DONE]") {
-          onDone?.(fullText);
-          return;
+        if (!res.ok) {
+          const errJson = await readJsonSafe(res);
+          throw buildAiRouteError(res, errJson);
         }
-        try {
-          const json = JSON.parse(data);
-          const chunk = json.choices?.[0]?.delta?.content ?? "";
-          if (chunk) {
-            fullText += chunk;
-            onChunk?.(chunk, fullText);
+
+        const reader = res.body?.getReader?.();
+        if (!reader) throw new Error("AI response stream was unavailable.");
+
+        _preferredAiBackend = backend.id;
+
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let fullText = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() ?? "";
+
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            const data = line.slice(6).trim();
+            if (data === "[DONE]") {
+              onDone?.(fullText);
+              return;
+            }
+            try {
+              const json = JSON.parse(data);
+              const chunk = json.choices?.[0]?.delta?.content ?? "";
+              if (chunk) {
+                fullText += chunk;
+                onChunk?.(chunk, fullText);
+              }
+            } catch (_) {}
           }
-        } catch (_) {}
+        }
+
+        onDone?.(fullText);
+        return;
+      } catch (err) {
+        lastError = err;
+        clearTokenCache(backend.id);
+        if (err.name === "AbortError") throw err;
+        if (!err?.fallbackWorthy || backend.id === "php") throw err;
       }
     }
 
-    onDone?.(fullText);
+    throw lastError || new Error("AI streaming request failed.");
   } catch (err) {
     if (err.name !== "AbortError") {
       onError?.(err);
@@ -281,20 +368,33 @@ function isCmsQuestion(q) {
 }
 
 export async function callCmsAnalyze(question) {
-  const token = await getToken();
-  const res = await fetch("/api/ai/cms-analyze", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-ai-token": token,
-    },
-    body: JSON.stringify({ question }),
-  });
-  if (!res.ok) {
-    const errJson = await readJsonSafe(res);
-    throw new Error(errJson.error || `CMS AI error ${res.status}`);
+  let lastError = null;
+
+  for (const backend of aiBackendOrder(true)) {
+    try {
+      const token = await getTokenForBackend(backend);
+      const res = await fetch(backend.cmsAnalyze, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-ai-token": token,
+        },
+        body: JSON.stringify({ question }),
+      });
+      if (!res.ok) {
+        const errJson = await readJsonSafe(res);
+        throw buildAiRouteError(res, errJson);
+      }
+      _preferredAiBackend = backend.id;
+      return readJsonSafe(res);
+    } catch (err) {
+      lastError = err;
+      clearTokenCache(backend.id);
+      if (!err?.fallbackWorthy || backend.id === "php") throw err;
+    }
   }
-  return readJsonSafe(res);
+
+  throw lastError || new Error("CMS AI request failed.");
 }
 
 export function buildMarketSummaryPrompt({ velocityRows, andwellDominance, amedisysCombinedShare, northernLight, totalCompetitors, nationalChainCount }) {

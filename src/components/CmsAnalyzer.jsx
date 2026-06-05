@@ -1,6 +1,7 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { useDarkMode } from "./DarkModeContext.jsx";
+import { callCmsAnalyze } from "../utils/ai.js";
 
 const SUGGESTED = [
   "Is Beacon Hospice CMS certified in Maine?",
@@ -15,15 +16,6 @@ export default function CmsAnalyzer() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
-  const tokenRef = useRef(null);
-
-  async function getToken() {
-    if (tokenRef.current) return tokenRef.current;
-    const r = await fetch("/api/ai/token");
-    const d = await r.json();
-    tokenRef.current = d.token;
-    return d.token;
-  }
 
   async function analyze(q) {
     const query = q || question;
@@ -32,19 +24,8 @@ export default function CmsAnalyzer() {
     setResult(null);
     setError(null);
     try {
-      const token = await getToken();
-      const r = await fetch("/api/ai/cms-analyze", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-ai-token": token,
-          Origin: window.location.origin,
-        },
-        body: JSON.stringify({ question: query }),
-      });
-      const d = await r.json();
-      if (!r.ok) { setError(d.error || "Request failed"); return; }
-      setResult(d);
+      const response = await callCmsAnalyze(query);
+      setResult(response);
     } catch (err) {
       setError(err.message);
     } finally {

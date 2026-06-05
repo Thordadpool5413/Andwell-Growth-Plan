@@ -6,13 +6,11 @@ import Badge from "../components/Badge.jsx";
 import SectionHeader from "../components/SectionHeader.jsx";
 import { getProviderIntelligenceRows, getProviderProfileByCcn } from "../data/dashboardData.js";
 import { ANDWELL_CCN, classifyProvider } from "../data/andwell.js";
+import { getNodeApiToken } from "../utils/ai.js";
 
 async function getCmsToken() {
   try {
-    const r = await fetch("/api/ai/token");
-    if (!r.ok) return "";
-    const { token } = await r.json();
-    return token;
+    return await getNodeApiToken();
   } catch { return ""; }
 }
 
@@ -702,8 +700,7 @@ export default function CompetitorGrid({ providerType = "hospice" }) {
     setLoading(true);
     (async () => {
       try {
-        const tr = await fetch("/api/ai/token");
-        const { token } = tr.ok ? await tr.json() : { token: "" };
+        const token = await getCmsToken();
         const compRes = await fetch("/api/cms/competitors", { headers: { "x-ai-token": token } });
         if (!compRes.ok) throw new Error(compRes.statusText);
         const data = await compRes.json();

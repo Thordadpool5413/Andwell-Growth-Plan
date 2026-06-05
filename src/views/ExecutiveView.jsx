@@ -18,6 +18,7 @@ import { namedProviderRows } from "../data/providers.js";
 import { rollupByService, getCompetitiveThreatScore } from "../utils/calculations.js";
 import { getCountyMarket, getFreshness } from "../data/dashboardData.js";
 import { currency, number, percent } from "../utils/formatters.js";
+import { getNodeApiToken } from "../utils/ai.js";
 
 function AtAGlanceIndicator({ label, status, dark }) {
   const colorMap = {
@@ -36,10 +37,7 @@ function AtAGlanceIndicator({ label, status, dark }) {
 
 async function getCmsToken() {
   try {
-    const r = await fetch("/api/ai/token");
-    if (!r.ok) return "";
-    const { token } = await r.json();
-    return token;
+    return await getNodeApiToken();
   } catch { return ""; }
 }
 

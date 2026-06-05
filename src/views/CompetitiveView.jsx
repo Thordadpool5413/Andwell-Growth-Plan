@@ -24,6 +24,7 @@ import { getFreshness, getTopProviders, MAINE_COUNTIES } from "../data/dashboard
 import { getProviderSummary, getCompetitiveThreatScore } from "../utils/calculations.js";
 import { currency, number, percent, badgeTone } from "../utils/formatters.js";
 import { exportCompetitiveCSV } from "../utils/csvExport.js";
+import { getNodeApiToken } from "../utils/ai.js";
 
 function isNationalChain(name) {
   return classifyProvider({ provider_name: name }).classification === "National chain";
@@ -60,8 +61,7 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
   useEffect(() => {
     (async () => {
       try {
-        const tr = await fetch("/api/ai/token");
-        const { token } = tr.ok ? await tr.json() : { token: "" };
+        const token = await getNodeApiToken();
         const r = await fetch("/api/cms/competitors", { headers: { "x-ai-token": token } });
         if (r.ok) { const d = await r.json(); setCmsCompetitors(d.competitors || []); }
       } catch (_) {}

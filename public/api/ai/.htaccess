@@ -1,0 +1,4 @@
+RewriteEngine On
+RewriteRule ^token/?$ token.php [L,QSA]
+RewriteRule ^chat/?$ chat.php [L,QSA]
+RewriteRule ^cms-analyze/?$ cms-analyze.php [L,QSA]
