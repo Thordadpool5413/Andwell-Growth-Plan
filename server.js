@@ -316,7 +316,7 @@ let cmsReady = false;
 try {
   await runMigrations();
 } catch (err) {
-  console.error("[startup] DB migration failed — CMS features may be unavailable:", err.message);
+  if (isDev) console.error("[startup] DB migration failed — CMS features may be unavailable:", err.message);
 }
 
 let cmsModule = null;
@@ -327,10 +327,10 @@ async function loadCms() {
     cmsModule = await import("./server/cms/cmsMcpServer.js");
     await cmsModule.seedCompetitors();
     cmsReady = true;
-    console.log("[CMS] MCP server ready");
+    if (isDev) console.log("[CMS] MCP server ready");
     return cmsModule;
   } catch (err) {
-    console.error("[CMS] Failed to load MCP server:", err.message);
+    if (isDev) console.error("[CMS] Failed to load MCP server:", err.message);
     return null;
   }
 }
@@ -355,7 +355,7 @@ function readGeneratedJson(fileName, fallback = []) {
     generatedDataCache.set(fileName, value);
     return value;
   } catch (err) {
-    console.warn(`[seed-data] Unable to read ${fileName}: ${err.message}`);
+    if (isDev) console.warn(`[seed-data] Unable to read ${fileName}: ${err.message}`);
     return fallback;
   }
 }
@@ -643,9 +643,9 @@ app.post("/api/cms/crawl", strictOriginCheck, tokenCheck, async (req, res) => {
     const { crawlAllCompetitors } = await import("./server/cms/competitorCrawler.js");
     res.json({ status: "started", message: "Crawl running in background." });
     crawlAllCompetitors().then((results) => {
-      console.log("[Crawl] Complete:", results.map((r) => `${r.name}:${r.status}`).join(", "));
+      if (isDev) console.log("[Crawl] Complete:", results.map((r) => `${r.name}:${r.status}`).join(", "));
     }).catch((err) => {
-      console.error("[Crawl] Error:", err.message);
+      if (isDev) console.error("[Crawl] Error:", err.message);
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -931,7 +931,7 @@ if (isDev) {
 }
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on http://0.0.0.0:${PORT} [${isDev ? "dev" : "production"}]`);
+  if (isDev) console.log(`Server running on http://0.0.0.0:${PORT} [${isDev ? "dev" : "production"}]`);
 });
 
 // ──────────────────────────────────────────────
@@ -942,31 +942,31 @@ app.listen(PORT, "0.0.0.0", () => {
 async function setupCron() {
   const syncEnabled = process.env.CMS_SYNC_ENABLED !== "false";
   if (!syncEnabled) {
-    console.log("[CMS Cron] Disabled via CMS_SYNC_ENABLED=false");
+    if (isDev) console.log("[CMS Cron] Disabled via CMS_SYNC_ENABLED=false");
     return;
   }
   const cronExpr = process.env.CMS_SYNC_CRON || "0 3 * * 0";
   try {
     const cron = (await import("node-cron")).default;
     if (!cron.validate(cronExpr)) {
-      console.error(`[CMS Cron] Invalid CMS_SYNC_CRON expression: "${cronExpr}" — using default`);
+      if (isDev) console.error(`[CMS Cron] Invalid CMS_SYNC_CRON expression: "${cronExpr}" — using default`);
     }
     const expr = cron.validate(cronExpr) ? cronExpr : "0 3 * * 0";
     cron.schedule(expr, async () => {
-      console.log("[CMS Cron] Starting scheduled sync...");
+      if (isDev) console.log("[CMS Cron] Starting scheduled sync...");
       try {
         const mod = await loadCms();
         if (mod) {
           await mod.callTool("sync_cms_provider_data", { provider_type: "both" });
-          console.log("[CMS Cron] Scheduled sync complete");
+          if (isDev) console.log("[CMS Cron] Scheduled sync complete");
         }
       } catch (err) {
-        console.error("[CMS Cron] Sync error:", err.message);
+        if (isDev) console.error("[CMS Cron] Sync error:", err.message);
       }
     }, { timezone: "America/New_York" });
-    console.log(`[CMS Cron] Scheduled sync with expression "${expr}" (America/New_York)`);
+    if (isDev) console.log(`[CMS Cron] Scheduled sync with expression "${expr}" (America/New_York)`);
   } catch (err) {
-    console.error("[CMS Cron] Setup failed:", err.message);
+    if (isDev) console.error("[CMS Cron] Setup failed:", err.message);
   }
 }
 

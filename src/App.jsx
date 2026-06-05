@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useCallback } from "react";
+import React, { useMemo, useState, useEffect, useCallback, Suspense } from "react";
 import { DEFAULT_SCENARIO } from "./data/constants.js";
 import DataSourceBanner from "./components/DataSourceBanner.jsx";
 import { buildRows } from "./utils/calculations.js";
@@ -8,6 +8,7 @@ import ScenarioPanel from "./components/ScenarioPanel.jsx";
 import ScenarioCompare from "./components/ScenarioCompare.jsx";
 import ExportButton from "./components/ExportButton.jsx";
 import InsightsPanel from "./components/InsightsPanel.jsx";
+import TabSkeleton from "./components/TabSkeleton.jsx";
 import { InsightsEngine } from "./utils/insights.js";
 import ExecutiveView from "./views/ExecutiveView.jsx";
 import CountyPlan from "./views/CountyPlan.jsx";
@@ -15,13 +16,13 @@ import ReferralPlan from "./views/ReferralPlan.jsx";
 import CompetitiveView from "./views/CompetitiveView.jsx";
 import MarketDynamicsView from "./views/MarketDynamicsView.jsx";
 import CmsData from "./views/CmsData.jsx";
-import FinancialModel from "./views/FinancialModel.jsx";
-import StaffingModel from "./views/StaffingModel.jsx";
-import SensitivityAnalysis from "./views/SensitivityAnalysis.jsx";
-import OpportunityScore from "./views/OpportunityScore.jsx";
-import LaunchTimeline from "./views/LaunchTimeline.jsx";
-import BoardReport from "./views/BoardReport.jsx";
-import LaunchChecklist from "./views/LaunchChecklist.jsx";
+const FinancialModel = React.lazy(() => import("./views/FinancialModel.jsx"));
+const StaffingModel = React.lazy(() => import("./views/StaffingModel.jsx"));
+const SensitivityAnalysis = React.lazy(() => import("./views/SensitivityAnalysis.jsx"));
+const OpportunityScore = React.lazy(() => import("./views/OpportunityScore.jsx"));
+const LaunchTimeline = React.lazy(() => import("./views/LaunchTimeline.jsx"));
+const BoardReport = React.lazy(() => import("./views/BoardReport.jsx"));
+const LaunchChecklist = React.lazy(() => import("./views/LaunchChecklist.jsx"));
 import AskPanel from "./components/AskPanel.jsx";
 import ScenarioSidebar from "./components/ScenarioSidebar.jsx";
 import { useScenarioStore } from "./store/scenarioStore.js";
@@ -665,6 +666,7 @@ function Dashboard() {
                         filename={`Andwell - ${activeTab}`}
                         variant="outline"
                         className={dark ? "rounded-full border-slate-700 bg-slate-900/90 text-slate-300 hover:bg-slate-800 hover:text-white" : "rounded-full border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900"}
+                        rows={rows}
                       />
                     )}
                   </div>
@@ -689,9 +691,11 @@ function Dashboard() {
               )}
 
               <div id="tab-content">
-                <div key={activeTab} className="tab-fade-in">
-                  {renderActiveView()}
-                </div>
+                <Suspense fallback={<TabSkeleton />}>
+                  <div key={activeTab} className="tab-fade-in">
+                    {renderActiveView()}
+                  </div>
+                </Suspense>
               </div>
             </div>
           </main>

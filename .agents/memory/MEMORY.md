@@ -2,3 +2,4 @@
 - [CountyPlan duplicate bug](countyplan-bug.md) — App.jsx previously rendered CountyPlan twice on lines 301-302; merged into one call with all props.
 - [Calculation data flow](calc-data-flow.md) — `buildRows` → `getCountyMath` is the single source of truth; views should never recompute margin × revenue independently.
 - [MaineMap ReferenceError](mainemap-bug.md) — `providerProviderType` was called as a function but never defined; caused CountyPlan to crash on load.
+- [Dead code removal](audit-cleanup.md) — deleted ComparisonView, ServiceLines, SensitivityAnalysisEnhanced; fixed ExportButton, server console logs, added React.lazy code splitting.

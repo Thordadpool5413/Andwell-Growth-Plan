@@ -49,7 +49,7 @@ export default function CompetitiveView({ selectedCounty, setSelectedCounty, com
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (competitorProviderType === "hospice") setServiceState("Hospice");
     else if (competitorProviderType === "homehealth") setServiceState("Home Healthcare");
   }, [competitorProviderType]);
