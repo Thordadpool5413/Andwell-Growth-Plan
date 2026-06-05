@@ -15,7 +15,7 @@ export default function SectionHeader({ eyebrow, title, children }) {
           <p className={`inline-flex items-center rounded-full border px-3 py-0.5 text-[10px] font-bold uppercase tracking-[0.2em] ${
             dark
               ? "border-slate-700/70 bg-slate-800/80 text-slate-400"
-              : "border-slate-200 bg-slate-100/80 text-slate-500"
+              : "border-slate-200 bg-slate-100/80 text-slate-600"
           }`}>
             {eyebrow}
           </p>
@@ -24,7 +24,7 @@ export default function SectionHeader({ eyebrow, title, children }) {
           {title}
         </h2>
         {children && (
-          <p className={`mt-2.5 max-w-4xl text-[13px] leading-6 sm:text-sm ${dark ? "text-slate-400" : "text-slate-600"}`}>
+          <p className={`mt-2.5 max-w-4xl text-[13px] leading-6 sm:text-sm ${dark ? "text-slate-400" : "text-slate-700"}`}>
             {children}
           </p>
         )}

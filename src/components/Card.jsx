@@ -27,7 +27,7 @@ export default function Card({ title, eyebrow, children, accent, flush }) {
       {(eyebrow || title) && (
         <div className={flush ? "px-6 pt-5 pb-3" : ""}>
           {eyebrow && (
-            <p className={`mb-1.5 text-[10px] font-bold uppercase tracking-[0.2em] ${dark ? "text-slate-500" : "text-slate-400"}`}>
+            <p className={`mb-1.5 text-[10px] font-bold uppercase tracking-[0.2em] ${dark ? "text-slate-500" : "text-slate-500"}`}>
               {eyebrow}
             </p>
           )}

@@ -51,7 +51,7 @@ export default function ScenarioPanel({ scenario, setScenario, onApplyScenario, 
       <div className="mb-4 flex items-center justify-between">
         <div>
           <p className={`text-xs font-medium uppercase tracking-[0.22em] ${dark ? "text-blue-400" : "text-blue-700"}`}>Scenario Controls</p>
-          <p className={`mt-1 text-sm ${dark ? "text-slate-400" : "text-slate-600"}`}>Adjust assumptions to see real-time financial impact across all views</p>
+          <p className={`mt-1 text-sm ${dark ? "text-slate-400" : "text-slate-700"}`}>Adjust assumptions to see real-time financial impact across all views</p>
         </div>
         {!isDefault && (
           <Button
@@ -75,8 +75,8 @@ export default function ScenarioPanel({ scenario, setScenario, onApplyScenario, 
           { label: "HH capture rate", benchmark: "Industry median: 8–15% first-year capture" },
           { label: "Wound / Therapy capture", benchmark: "Internal Andwell planning assumptions" },
         ].map((note) => (
-          <div key={note.label} className={`rounded-xl px-3 py-2 ${dark ? "bg-slate-800/60 text-slate-400" : "bg-white/70 text-slate-500"}`}>
-            <p className={`font-semibold ${dark ? "text-slate-300" : "text-slate-600"}`}>{note.label}</p>
+          <div key={note.label} className={`rounded-xl px-3 py-2 ${dark ? "bg-slate-800/60 text-slate-400" : "bg-white/70 text-slate-600"}`}>
+            <p className={`font-semibold ${dark ? "text-slate-300" : "text-slate-700"}`}>{note.label}</p>
             <p className="mt-0.5 text-[10px] leading-4">{note.benchmark}</p>
           </div>
         ))}
@@ -101,7 +101,7 @@ export default function ScenarioPanel({ scenario, setScenario, onApplyScenario, 
         />
 
         <div className={`border-t pt-3 ${dark ? "border-blue-800" : "border-blue-200"}`}>
-          <p className={`mb-2 text-xs font-medium uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-500"}`}>Home Healthcare capture</p>
+          <p className={`mb-2 text-xs font-medium uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-600"}`}>Home Healthcare capture</p>
           {["Year 1", "Year 2", "Year 3"].map((label, i) => (
             <SliderRow
               key={label}
@@ -118,7 +118,7 @@ export default function ScenarioPanel({ scenario, setScenario, onApplyScenario, 
         </div>
 
         <div className={`border-t pt-3 ${dark ? "border-blue-800" : "border-blue-200"}`}>
-          <p className={`mb-2 text-xs font-medium uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-500"}`}>Mobile Wound capture</p>
+          <p className={`mb-2 text-xs font-medium uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-600"}`}>Mobile Wound capture</p>
           {["Year 1", "Year 2", "Year 3"].map((label, i) => (
             <SliderRow
               key={label}
@@ -135,7 +135,7 @@ export default function ScenarioPanel({ scenario, setScenario, onApplyScenario, 
         </div>
 
         <div className={`border-t pt-3 ${dark ? "border-blue-800" : "border-blue-200"}`}>
-          <p className={`mb-2 text-xs font-medium uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-500"}`}>Therapy Care capture</p>
+          <p className={`mb-2 text-xs font-medium uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-600"}`}>Therapy Care capture</p>
           {["Year 1", "Year 2", "Year 3"].map((label, i) => (
             <SliderRow
               key={label}

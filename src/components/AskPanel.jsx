@@ -212,7 +212,7 @@ export default function AskPanel({
                   Ask the data
                 </span>
               </div>
-              <p className={`mt-1 text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>
+              <p className={`mt-1 text-xs ${dark ? "text-slate-400" : "text-slate-600"}`}>
                 {tabLabel}
               </p>
             </div>
@@ -287,13 +287,13 @@ export default function AskPanel({
                               )}
                             </>
                           ) : (
-                            <span className={dark ? "text-slate-500" : "text-slate-400"}>Thinking…</span>
+                            <span className={dark ? "text-slate-500" : "text-slate-500"}>Thinking…</span>
                           )}
                         </div>
                         {!msg.streaming && msg.content && (
                           <p
                             className={`mt-2 border-t pt-1.5 text-[10px] italic ${
-                              dark ? "border-slate-700 text-slate-500" : "border-[#ece4d6] text-slate-400"
+                              dark ? "border-slate-700 text-slate-500" : "border-[#ece4d6] text-slate-500"
                             }`}
                           >
                             {SOURCE_FOOTNOTE}
@@ -324,7 +324,7 @@ export default function AskPanel({
                 onKeyDown={(e) => e.key === "Enter" && handleAsk()}
                 placeholder={hasConversation ? "Follow up..." : "Ask anything about the data..."}
                 className={`flex-1 bg-transparent px-3 py-2.5 text-sm outline-none ${
-                  dark ? "text-white placeholder-slate-500" : "text-slate-900 placeholder-slate-400"
+                  dark ? "text-white placeholder-slate-500" : "text-slate-900 placeholder-slate-500"
                 }`}
                 disabled={generating}
               />
@@ -337,7 +337,7 @@ export default function AskPanel({
               </button>
             </div>
 
-            <p className={`text-[10px] ${dark ? "text-slate-600" : "text-slate-400"}`}>
+            <p className={`text-[10px] ${dark ? "text-slate-600" : "text-slate-500"}`}>
               AI summary support only. Not verified advice.
             </p>
           </div>
@@ -359,7 +359,7 @@ export default function AskPanel({
             <SparklesIcon />
           </span>
           <span className="flex flex-col items-start leading-tight">
-            <span className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${dark ? "text-slate-400" : "text-slate-500"}`}>
+            <span className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${dark ? "text-slate-400" : "text-slate-600"}`}>
               AI Workspace
             </span>
             <span>Ask the data</span>

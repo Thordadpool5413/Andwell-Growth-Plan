@@ -43,17 +43,17 @@ async function getCmsToken() {
 
 function QualityKPI({ label, value, sub, dark, color = "emerald" }) {
   const colorMap = {
-    emerald: { bg: dark ? "bg-slate-700/30 border-slate-700/60" : "bg-slate-50 border-slate-200", label: dark ? "text-slate-400" : "text-slate-500" },
-    blue:    { bg: dark ? "bg-slate-700/30 border-slate-700/60" : "bg-slate-50 border-slate-200", label: dark ? "text-slate-400" : "text-slate-500" },
-    amber:   { bg: dark ? "bg-slate-700/30 border-slate-700/60" : "bg-slate-50 border-slate-200", label: dark ? "text-slate-400" : "text-slate-500" },
-    violet:  { bg: dark ? "bg-slate-700/30 border-slate-700/60" : "bg-slate-50 border-slate-200", label: dark ? "text-slate-400" : "text-slate-500" },
+    emerald: { bg: dark ? "bg-slate-700/30 border-slate-700/60" : "bg-slate-50 border-slate-200", label: dark ? "text-slate-400" : "text-slate-600" },
+    blue:    { bg: dark ? "bg-slate-700/30 border-slate-700/60" : "bg-slate-50 border-slate-200", label: dark ? "text-slate-400" : "text-slate-600" },
+    amber:   { bg: dark ? "bg-slate-700/30 border-slate-700/60" : "bg-slate-50 border-slate-200", label: dark ? "text-slate-400" : "text-slate-600" },
+    violet:  { bg: dark ? "bg-slate-700/30 border-slate-700/60" : "bg-slate-50 border-slate-200", label: dark ? "text-slate-400" : "text-slate-600" },
   };
   const c = colorMap[color] || colorMap.emerald;
   return (
     <div className={`rounded-lg border p-4 ${c.bg}`}>
       <p className={`text-[11px] font-medium uppercase tracking-[0.1em] ${c.label}`}>{label}</p>
       <p className={`mt-1.5 text-xl font-bold tabular-nums ${dark ? "text-slate-100" : "text-slate-900"}`}>{value}</p>
-      {sub && <p className={`mt-0.5 text-xs ${dark ? "text-slate-500" : "text-slate-400"}`}>{sub}</p>}
+      {sub && <p className={`mt-0.5 text-xs ${dark ? "text-slate-500" : "text-slate-500"}`}>{sub}</p>}
     </div>
   );
 }
@@ -86,7 +86,11 @@ export default function ExecutiveView({ rows, totals }) {
     : 0;
 
   const totalFFS = countyMarkets.reduce((s, m) => s + (m.ffs || 0), 0);
-  const revPerBeneficiary = totalFFS > 0 ? Math.round(totals.y1Revenue / totalFFS) : 0;
+  const annualRevenuePerFfsBeneficiary = totalFFS > 0 ? totals.y1Revenue / totalFFS : 0;
+  const annualRevenuePerFfsBeneficiaryDisplay = currency(annualRevenuePerFfsBeneficiary, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
   const serviceMix = rollupByService(rows);
 
@@ -106,7 +110,7 @@ export default function ExecutiveView({ rows, totals }) {
 
       {/* At-a-glance status bar */}
       <div className={`flex flex-wrap items-center gap-2 rounded-lg border px-4 py-3 ${dark ? "border-slate-700/60 bg-slate-800/40" : "border-slate-200 bg-slate-50"}`}>
-        <p className={`text-[11px] font-medium uppercase tracking-wide mr-1 ${dark ? "text-slate-500" : "text-slate-400"}`}>Status</p>
+        <p className={`text-[11px] font-medium uppercase tracking-wide mr-1 ${dark ? "text-slate-500" : "text-slate-500"}`}>Status</p>
         <AtAGlanceIndicator label="Market Opportunity" status={marketStatus} dark={dark} />
         <AtAGlanceIndicator label="Competitive Position" status={competitionStatus} dark={dark} />
         <AtAGlanceIndicator label="Financial Readiness" status={financialStatus} dark={dark} />
@@ -153,31 +157,31 @@ export default function ExecutiveView({ rows, totals }) {
       {/* Secondary KPI cards — no emoji */}
       <div className="grid gap-4 md:grid-cols-3">
         <div className={`rounded-xl border-l-4 border-l-emerald-500 border p-5 ${dark ? "border-slate-700/60 bg-slate-800/60" : "border-slate-200 bg-white"}`}>
-          <p className={`text-[11px] font-medium uppercase tracking-[0.1em] ${dark ? "text-slate-400" : "text-slate-500"}`}>Market penetration (Y1)</p>
+          <p className={`text-[11px] font-medium uppercase tracking-[0.1em] ${dark ? "text-slate-400" : "text-slate-600"}`}>Market penetration (Y1)</p>
           <p className={`mt-2 text-3xl font-bold tabular-nums ${dark ? "text-slate-100" : "text-slate-900"}`}>{percent(y1Penetration)}</p>
-          <p className={`mt-2 text-xs leading-5 ${dark ? "text-slate-500" : "text-slate-500"}`}>
+          <p className={`mt-2 text-xs leading-5 ${dark ? "text-slate-500" : "text-slate-600"}`}>
             <EstBadge reason="Modeled Y1 starts divided by total CMS addressable beneficiary volume — a planning proxy, not observed market share.">Est.</EstBadge>{" "}
             Y1 starts vs the total CMS addressable market across {activeCounties.length} target counties ({number(totalMarket)} beneficiary users).
           </p>
         </div>
         <div className={`rounded-xl border-l-4 border-l-amber-500 border p-5 ${dark ? "border-slate-700/60 bg-slate-800/60" : "border-slate-200 bg-white"}`}>
-          <p className={`text-[11px] font-medium uppercase tracking-[0.1em] ${dark ? "text-slate-400" : "text-slate-500"}`}>Avg competitive threat</p>
+          <p className={`text-[11px] font-medium uppercase tracking-[0.1em] ${dark ? "text-slate-400" : "text-slate-600"}`}>Avg competitive threat</p>
           <div className="mt-2 flex items-center gap-3">
             <p className={`text-3xl font-bold tabular-nums ${dark ? "text-slate-100" : "text-slate-900"}`}>
-              {Math.round(avgThreat)}<span className={`text-base font-medium ${dark ? "text-slate-500" : "text-slate-400"}`}>/100</span>
+              {Math.round(avgThreat)}<span className={`text-base font-medium ${dark ? "text-slate-500" : "text-slate-500"}`}>/100</span>
             </p>
             <Badge tone={avgThreat >= 70 ? "red" : avgThreat >= 50 ? "amber" : avgThreat >= 30 ? "blue" : "green"}>
               {avgThreat >= 70 ? "Fortress" : avgThreat >= 50 ? "High" : avgThreat >= 30 ? "Moderate" : "Low"}
             </Badge>
           </div>
-          <p className={`mt-2 text-xs leading-5 ${dark ? "text-slate-500" : "text-slate-500"}`}>Composite weighted score across all 12 target counties.</p>
+          <p className={`mt-2 text-xs leading-5 ${dark ? "text-slate-500" : "text-slate-600"}`}>Composite weighted score across all 12 target counties.</p>
         </div>
         <div className={`rounded-xl border-l-4 border-l-blue-500 border p-5 ${dark ? "border-slate-700/60 bg-slate-800/60" : "border-slate-200 bg-white"}`}>
-          <p className={`text-[11px] font-medium uppercase tracking-[0.1em] ${dark ? "text-slate-400" : "text-slate-500"}`}>Modeled Y1 revenue per <Abbr term="FFS">FFS</Abbr> beneficiary (USD)</p>
-          <p className={`mt-2 text-3xl font-bold tabular-nums ${dark ? "text-slate-100" : "text-slate-900"}`}>{currency(revPerBeneficiary)}</p>
-          <p className={`mt-2 text-xs leading-5 ${dark ? "text-slate-500" : "text-slate-500"}`}>
+          <p className={`text-[11px] font-medium uppercase tracking-[0.1em] ${dark ? "text-slate-400" : "text-slate-600"}`}>Annual modeled Y1 revenue per Medicare <Abbr term="FFS">FFS</Abbr> beneficiary</p>
+          <p className={`mt-2 text-3xl font-bold tabular-nums ${dark ? "text-slate-100" : "text-slate-900"}`}>{annualRevenuePerFfsBeneficiaryDisplay}</p>
+          <p className={`mt-2 text-xs leading-5 ${dark ? "text-slate-500" : "text-slate-600"}`}>
             <EstBadge reason="Derived: Y1 modeled revenue divided by total CMS Fee-For-Service beneficiary count — not a verified billing figure.">Est.</EstBadge>{" "}
-            US dollars per beneficiary across the {activeCounties.length}-county target plan: {currency(totals.y1Revenue)} / {number(totalFFS)} <Abbr term="FFS">Fee-For-Service</Abbr> beneficiaries.
+            Literal U.S. dollars per beneficiary per year across the {activeCounties.length}-county target plan, not hundreds or thousands: {currency(totals.y1Revenue)} / {number(totalFFS)} Medicare <Abbr term="FFS">Fee-For-Service</Abbr> beneficiaries = {annualRevenuePerFfsBeneficiaryDisplay} annually per beneficiary.
           </p>
         </div>
       </div>

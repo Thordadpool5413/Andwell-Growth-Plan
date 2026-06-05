@@ -68,7 +68,7 @@ function TrendArrow({ sparkData }) {
       ↓{pct}%
     </span>
   );
-  return <span className="text-xs text-slate-400">—</span>;
+  return <span className="text-xs text-slate-500">—</span>;
 }
 
 export default function Metric({ label, value, detail, sparkData, sparkColor, color, sourceType }) {
@@ -88,7 +88,7 @@ export default function Metric({ label, value, detail, sparkData, sparkColor, co
       }`}
     >
       <div className="flex items-start justify-between gap-2">
-        <p className={`text-[10px] font-bold uppercase tracking-[0.16em] leading-tight ${dark ? "text-slate-500" : "text-slate-400"}`}>
+        <p className={`text-[10px] font-bold uppercase tracking-[0.16em] leading-tight ${dark ? "text-slate-500" : "text-slate-500"}`}>
           {label}
         </p>
       </div>
@@ -99,10 +99,10 @@ export default function Metric({ label, value, detail, sparkData, sparkColor, co
         <TrendArrow sparkData={sparkData} />
       </div>
       {detail && (
-        <p className={`mt-2 text-xs leading-5 ${dark ? "text-slate-500" : "text-slate-500"}`}>{detail}</p>
+        <p className={`mt-2 text-xs leading-5 ${dark ? "text-slate-500" : "text-slate-600"}`}>{detail}</p>
       )}
       {src && (
-        <p className={`mt-2.5 flex items-center gap-1.5 text-[10px] font-medium ${dark ? "text-slate-600" : "text-slate-400"}`}>
+        <p className={`mt-2.5 flex items-center gap-1.5 text-[10px] font-medium ${dark ? "text-slate-600" : "text-slate-500"}`}>
           <span className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${src.dot}`} />
           {src.label}
         </p>

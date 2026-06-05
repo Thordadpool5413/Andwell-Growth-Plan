@@ -11,9 +11,9 @@ function formatCurrencyDelta(value) {
 function MetricTile({ label, value, detail, dark }) {
   return (
     <div className={`rounded-lg border px-3 py-2.5 ${dark ? "border-slate-700/70 bg-slate-900/50" : "border-slate-200 bg-white/80"}`}>
-      <p className={`text-[10px] font-semibold uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-400"}`}>{label}</p>
+      <p className={`text-[10px] font-semibold uppercase tracking-wide ${dark ? "text-slate-500" : "text-slate-500"}`}>{label}</p>
       <p className={`mt-1 text-sm font-bold tabular-nums ${dark ? "text-white" : "text-slate-900"}`}>{value}</p>
-      <p className={`mt-1 text-[11px] ${dark ? "text-slate-400" : "text-slate-500"}`}>{detail}</p>
+      <p className={`mt-1 text-[11px] ${dark ? "text-slate-400" : "text-slate-600"}`}>{detail}</p>
     </div>
   );
 }
@@ -38,7 +38,7 @@ export default function SmartScenarioCard({ scenario, onApplyScenario, onNavigat
             Optimized across revenue, contribution, opportunity score, staffing load, and county concentration.
           </p>
         </div>
-        <div className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${dark ? "bg-emerald-900/70 text-emerald-200" : "bg-emerald-100 text-emerald-700"}`}>
+        <div className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${dark ? "bg-emerald-900/70 text-emerald-200" : "bg-emerald-100 text-emerald-800"}`}>
           {recommendation.strategyLabel}
         </div>
       </div>
@@ -79,7 +79,7 @@ export default function SmartScenarioCard({ scenario, onApplyScenario, onNavigat
         ].map((item) => (
           <span
             key={item.label}
-            className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${dark ? "bg-slate-800 text-slate-300" : "bg-white text-slate-600"}`}
+            className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${dark ? "bg-slate-800 text-slate-300" : "bg-white text-slate-700"}`}
           >
             {item.label}: <span className={dark ? "text-white" : "text-slate-900"}>{item.value}</span>
           </span>
@@ -88,7 +88,7 @@ export default function SmartScenarioCard({ scenario, onApplyScenario, onNavigat
 
       <ul className="mt-4 space-y-2">
         {recommendation.rationale.map((item) => (
-          <li key={item} className={`flex gap-2 text-xs leading-5 ${dark ? "text-slate-300" : "text-slate-600"}`}>
+          <li key={item} className={`flex gap-2 text-xs leading-5 ${dark ? "text-slate-300" : "text-slate-700"}`}>
             <span className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${dark ? "bg-emerald-400" : "bg-emerald-600"}`} />
             <span>{item}</span>
           </li>
@@ -117,7 +117,7 @@ export default function SmartScenarioCard({ scenario, onApplyScenario, onNavigat
             Review {topCounty}
           </button>
         )}
-        <div className={`flex items-center rounded-lg px-2.5 py-2 text-[11px] ${dark ? "bg-slate-900/60 text-slate-400" : "bg-white/70 text-slate-500"}`}>
+        <div className={`flex items-center rounded-lg px-2.5 py-2 text-[11px] ${dark ? "bg-slate-900/60 text-slate-400" : "bg-white/70 text-slate-600"}`}>
           Concentration risk: {percent(recommendation.recommended.concentrationRisk)}
         </div>
       </div>

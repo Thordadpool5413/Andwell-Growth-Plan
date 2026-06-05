@@ -28,7 +28,7 @@ function CompactSlider({ label, value, min, max, step, format, onChange, dark })
 function SliderGroup({ title, dark, children }) {
   return (
     <div>
-      <p className={`mb-2 text-[10px] font-medium uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>
+      <p className={`mb-2 text-[10px] font-medium uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-500"}`}>
         {title}
       </p>
       <div className="space-y-3">{children}</div>
@@ -47,7 +47,7 @@ function RevenueDelta({ current, baseline, dark }) {
   const isZero = Math.abs(delta) < 1;
   const isUp = delta > 0;
   const color = isZero
-    ? dark ? "text-slate-500" : "text-slate-400"
+    ? dark ? "text-slate-500" : "text-slate-500"
     : isUp
       ? dark ? "text-emerald-400" : "text-emerald-600"
       : dark ? "text-rose-400" : "text-rose-600";
@@ -89,7 +89,7 @@ function SaveScenarioSection({ scenario, onLoadScenario, dark }) {
     <div className={`rounded-xl border ${dark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
       {/* Save input */}
       <div className="px-3 pt-3 pb-2">
-        <p className={`mb-2 text-[10px] font-semibold uppercase tracking-widest ${dark ? "text-slate-400" : "text-slate-500"}`}>
+        <p className={`mb-2 text-[10px] font-semibold uppercase tracking-widest ${dark ? "text-slate-400" : "text-slate-600"}`}>
           Save Scenario
         </p>
         <div className="flex gap-1.5">
@@ -160,7 +160,7 @@ function SaveScenarioSection({ scenario, onLoadScenario, dark }) {
                     <button
                       onClick={() => handleLoad(s)}
                       title="Load this scenario"
-                      className={`shrink-0 rounded p-1 transition ${dark ? "text-slate-400 hover:text-blue-400 hover:bg-blue-900/40" : "text-slate-400 hover:text-blue-600 hover:bg-blue-50"}`}
+                      className={`shrink-0 rounded p-1 transition ${dark ? "text-slate-400 hover:text-blue-400 hover:bg-blue-900/40" : "text-slate-500 hover:text-blue-600 hover:bg-blue-50"}`}
                     >
                       <FolderOpen className="h-3.5 w-3.5" />
                     </button>
@@ -276,7 +276,7 @@ export default function ScenarioSidebar({
             <p className={`text-[10px] font-medium uppercase tracking-[0.22em] ${dark ? "text-emerald-300" : "text-emerald-700"}`}>
               Scenario Controls
             </p>
-            <p className={`text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>
+            <p className={`text-xs ${dark ? "text-slate-400" : "text-slate-600"}`}>
               Live assumptions across every view
             </p>
           </div>
@@ -295,7 +295,7 @@ export default function ScenarioSidebar({
             )}
             <button
               onClick={onClose}
-              className={`rounded-full p-1.5 transition ${dark ? "text-slate-400 hover:bg-slate-800 hover:text-slate-200" : "text-slate-400 hover:bg-slate-100 hover:text-slate-700"}`}
+            className={`rounded-full p-1.5 transition ${dark ? "text-slate-400 hover:bg-slate-800 hover:text-slate-200" : "text-slate-500 hover:bg-slate-100 hover:text-slate-700"}`}
               aria-label="Close scenario panel"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
@@ -392,7 +392,7 @@ export default function ScenarioSidebar({
           <div className={`border-t ${dark ? "border-slate-800" : "border-slate-100"}`} />
 
           <SaveScenarioSection scenario={scenario} onLoadScenario={setScenario} dark={dark} />
-          <div className={`rounded-2xl p-3 text-[10px] leading-relaxed ${dark ? "bg-slate-900 text-slate-400" : "bg-[#f5f1e8] text-slate-500"}`}>
+          <div className={`rounded-2xl p-3 text-[10px] leading-relaxed ${dark ? "bg-slate-900 text-slate-400" : "bg-[#f5f1e8] text-slate-600"}`}>
             <p className={`mb-1 font-semibold ${dark ? "text-slate-300" : "text-slate-600"}`}>Benchmarks</p>
             <p>Conversion: 72–78% industry median (NAHC 2023)</p>
             <p>HH capture: 8–15% first-year (industry)</p>
@@ -403,7 +403,7 @@ export default function ScenarioSidebar({
         {/* Revenue impact footer */}
         {totals && defaultTotals && (
           <div className={`shrink-0 border-t px-4 py-3 ${dark ? "border-slate-700 bg-slate-950" : "border-[#ede6d9] bg-[#fcfaf5]"}`}>
-            <p className={`mb-2 text-[10px] font-medium uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-400"}`}>
+            <p className={`mb-2 text-[10px] font-medium uppercase tracking-widest ${dark ? "text-slate-500" : "text-slate-500"}`}>
               Revenue Impact
             </p>
             <div className="grid grid-cols-3 gap-2">
@@ -416,7 +416,7 @@ export default function ScenarioSidebar({
                   key={label}
                   className={`rounded-lg px-2 py-2 text-center ${dark ? "bg-slate-800" : "bg-slate-50"}`}
                 >
-                  <p className={`text-[10px] font-semibold mb-0.5 ${dark ? "text-slate-500" : "text-slate-400"}`}>{label}</p>
+                  <p className={`text-[10px] font-semibold mb-0.5 ${dark ? "text-slate-500" : "text-slate-500"}`}>{label}</p>
                   <p className={`text-sm font-bold tabular-nums leading-tight ${dark ? "text-white" : "text-slate-900"}`}>{fmt(current)}</p>
                   <div className="mt-0.5 h-3 flex items-center justify-center">
                     <RevenueDelta current={current} baseline={baseline} dark={dark} />

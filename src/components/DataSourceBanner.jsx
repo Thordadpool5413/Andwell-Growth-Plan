@@ -15,16 +15,16 @@ export default function DataSourceBanner() {
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3 min-w-0">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-            className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${dark ? "text-slate-500" : "text-slate-400"}`}>
+            className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${dark ? "text-slate-500" : "text-slate-500"}`}>
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
           </svg>
           {collapsed ? (
             <button
               onClick={() => setCollapsed(false)}
-              className={`text-xs font-semibold hover:underline transition-colors ${dark ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-700"}`}
+              className={`text-xs font-semibold hover:underline transition-colors ${dark ? "text-slate-400 hover:text-slate-200" : "text-slate-600 hover:text-slate-800"}`}
             >
               Data sources &amp; methodology
-              <span className={`ml-2 text-[10px] font-medium rounded px-1.5 py-0.5 ${dark ? "bg-slate-800 text-slate-500" : "bg-slate-200 text-slate-400"}`}>
+              <span className={`ml-2 text-[10px] font-medium rounded px-1.5 py-0.5 ${dark ? "bg-slate-800 text-slate-500" : "bg-slate-200 text-slate-500"}`}>
                 Model {cmsMeta.modelDate}
               </span>
             </button>
@@ -38,7 +38,7 @@ export default function DataSourceBanner() {
                   Model as of {cmsMeta.modelDate}
                 </span>
               </div>
-              <div className={`mt-1.5 grid gap-1 text-xs leading-5 ${dark ? "text-blue-200/80" : "text-blue-900/70"}`}>
+              <div className={`mt-1.5 grid gap-1 text-xs leading-5 ${dark ? "text-blue-200/80" : "text-blue-950/80"}`}>
                 <p>
                   <span className="font-semibold">Market data:</span> CMS {cmsMeta.datasetYear} Home Health &amp; Hospice Public Use File (PUF) · Medicare Provider of Service File · County-level Fee-For-Service (FFS) beneficiary counts
                 </p>

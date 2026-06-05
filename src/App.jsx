@@ -172,7 +172,7 @@ function NavRail({ dark, activeTab, onSelect, onClose }) {
     <nav className="space-y-6" aria-label="Workspace navigation">
       {NAV_SECTIONS.map((section) => (
         <div key={section.label}>
-          <p className={`px-3 text-[10px] font-semibold uppercase tracking-[0.24em] ${dark ? "text-slate-500" : "text-slate-400"}`}>
+          <p className={`px-3 text-[10px] font-semibold uppercase tracking-[0.24em] ${dark ? "text-slate-500" : "text-slate-500"}`}>
             {section.label}
           </p>
           <div className="mt-2 space-y-1.5">
@@ -196,7 +196,7 @@ function NavRail({ dark, activeTab, onSelect, onClose }) {
                         : "border-emerald-200 bg-white text-slate-950 shadow-[0_20px_50px_-32px_rgba(15,118,110,0.45)]"
                       : dark
                         ? "border-transparent text-slate-400 hover:border-slate-800 hover:bg-slate-900/70 hover:text-slate-200"
-                        : "border-transparent text-slate-600 hover:border-slate-200 hover:bg-white/90 hover:text-slate-900"
+                        : "border-transparent text-slate-700 hover:border-slate-200 hover:bg-white/90 hover:text-slate-950"
                   }`}
                 >
                   <span
@@ -207,7 +207,7 @@ function NavRail({ dark, activeTab, onSelect, onClose }) {
                           : "border-emerald-200 bg-emerald-50 text-emerald-700"
                         : dark
                           ? "border-slate-800 bg-slate-950 text-slate-500 group-hover:text-slate-300"
-                          : "border-slate-200 bg-slate-50 text-slate-500 group-hover:text-slate-700"
+                          : "border-slate-200 bg-slate-50 text-slate-600 group-hover:text-slate-800"
                     }`}
                   >
                     <Icon className="h-4.5 w-4.5" />
@@ -216,7 +216,7 @@ function NavRail({ dark, activeTab, onSelect, onClose }) {
                     <span className={`block text-sm font-semibold ${active ? (dark ? "text-white" : "text-slate-950") : ""}`}>
                       {item.title}
                     </span>
-                    <span className={`mt-1 block text-xs leading-5 ${dark ? (active ? "text-slate-300" : "text-slate-500") : active ? "text-slate-600" : "text-slate-500"}`}>
+                    <span className={`mt-1 block text-xs leading-5 ${dark ? (active ? "text-slate-300" : "text-slate-500") : active ? "text-slate-700" : "text-slate-600"}`}>
                       {item.description}
                     </span>
                   </span>
@@ -482,31 +482,24 @@ function Dashboard() {
           </div>
 
           <div className={`mt-5 shrink-0 rounded-[22px] border p-3.5 ${dark ? "border-slate-800 bg-slate-900/80" : "border-[#e4ddd1] bg-white/90"}`}>
-            <p className={`text-[10px] font-semibold uppercase tracking-[0.24em] ${dark ? "text-slate-500" : "text-slate-400"}`}>
+            <p className={`text-[10px] font-semibold uppercase tracking-[0.24em] ${dark ? "text-slate-500" : "text-slate-500"}`}>
               Live context
             </p>
             <div className="mt-3 space-y-2">
               <div className="flex items-center justify-between gap-3">
-                <span className={`text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>Selected county</span>
+                <span className={`text-xs ${dark ? "text-slate-400" : "text-slate-600"}`}>Selected county</span>
                 <span className={`text-sm font-semibold ${dark ? "text-white" : "text-slate-900"}`}>{selectedCounty}</span>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <span className={`text-xs ${dark ? "text-slate-400" : "text-slate-500"}`}>Scenario mode</span>
+                <span className={`text-xs ${dark ? "text-slate-400" : "text-slate-600"}`}>Scenario mode</span>
                 <span className={`text-sm font-semibold ${scenarioIsDefault ? (dark ? "text-slate-300" : "text-slate-700") : dark ? "text-amber-300" : "text-amber-700"}`}>
                   {scenarioIsDefault ? "Baseline" : "Custom"}
                 </span>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowScenarioSidebar(true)}
-              className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-2.5 text-sm font-semibold transition ${
-                dark ? "bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15" : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-              }`}
-            >
-              <SlidersHorizontal className="h-4 w-4" />
-              Scenario controls
-            </button>
+            <p className={`mt-3 text-xs leading-5 ${dark ? "text-slate-500" : "text-slate-600"}`}>
+              Use the header scenario controls to adjust live assumptions without leaving the current view.
+            </p>
           </div>
         </aside>
 
@@ -523,7 +516,7 @@ function Dashboard() {
           <div className="shrink-0">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className={`text-[10px] font-semibold uppercase tracking-[0.24em] ${dark ? "text-slate-500" : "text-slate-400"}`}>
+                <p className={`text-[10px] font-semibold uppercase tracking-[0.24em] ${dark ? "text-slate-500" : "text-slate-500"}`}>
                   Andwell
                 </p>
                 <h2 className={`mt-1 text-lg font-semibold ${dark ? "text-white" : "text-slate-950"}`}>
@@ -625,14 +618,28 @@ function Dashboard() {
                       {COUNTY_CONTEXT_VIEWS.has(activeTab) && <ContextChip dark={dark}>{selectedCounty} County</ContextChip>}
                       {!scenarioIsDefault && <ContextChip dark={dark} tone="warning">Custom scenario active</ContextChip>}
                     </div>
-                    <div className="mt-4">
+                    <div className={`mt-4 rounded-[24px] border px-4 py-3.5 ${
+                      dark ? "border-emerald-500/15 bg-emerald-500/[0.08]" : "border-emerald-100 bg-emerald-50/75"
+                    }`}>
+                      <p className={`text-[10px] font-semibold uppercase tracking-[0.24em] ${
+                        dark ? "text-emerald-300" : "text-emerald-800"
+                      }`}>
+                        Innovation and Growth
+                      </p>
+                      <blockquote className={`mt-2 max-w-4xl text-sm leading-7 ${
+                        dark ? "text-slate-200" : "text-slate-700"
+                      }`}>
+                        "Innovation and Growth is where Andwell Health Partners turns vision into infrastructure. We are building the future of high acuity community care, creating post acute partnerships that make us essential to Maine, connecting complex services through technology, and developing the value based contracting model that allows us to take risk, deliver better outcomes, save payers money, and grow because we are built for the complexity others cannot manage."
+                      </blockquote>
+                    </div>
+                    <div className="mt-5">
                       <p className={`text-[11px] font-semibold uppercase tracking-[0.24em] ${dark ? "text-slate-500" : "text-slate-500"}`}>
                         Andwell Maine Growth Plan
                       </p>
                       <h1 className={`mt-2 text-[1.9rem] font-semibold tracking-tight sm:text-[2rem] ${dark ? "text-white" : "text-slate-950"}`}>
                         {activeView.title}
                       </h1>
-                      <p className={`mt-3 max-w-3xl text-[14px] leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>
+                      <p className={`mt-3 max-w-3xl text-[14px] leading-6 ${dark ? "text-slate-400" : "text-slate-700"}`}>
                         {activeView.description}
                       </p>
                     </div>
