@@ -170,8 +170,6 @@ export default function MarketDynamicsView({ setActiveTab, selectedCounty: appSe
   }, [appSelectedCounty]);
 
   const [cmsCompetitors, setCmsCompetitors] = useState(() => buildSeededCmsCompetitors());
-  const [hhvbpData,      setHhvbpData]      = useState(null);
-  const [qualityData,    setQualityData]    = useState(null);
   const [loading,        setLoading]        = useState(true);
 
   const [aiSummary, setAiSummary] = useState("");
@@ -184,14 +182,11 @@ export default function MarketDynamicsView({ setActiveTab, selectedCounty: appSe
       try {
         const token = await getCmsToken();
         const h = { "x-ai-token": token };
-        const [r1, r2, r3] = await Promise.all([
-          fetch("/api/cms/competitors", { headers: h }),
-          fetch("/api/cms/hhvbp",       { headers: h }),
-          fetch("/api/cms/hh-quality",  { headers: h }),
-        ]);
-        if (r1.ok) { const d = await r1.json(); setCmsCompetitors(d.competitors || []); }
-        if (r2.ok) { const d = await r2.json(); setHhvbpData(d); }
-        if (r3.ok) { const d = await r3.json(); setQualityData(d); }
+        const response = await fetch("/api/cms/competitors", { headers: h });
+        if (response.ok) {
+          const data = await response.json();
+          setCmsCompetitors(data.competitors || []);
+        }
       } catch (_) {
         setCmsCompetitors((current) => current.length ? current : buildSeededCmsCompetitors());
       }
@@ -385,18 +380,6 @@ export default function MarketDynamicsView({ setActiveTab, selectedCounty: appSe
     const opp  = getOpportunityScore(selectedCounty, rows);
     return [{ county: selectedCounty, market: mkt, score: opp?.score || 0 }];
   }, [selectedCounty]);
-
-  const andwellQuality = qualityData?.rows?.find((r) =>
-    (r.provider_name || "").toLowerCase().includes("androscoggin"));
-  const andwellHhvbp  = hhvbpData?.rows?.find((r) =>
-    (r.provider_name || "").toLowerCase().includes("androscoggin"));
-
-  const hcahpsRank = andwellQuality?.star_rating
-    ? `${parseFloat(andwellQuality.star_rating).toFixed(1)} quality stars`
-    : "Unavailable";
-  const vbpAdj     = andwellHhvbp?.payment_adjustment_pct
-    ? `${andwellHhvbp.payment_adjustment_pct > 0 ? "+" : ""}${parseFloat(andwellHhvbp.payment_adjustment_pct).toFixed(2)}%`
-    : "Unavailable";
 
   const displayConfidence = dataConfidence ?? (loading ? null : 98);
 
@@ -895,64 +878,8 @@ export default function MarketDynamicsView({ setActiveTab, selectedCounty: appSe
         </div>
       </div>
 
-      {/* ── Row 3: CMS Provenance + Strategy Map ─────────────── */}
-      <div className="grid gap-6 lg:grid-cols-2">
-
-        {/* CMS Market Provenance */}
-        <CommandCard className="p-5">
-          <div className="flex items-center gap-3 mb-4">
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2">
-              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-              <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-            </svg>
-            <h3 className="text-sm font-black uppercase tracking-[0.2em]" style={{ color: textMain }}>
-              CMS Market Provenance
-            </h3>
-          </div>
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            {/* HCAHPS */}
-            <div
-              className="rounded-xl p-4 border transition-colors"
-              style={{ background: surfLow, borderColor: C.outlineVar }}
-              onMouseEnter={(e) => e.currentTarget.style.background = `${C.primary}0d`}
-              onMouseLeave={(e) => e.currentTarget.style.background = surfLow}
-            >
-              <div className="text-[9px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: textMute }}>HCAHPS Peer Rank</div>
-              <div className="font-black" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: C.primary }}>
-                {hcahpsRank}
-              </div>
-              <div className="text-[9px] font-bold uppercase mt-2" style={{ color: textSub }}>Clinical Meta-Data</div>
-            </div>
-            {/* VBP */}
-            <div
-              className="rounded-xl p-4 border transition-colors"
-              style={{ background: surfLow, borderColor: C.outlineVar }}
-              onMouseEnter={(e) => e.currentTarget.style.background = `${C.secondary}0d`}
-              onMouseLeave={(e) => e.currentTarget.style.background = surfLow}
-            >
-              <div className="text-[9px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: textMute }}>VBP Adjustment</div>
-              <div className="font-black" style={{ fontSize: 32, lineHeight: "40px", letterSpacing: "-0.02em", color: C.secondary }}>
-                {vbpAdj}
-              </div>
-              <div className="text-[9px] font-bold uppercase mt-2" style={{ color: textSub }}>Net Revenue Impact</div>
-            </div>
-          </div>
-          {/* Data Implication Cluster */}
-          <div className="rounded-xl p-4 relative overflow-hidden" style={{ background: C.inverseSurf }}>
-            <div className="absolute inset-0 pointer-events-none" style={{ ...dotMatrix, opacity: 0.03 }} />
-            <div className="relative z-10 flex items-start gap-2 mb-2">
-              <svg className="w-4 h-4 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2">
-                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Data Implication Cluster</p>
-            </div>
-            <p className="relative z-10 text-sm leading-6 text-white opacity-90">
-              The current CMS data indicates that Andwell's statewide provider-file footprint should be interpreted as a
-              presence proxy, not county market share. VBP status of <strong>{vbpAdj}</strong> and CMS quality status of{" "}
-              <strong>{hcahpsRank}</strong> are shown only when bundled CMS evidence is available.
-            </p>
-          </div>
-        </CommandCard>
+      {/* ── Row 3: Strategy Map ─────────────── */}
+      <div className="grid gap-6">
 
         {/* Geographic Opportunity Density */}
         <div className="rounded-2xl overflow-hidden relative min-h-[380px] p-5" style={{ ...card(), background: C.inverseSurf }}>
