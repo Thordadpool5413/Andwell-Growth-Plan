@@ -263,6 +263,7 @@ export default function ExecutiveView({ rows, totals, onNavigate }) {
       share: totals.y1Revenue > 0 ? row.revenue / totals.y1Revenue : 0,
     }))
     .sort((a, b) => b.revenue - a.revenue);
+  const y3GrowthPercent = totals.y1Revenue > 0 ? ((totals.y3Revenue - totals.y1Revenue) / totals.y1Revenue) * 100 : 0;
 
   const marketStatus = y1Penetration >= 0.05 ? "green" : y1Penetration >= 0.02 ? "amber" : "red";
   const competitionStatus = avgThreat < 40 ? "green" : avgThreat < 60 ? "amber" : "red";
@@ -332,6 +333,46 @@ export default function ExecutiveView({ rows, totals, onNavigate }) {
                   <ArrowRight className={`h-4 w-4 shrink-0 ${dark ? "text-slate-500 group-hover:text-slate-300" : "text-slate-500 group-hover:text-slate-800"}`} />
                 </button>
               ))}
+            </div>
+
+            <div className={`mt-5 rounded-2xl border px-4 py-4 ${dark ? "border-slate-800 bg-slate-900/90" : "border-slate-200 bg-white/95"}`}>
+              <div className="flex items-start gap-3">
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border ${dark ? "border-emerald-900/60 bg-emerald-950/20 text-emerald-300" : "border-emerald-300/80 bg-emerald-100/80 text-emerald-800"}`}>
+                  <TrendingUp className="h-4.5 w-4.5" />
+                </div>
+                <div className="min-w-0">
+                  <p className={`text-[10px] font-semibold uppercase tracking-[0.2em] ${dark ? "text-slate-500" : "text-slate-500"}`}>
+                    Current snapshot
+                  </p>
+                  <p className={`mt-1 text-sm font-semibold ${dark ? "text-white" : "text-slate-950"}`}>
+                    The model at a glance right now
+                  </p>
+                  <p className={`mt-2 text-xs leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>
+                    This quick readout summarizes the current home-page snapshot before you move into the deeper planning views below.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                <AtAGlanceIndicator label="Market Opportunity" status={marketStatus} dark={dark} />
+                <AtAGlanceIndicator label="Competitive Position" status={competitionStatus} dark={dark} />
+                <AtAGlanceIndicator label="Financial Readiness" status={financialStatus} dark={dark} />
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <div className={`rounded-2xl border p-4 ${dark ? "border-slate-800 bg-slate-950/60" : "border-slate-200 bg-slate-50/90"}`}>
+                  <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${dark ? "text-slate-500" : "text-slate-500"}`}>Year 1 revenue</p>
+                  <p className={`mt-2 text-xl font-bold tabular-nums ${dark ? "text-white" : "text-slate-950"}`}>{currency(totals.y1Revenue)}</p>
+                </div>
+                <div className={`rounded-2xl border p-4 ${dark ? "border-slate-800 bg-slate-950/60" : "border-slate-200 bg-slate-50/90"}`}>
+                  <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${dark ? "text-slate-500" : "text-slate-500"}`}>Year 1 referrals</p>
+                  <p className={`mt-2 text-xl font-bold tabular-nums ${dark ? "text-white" : "text-slate-950"}`}>{number(totals.y1Referrals)}</p>
+                </div>
+                <div className={`rounded-2xl border p-4 ${dark ? "border-slate-800 bg-slate-950/60" : "border-slate-200 bg-slate-50/90"}`}>
+                  <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${dark ? "text-slate-500" : "text-slate-500"}`}>3-year growth</p>
+                  <p className={`mt-2 text-xl font-bold tabular-nums ${dark ? "text-white" : "text-slate-950"}`}>+{y3GrowthPercent.toFixed(0)}%</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

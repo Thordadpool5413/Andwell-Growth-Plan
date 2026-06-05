@@ -6,6 +6,19 @@
     <meta name="description" content="Andwell Maine Innovation and Growth Plan dashboard" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Andwell Growth Plan</title>
+    <script>
+      (function () {
+        try {
+          var storedTheme = localStorage.getItem("andwell-theme");
+          var useDark = storedTheme == null ? true : storedTheme === "dark";
+          document.documentElement.classList.toggle("dark", useDark);
+          document.documentElement.style.colorScheme = useDark ? "dark" : "light";
+        } catch (error) {
+          document.documentElement.classList.add("dark");
+          document.documentElement.style.colorScheme = "dark";
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
