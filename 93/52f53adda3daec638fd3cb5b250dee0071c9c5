@@ -1,0 +1,51 @@
+src/views/MarketDynamicsView.jsx
+  s_e3540d5e18be27::t_6e44469fef631f 8,54
+src/utils/ai.js
+  s_e3540d5e18be27::t_8593f47def637b 97-116,118-149,151-159,163
+  s_e3540d5e18be27::t_d9fa812bcbbc44 6-25,31-50,53-65,67-70,72,74-75,79-87,89-94
+  s_e3540d5e18be27::t_4063c50d73ce22 371-394,396-397
+src/views/CompetitorGrid.jsx
+  s_e3540d5e18be27::t_a4825b6b2f94c1 9,13
+server.js
+  s_e3540d5e18be27::t_1b1fa3305ec5ec 22,28-60,63-66,95,125-126,145-149
+README.md
+  s_e3540d5e18be27::t_16034f2b71f0e2 26-35
+src/components/CmsAnalyzer.jsx
+  s_e3540d5e18be27::t_ebfa8507787a23 4,27-28
+  s_e3540d5e18be27::t_130fdc39aa49bd 1
+public/api/ai/chat.php
+  s_e3540d5e18be27::t_f278838bc5ce94 1-34
+public/api/ai/cms-analyze.php
+  s_e3540d5e18be27::t_f278838bc5ce94 1-46
+api/ai/chat.js
+  s_e3540d5e18be27::t_1397563cc7582b 32
+public/api/ai/.htaccess
+  s_e3540d5e18be27::t_f278838bc5ce94 1-4
+public/api/ai/_shared.php
+  s_e3540d5e18be27::t_9554cb65d68979 227-234
+  s_e3540d5e18be27::t_f278838bc5ce94 1-226,235-348
+src/components/CmsDataPanel.jsx
+  s_e3540d5e18be27::t_64aa0440f4abfe 5,8
+public/api/ai/token.php
+  s_e3540d5e18be27::t_f278838bc5ce94 1-10
+src/views/CompetitiveView.jsx
+  s_e3540d5e18be27::t_4704980a434e4e 27,64
+src/views/ExecutiveView.jsx
+  s_e3540d5e18be27::t_fb5919dbeaeb55 21,40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "9352f53adda3daec638fd3cb5b250dee0071c9c5",
+  "prompts": {},
+  "sessions": {
+    "s_e3540d5e18be27": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e90a3-a51b-7252-9005-e366e766a2b5",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Thordadpool5413 <nick.lynch.coaching@outlook.com>"
+    }
+  }
+}
