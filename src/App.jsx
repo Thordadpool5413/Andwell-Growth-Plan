@@ -55,8 +55,8 @@ const NAV_SECTIONS = [
     items: [
       {
         id: "Executive View",
-        title: "Executive View",
-        description: "Leadership summary across revenue, referrals, margin, and priority markets.",
+        title: "Home",
+        description: "Why this workspace exists, how to use it, and what leadership should review first.",
         icon: LayoutDashboard,
       },
       {
@@ -234,13 +234,13 @@ function ContextChip({ dark, children, tone = "neutral" }) {
   const tones = {
     neutral: dark
       ? "border-slate-800 bg-slate-900/80 text-slate-300"
-      : "border-slate-200 bg-white text-slate-600",
+      : "border-slate-300/80 bg-slate-100/80 text-slate-700",
     accent: dark
       ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
-      : "border-emerald-200 bg-emerald-50 text-emerald-700",
+      : "border-emerald-300/80 bg-emerald-100/85 text-emerald-800",
     warning: dark
       ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
-      : "border-amber-200 bg-amber-50 text-amber-700",
+      : "border-amber-300/80 bg-amber-100/85 text-amber-800",
   };
 
   return (
@@ -387,13 +387,13 @@ function Dashboard() {
   const exportActionPage = EXPORTABLE_VIEWS.has(activeTab);
 
   useEffect(() => {
-    document.title = `${activeTab} — Andwell Growth Plan`;
-  }, [activeTab]);
+    document.title = `${activeView.title} — Andwell Growth Plan`;
+  }, [activeView.title]);
 
   const renderActiveView = () => {
     switch (activeTab) {
       case "Executive View":
-        return <ExecutiveView rows={rows} totals={totals} />;
+        return <ExecutiveView rows={rows} totals={totals} onNavigate={handleNavigate} />;
       case "County Plan":
         return (
           <CountyPlan
@@ -442,7 +442,7 @@ function Dashboard() {
       case "Launch Checklist":
         return <LaunchChecklist />;
       default:
-        return <ExecutiveView rows={rows} totals={totals} />;
+        return <ExecutiveView rows={rows} totals={totals} onNavigate={handleNavigate} />;
     }
   };
 
@@ -473,33 +473,12 @@ function Dashboard() {
               </div>
             </div>
             <p className={`mt-4 text-sm leading-6 ${dark ? "text-slate-400" : "text-slate-600"}`}>
-              Market intelligence, growth planning, and board-ready operating decisions in one executive workspace.
+              Leadership home, market planning, and decision support for Andwell's innovation and growth strategy.
             </p>
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
             <NavRail dark={dark} activeTab={activeTab} onSelect={activateView} />
-          </div>
-
-          <div className={`mt-5 shrink-0 rounded-[22px] border p-3.5 ${dark ? "border-slate-800 bg-slate-900/80" : "border-[#e4ddd1] bg-white/90"}`}>
-            <p className={`text-[10px] font-semibold uppercase tracking-[0.24em] ${dark ? "text-slate-500" : "text-slate-500"}`}>
-              Live context
-            </p>
-            <div className="mt-3 space-y-2">
-              <div className="flex items-center justify-between gap-3">
-                <span className={`text-xs ${dark ? "text-slate-400" : "text-slate-600"}`}>Selected county</span>
-                <span className={`text-sm font-semibold ${dark ? "text-white" : "text-slate-900"}`}>{selectedCounty}</span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className={`text-xs ${dark ? "text-slate-400" : "text-slate-600"}`}>Scenario mode</span>
-                <span className={`text-sm font-semibold ${scenarioIsDefault ? (dark ? "text-slate-300" : "text-slate-700") : dark ? "text-amber-300" : "text-amber-700"}`}>
-                  {scenarioIsDefault ? "Baseline" : "Custom"}
-                </span>
-              </div>
-            </div>
-            <p className={`mt-3 text-xs leading-5 ${dark ? "text-slate-500" : "text-slate-600"}`}>
-              Use the header scenario controls to adjust live assumptions without leaving the current view.
-            </p>
           </div>
         </aside>
 
@@ -613,26 +592,12 @@ function Dashboard() {
               >
                 <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
                   <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <ContextChip dark={dark} tone="accent">{activeView.section}</ContextChip>
-                      {COUNTY_CONTEXT_VIEWS.has(activeTab) && <ContextChip dark={dark}>{selectedCounty} County</ContextChip>}
-                      {!scenarioIsDefault && <ContextChip dark={dark} tone="warning">Custom scenario active</ContextChip>}
-                    </div>
-                    <div className={`mt-4 rounded-[24px] border px-4 py-3.5 ${
-                      dark ? "border-emerald-500/15 bg-emerald-500/[0.08]" : "border-emerald-100 bg-emerald-50/75"
-                    }`}>
-                      <p className={`text-[10px] font-semibold uppercase tracking-[0.24em] ${
-                        dark ? "text-emerald-300" : "text-emerald-800"
-                      }`}>
-                        Innovation and Growth
-                      </p>
-                      <blockquote className={`mt-2 max-w-4xl text-sm leading-7 ${
-                        dark ? "text-slate-200" : "text-slate-700"
-                      }`}>
-                        "Innovation and Growth is where Andwell Health Partners turns vision into infrastructure. We are building the future of high acuity community care, creating post acute partnerships that make us essential to Maine, connecting complex services through technology, and developing the value based contracting model that allows us to take risk, deliver better outcomes, save payers money, and grow because we are built for the complexity others cannot manage."
-                      </blockquote>
-                    </div>
-                    <div className="mt-5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <ContextChip dark={dark} tone="accent">{activeView.section}</ContextChip>
+                  {COUNTY_CONTEXT_VIEWS.has(activeTab) && <ContextChip dark={dark}>{selectedCounty} County</ContextChip>}
+                  {!scenarioIsDefault && <ContextChip dark={dark} tone="warning">Custom scenario active</ContextChip>}
+                </div>
+                    <div className="mt-4">
                       <p className={`text-[11px] font-semibold uppercase tracking-[0.24em] ${dark ? "text-slate-500" : "text-slate-500"}`}>
                         Andwell Maine Growth Plan
                       </p>

@@ -38,7 +38,7 @@ const DEFAULT_TINT = { light: "from-white to-slate-50/60", dark: "from-slate-900
 
 const SOURCE_CONFIG = {
   cms: {
-    dot: "bg-emerald-500",
+    dot: "bg-blue-500",
     label: "Source: CMS Provider Files 2023",
   },
   modeled: {
@@ -46,7 +46,7 @@ const SOURCE_CONFIG = {
     label: "Modeled — internal assumptions",
   },
   derived: {
-    dot: "bg-blue-400",
+    dot: "bg-violet-400",
     label: "Derived — NAHC/industry benchmarks",
   },
 };

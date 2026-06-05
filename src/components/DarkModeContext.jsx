@@ -5,15 +5,17 @@ const DarkModeContext = createContext({ dark: false, toggle: () => {} });
 export function DarkModeProvider({ children }) {
   const [dark, setDark] = useState(() => {
     try {
-      return localStorage.getItem("andwell-dark") === "true";
+      const saved = localStorage.getItem("andwell-dark");
+      return saved == null ? true : saved === "true";
     } catch {
-      return false;
+      return true;
     }
   });
 
   useEffect(() => {
-    try { localStorage.setItem("andwell-dark", dark); } catch {}
+    try { localStorage.setItem("andwell-dark", dark ? "true" : "false"); } catch {}
     document.documentElement.classList.toggle("dark", dark);
+    document.documentElement.style.colorScheme = dark ? "dark" : "light";
   }, [dark]);
 
   const toggle = () => setDark((prev) => !prev);
