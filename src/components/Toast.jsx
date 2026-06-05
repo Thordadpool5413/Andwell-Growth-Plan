@@ -63,7 +63,7 @@ export default function Toast({
       </span>
       <button
         onClick={onClose}
-        className={`p-1 hover:opacity-80 transition-smooth ${styles.text}`}
+        className={`flex h-9 w-9 items-center justify-center rounded-md hover:opacity-80 transition-smooth ${styles.text}`}
         aria-label="Close notification"
       >
         <X className="w-4 h-4" />

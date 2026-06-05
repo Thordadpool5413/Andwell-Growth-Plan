@@ -122,7 +122,8 @@ export default function DataTable({
             <button
               onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
               disabled={currentPage === 0}
-              className={`p-2 rounded transition-colors ${
+              aria-label="Previous page"
+              className={`flex h-11 w-11 items-center justify-center rounded-lg transition-colors ${
                 currentPage === 0
                   ? dark
                     ? "opacity-50 cursor-not-allowed"
@@ -137,7 +138,8 @@ export default function DataTable({
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={currentPage === totalPages - 1}
-              className={`p-2 rounded transition-colors ${
+              aria-label="Next page"
+              className={`flex h-11 w-11 items-center justify-center rounded-lg transition-colors ${
                 currentPage === totalPages - 1
                   ? dark
                     ? "opacity-50 cursor-not-allowed"

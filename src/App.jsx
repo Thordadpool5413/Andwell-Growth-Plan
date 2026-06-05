@@ -25,6 +25,7 @@ const BoardReport = React.lazy(() => import("./views/BoardReport.jsx"));
 const LaunchChecklist = React.lazy(() => import("./views/LaunchChecklist.jsx"));
 import AskPanel from "./components/AskPanel.jsx";
 import ScenarioSidebar from "./components/ScenarioSidebar.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import { useScenarioStore } from "./store/scenarioStore.js";
 import {
   Activity,
@@ -188,7 +189,7 @@ function NavRail({ dark, activeTab, onSelect, onClose }) {
                     onClose?.();
                   }}
                   aria-current={active ? "page" : undefined}
-                  className={`group flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-all duration-200 ${
+                  className={`group flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors duration-200 ${
                     active
                       ? dark
                         ? "border-emerald-500/35 bg-slate-900 text-white shadow-[0_18px_40px_-28px_rgba(16,185,129,0.8)]"
@@ -354,6 +355,7 @@ function Dashboard() {
     setMobileNavOpen(false);
     window.requestAnimationFrame(() => {
       document.getElementById("tab-content")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document.getElementById("tab-content")?.focus({ preventScroll: true });
     });
   }, []);
 
@@ -369,6 +371,7 @@ function Dashboard() {
     setMobileNavOpen(false);
     window.requestAnimationFrame(() => {
       document.getElementById("tab-content")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document.getElementById("tab-content")?.focus({ preventScroll: true });
     });
   }, []);
 
@@ -382,6 +385,10 @@ function Dashboard() {
 
   const financialActionPage = activeTab === "Financial Model" || activeTab === "Sensitivity";
   const exportActionPage = EXPORTABLE_VIEWS.has(activeTab);
+
+  useEffect(() => {
+    document.title = `${activeTab} — Andwell Growth Plan`;
+  }, [activeTab]);
 
   const renderActiveView = () => {
     switch (activeTab) {
@@ -543,7 +550,13 @@ function Dashboard() {
           </div>
         </aside>
 
-        <div className={`flex min-h-screen min-w-0 flex-1 flex-col transition-all duration-300 ${showScenarioSidebar ? "xl:pr-[22rem]" : ""}`}>
+        <a
+          href="#tab-content"
+          className={`absolute left-0 top-0 z-[60] -translate-y-full rounded-b-lg px-4 py-2 text-sm font-semibold transition-transform focus:translate-y-0 ${dark ? "bg-white text-slate-900" : "bg-slate-900 text-white"}`}
+        >
+          Skip to main content
+        </a>
+        <div className={`flex min-h-screen min-w-0 flex-1 flex-col transition-[padding] duration-300 ${showScenarioSidebar ? "xl:pr-[22rem]" : ""}`}>
           <header
             className={`sticky top-0 z-30 border-b backdrop-blur-xl ${
               dark ? "border-slate-800 bg-slate-950/85" : "border-[#e4ddd1] bg-[#f7f5ef]/90"
@@ -690,11 +703,13 @@ function Dashboard() {
                 </div>
               )}
 
-              <div id="tab-content">
+              <div id="tab-content" tabIndex={-1} className="outline-none">
                 <Suspense fallback={<TabSkeleton />}>
-                  <div key={activeTab} className="tab-fade-in">
-                    {renderActiveView()}
-                  </div>
+                  <ErrorBoundary>
+                    <div key={activeTab} className="tab-fade-in">
+                      {renderActiveView()}
+                    </div>
+                  </ErrorBoundary>
                 </Suspense>
               </div>
             </div>

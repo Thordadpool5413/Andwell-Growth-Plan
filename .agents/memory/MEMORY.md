@@ -3,3 +3,4 @@
 - [Calculation data flow](calc-data-flow.md) — `buildRows` → `getCountyMath` is the single source of truth; views should never recompute margin × revenue independently.
 - [MaineMap ReferenceError](mainemap-bug.md) — `providerProviderType` was called as a function but never defined; caused CountyPlan to crash on load.
 - [Dead code removal](audit-cleanup.md) — deleted ComparisonView, ServiceLines, SensitivityAnalysisEnhanced; fixed ExportButton, server console logs, added React.lazy code splitting.
+- [Expert audit](expert-audit.md) — ErrorBoundary, performance (transition-all), accessibility (skip links, focus mgmt), security (dead Google Maps key), touch targets.
