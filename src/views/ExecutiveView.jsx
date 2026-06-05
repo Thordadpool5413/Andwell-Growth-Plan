@@ -99,7 +99,7 @@ export default function ExecutiveView({ rows, totals }) {
   return (
     <div className="space-y-6">
       <SectionHeader eyebrow="Executive View" title="Market opportunity and growth thesis">
-        A high-level summary connecting Andwell's market opportunity across 12 Maine counties. Revenue figures are modeled projections based on CMS 2022 beneficiary volumes, internal capture rate assumptions, and NAHC-benchmarked conversion rates. Adjust the Scenario Model to see how changes in these assumptions affect all figures.
+        A high-level summary connecting Andwell's market opportunity across 12 Maine counties. Revenue figures are modeled projections based on CMS 2024 geographic variation and 2023 provider file data, internal capture rate assumptions, and NAHC-benchmarked conversion rates. Adjust the Scenario Model to see how changes in these assumptions affect all figures.
       </SectionHeader>
 
       <div className="flex items-center gap-2 flex-wrap">

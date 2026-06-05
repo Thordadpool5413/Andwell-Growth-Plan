@@ -29,7 +29,7 @@ const CONFIDENCE_INPUTS = [
     type: "CMS verified",
     typeClass: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
     dot: "bg-emerald-500",
-    description: "CMS Provider File 2022 — FFS beneficiary counts by county and service type.",
+    description: "CMS 2024 geographic data and 2023 provider files — FFS beneficiary counts by county and service type.",
     lastUpdated: CMS_DISPLAY_DATE,
   },
   {

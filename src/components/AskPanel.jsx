@@ -79,7 +79,7 @@ const SUGGESTED_QUESTIONS = {
   ],
 };
 
-const SOURCE_FOOTNOTE = "Based on CMS 2022 PUF · Andwell planning assumptions · May 2026 model";
+const SOURCE_FOOTNOTE = "Based on CMS 2024 geographic data and 2023 provider files · Andwell planning assumptions · June 2026 model";
 
 export default function AskPanel({
   rows,

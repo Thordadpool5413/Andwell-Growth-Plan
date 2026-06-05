@@ -39,7 +39,7 @@ const DEFAULT_TINT = { light: "from-white to-slate-50/60", dark: "from-slate-900
 const SOURCE_CONFIG = {
   cms: {
     dot: "bg-emerald-500",
-    label: "Source: CMS Provider Files 2022",
+    label: "Source: CMS Provider Files 2023",
   },
   modeled: {
     dot: "bg-amber-400",
