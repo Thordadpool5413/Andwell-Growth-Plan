@@ -1,0 +1,28 @@
+src/views/ExecutiveView.jsx
+  s_e3540d5e18be27::t_7befa274ccfe29 1,3-7,9-17,30,35-115,118-132,136,138,143-182,187-206,210-213,218-226,237-238,243,253,260-265,271-276,283-388,394,396-402,406-407,414,420,428-431,433,436-438,440,447-449,451-455,457,462-558,560-565,570,613,616-617,620-621
+src/components/Metric.jsx
+  s_e3540d5e18be27::t_77ffe07b485106 41,49
+src/App.jsx
+  s_e3540d5e18be27::t_b733ca6a17ad20 445
+  s_e3540d5e18be27::t_77ffe07b485106 58-59,237,240,243,390-391,396,476,595-600
+src/components/DarkModeContext.jsx
+  s_e3540d5e18be27::t_77ffe07b485106 8-9,11,16,18
+src/components/Badge.jsx
+  s_e3540d5e18be27::t_77ffe07b485106 5-10,14-19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "72ec5417ec6f6fb16135c9b4e38424c154b104ff",
+  "prompts": {},
+  "sessions": {
+    "s_e3540d5e18be27": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e90a3-a51b-7252-9005-e366e766a2b5",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Thordadpool5413 <nick.lynch.coaching@outlook.com>"
+    }
+  }
+}
